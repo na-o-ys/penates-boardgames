@@ -1,0 +1,325 @@
+import type { GameAction, GameConfig, GameState, Phase, Player, PlayerId, Role } from "./types";
+import { ROLE_HAS_ACTION } from "./types";
+import { distributeRoles } from "./distribution";
+import { getActionResult } from "./resolver";
+import { validateAction, validateVote, haveAllPlayersVoted } from "./validator";
+
+/**
+ * 初期ゲーム状態を作成
+ */
+export function createInitialGameState(roomId: string): GameState {
+  return {
+    roomId,
+    phase: "LOBBY",
+    players: [],
+    config: {
+      roles: [],
+      nightDuration: 30,
+      dayDuration: 180,
+      votingDuration: 30,
+    },
+    initialDistribution: {},
+    actions: [],
+    votes: {},
+    phaseStartedAt: null,
+  };
+}
+
+/**
+ * プレイヤーを追加
+ */
+export function addPlayer(
+  state: GameState,
+  player: Player
+): GameState {
+  if (state.phase !== "LOBBY") {
+    throw new Error("ロビーフェーズでのみプレイヤーを追加できます");
+  }
+
+  if (state.players.some((p) => p.id === player.id)) {
+    throw new Error("既に参加済みのプレイヤーです");
+  }
+
+  return {
+    ...state,
+    players: [...state.players, player],
+  };
+}
+
+/**
+ * プレイヤーを削除
+ */
+export function removePlayer(
+  state: GameState,
+  playerId: PlayerId
+): GameState {
+  if (state.phase !== "LOBBY") {
+    throw new Error("ロビーフェーズでのみプレイヤーを削除できます");
+  }
+
+  return {
+    ...state,
+    players: state.players.filter((p) => p.id !== playerId),
+  };
+}
+
+/**
+ * ゲーム設定を更新
+ */
+export function updateConfig(
+  state: GameState,
+  config: Partial<GameConfig>
+): GameState {
+  if (state.phase !== "LOBBY") {
+    throw new Error("ロビーフェーズでのみ設定を変更できます");
+  }
+
+  return {
+    ...state,
+    config: {
+      ...state.config,
+      ...config,
+    },
+  };
+}
+
+/**
+ * ゲームを開始（ロビー → 夜フェーズ）
+ */
+export function startGame(state: GameState): GameState {
+  if (state.phase !== "LOBBY") {
+    throw new Error("ロビーフェーズからのみゲームを開始できます");
+  }
+
+  if (state.players.length < 3) {
+    throw new Error("最低3人のプレイヤーが必要です");
+  }
+
+  const requiredRoles = state.players.length + 2;
+  if (state.config.roles.length !== requiredRoles) {
+    throw new Error(
+      `役職数が不正です。必要: ${requiredRoles}, 設定: ${state.config.roles.length}`
+    );
+  }
+
+  // 役職を配布
+  const distribution = distributeRoles(state.players, state.config.roles);
+
+  const nightState: GameState = {
+    ...state,
+    phase: "NIGHT",
+    initialDistribution: distribution,
+    phaseStartedAt: Date.now(),
+  };
+
+  // 夜アクションを持つプレイヤーがいない場合は即座に昼フェーズへ
+  if (shouldAutoAdvanceFromNight(nightState)) {
+    return advancePhase(nightState);
+  }
+
+  return nightState;
+}
+
+/**
+ * 固定配置でゲームを開始（テスト用）
+ */
+export function startGameWithDistribution(
+  state: GameState,
+  distribution: Record<string, Role>
+): GameState {
+  if (state.phase !== "LOBBY") {
+    throw new Error("ロビーフェーズからのみゲームを開始できます");
+  }
+
+  if (state.players.length < 3) {
+    throw new Error("最低3人のプレイヤーが必要です");
+  }
+
+  const nightState: GameState = {
+    ...state,
+    phase: "NIGHT",
+    initialDistribution: distribution,
+    phaseStartedAt: Date.now(),
+  };
+
+  // 夜アクションを持つプレイヤーがいない場合は即座に昼フェーズへ
+  if (shouldAutoAdvanceFromNight(nightState)) {
+    return advancePhase(nightState);
+  }
+
+  return nightState;
+}
+
+/**
+ * 夜アクションを実行
+ */
+export function executeNightAction(
+  state: GameState,
+  action: GameAction
+): GameState {
+  // バリデーション
+  const validation = validateAction(state, action);
+  if (!validation.valid) {
+    throw new Error(validation.error.message);
+  }
+
+  // アクション結果を計算
+  const result = getActionResult(
+    state.initialDistribution,
+    state.actions,
+    action
+  );
+
+  // 結果を含むアクションを作成
+  const actionWithResult: GameAction = {
+    ...action,
+    result,
+  };
+
+  const newState: GameState = {
+    ...state,
+    actions: [...state.actions, actionWithResult],
+  };
+
+  // 全員のアクションが完了したかチェック
+  if (shouldAutoAdvanceFromNight(newState)) {
+    return advancePhase(newState);
+  }
+
+  return newState;
+}
+
+/**
+ * 夜フェーズから自動進行すべきかチェック
+ */
+function shouldAutoAdvanceFromNight(state: GameState): boolean {
+  // アクション持ちの役職を持つプレイヤーを取得
+  const playersWithActions = state.players.filter((player) => {
+    const role = state.initialDistribution[player.id];
+    return ROLE_HAS_ACTION[role];
+  });
+
+  // 全員がアクションを実行したかチェック
+  return playersWithActions.every((player) =>
+    state.actions.some((action) => action.actorId === player.id)
+  );
+}
+
+/**
+ * 投票を実行
+ */
+export function executeVote(
+  state: GameState,
+  voterId: PlayerId,
+  targetId: PlayerId
+): GameState {
+  // バリデーション
+  const validation = validateVote(state, voterId, targetId);
+  if (!validation.valid) {
+    throw new Error(validation.error.message);
+  }
+
+  const newState: GameState = {
+    ...state,
+    votes: {
+      ...state.votes,
+      [voterId]: targetId,
+    },
+  };
+
+  // 全員の投票が完了したかチェック
+  if (haveAllPlayersVoted(newState)) {
+    return advancePhase(newState);
+  }
+
+  return newState;
+}
+
+/**
+ * フェーズを進行
+ */
+export function advancePhase(state: GameState): GameState {
+  const nextPhase = getNextPhase(state.phase);
+
+  if (nextPhase === null) {
+    throw new Error("これ以上フェーズを進行できません");
+  }
+
+  return {
+    ...state,
+    phase: nextPhase,
+    phaseStartedAt: Date.now(),
+  };
+}
+
+/**
+ * 次のフェーズを取得
+ */
+function getNextPhase(currentPhase: Phase): Phase | null {
+  switch (currentPhase) {
+    case "LOBBY":
+      return "NIGHT";
+    case "NIGHT":
+      return "DAY";
+    case "DAY":
+      return "VOTING";
+    case "VOTING":
+      return "RESULT";
+    case "RESULT":
+      return null;
+  }
+}
+
+/**
+ * ゲームをリセット（結果 → ロビー）
+ */
+export function resetGame(state: GameState): GameState {
+  return {
+    ...state,
+    phase: "LOBBY",
+    initialDistribution: {},
+    actions: [],
+    votes: {},
+    phaseStartedAt: null,
+  };
+}
+
+/**
+ * ゲーム全体のReducer
+ */
+export type GameActionType =
+  | { type: "ADD_PLAYER"; player: Player }
+  | { type: "REMOVE_PLAYER"; playerId: PlayerId }
+  | { type: "UPDATE_CONFIG"; config: Partial<GameConfig> }
+  | { type: "START_GAME" }
+  | { type: "START_GAME_WITH_DISTRIBUTION"; distribution: Record<string, Role> }
+  | { type: "EXECUTE_NIGHT_ACTION"; action: GameAction }
+  | { type: "EXECUTE_VOTE"; voterId: PlayerId; targetId: PlayerId }
+  | { type: "ADVANCE_PHASE" }
+  | { type: "RESET_GAME" };
+
+export function gameReducer(
+  state: GameState,
+  action: GameActionType
+): GameState {
+  switch (action.type) {
+    case "ADD_PLAYER":
+      return addPlayer(state, action.player);
+    case "REMOVE_PLAYER":
+      return removePlayer(state, action.playerId);
+    case "UPDATE_CONFIG":
+      return updateConfig(state, action.config);
+    case "START_GAME":
+      return startGame(state);
+    case "START_GAME_WITH_DISTRIBUTION":
+      return startGameWithDistribution(state, action.distribution);
+    case "EXECUTE_NIGHT_ACTION":
+      return executeNightAction(state, action.action);
+    case "EXECUTE_VOTE":
+      return executeVote(state, action.voterId, action.targetId);
+    case "ADVANCE_PHASE":
+      return advancePhase(state);
+    case "RESET_GAME":
+      return resetGame(state);
+  }
+}

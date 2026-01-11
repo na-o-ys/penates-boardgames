@@ -1,0 +1,202 @@
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import {
+  createRoom as dbCreateRoom,
+  getGameState,
+  updateRoomWithRetry,
+  RoomNotFoundError,
+} from "@/lib/supabase/rooms";
+import {
+  createInitialGameState,
+  addPlayer,
+  removePlayer,
+  updateConfig,
+  type Player,
+  type GameConfig,
+  type Role,
+} from "@/lib/game";
+import { getOrCreatePlayerId, setPlayerName } from "@/lib/session";
+
+export interface ActionResult<T = void> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
+
+/**
+ * 新規部屋を作成
+ */
+export async function createRoomAction(
+  playerName: string
+): Promise<ActionResult<{ roomId: string }>> {
+  try {
+    const supabase = await createClient();
+    const playerId = await getOrCreatePlayerId();
+    await setPlayerName(playerName);
+
+    // 初期ゲーム状態を作成
+    const initialState = createInitialGameState("");
+
+    // ホストプレイヤーを追加
+    const player: Player = {
+      id: playerId,
+      name: playerName,
+      isHost: true,
+      isConnected: true,
+    };
+
+    const stateWithPlayer = addPlayer(initialState, player);
+
+    // DBに保存
+    const roomId = await dbCreateRoom(supabase, {
+      ...stateWithPlayer,
+      roomId: "", // roomIdはDB側で生成される
+    });
+
+    // roomIdを更新
+    await updateRoomWithRetry(supabase, roomId, (state) => ({
+      ...state,
+      roomId,
+    }));
+
+    return { success: true, data: { roomId } };
+  } catch (error) {
+    console.error("部屋の作成に失敗:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "部屋の作成に失敗しました",
+    };
+  }
+}
+
+/**
+ * 部屋に参加
+ */
+export async function joinRoomAction(
+  roomId: string,
+  playerName: string
+): Promise<ActionResult> {
+  try {
+    const supabase = await createClient();
+    const playerId = await getOrCreatePlayerId();
+    await setPlayerName(playerName);
+
+    await updateRoomWithRetry(supabase, roomId, (state) => {
+      // 既に参加済みの場合は名前を更新
+      const existingPlayer = state.players.find((p) => p.id === playerId);
+      if (existingPlayer) {
+        return {
+          ...state,
+          players: state.players.map((p) =>
+            p.id === playerId ? { ...p, name: playerName, isConnected: true } : p
+          ),
+        };
+      }
+
+      // 新規参加
+      const player: Player = {
+        id: playerId,
+        name: playerName,
+        isHost: false,
+        isConnected: true,
+      };
+
+      return addPlayer(state, player);
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("部屋への参加に失敗:", error);
+    if (error instanceof RoomNotFoundError) {
+      return { success: false, error: "部屋が見つかりません" };
+    }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "部屋への参加に失敗しました",
+    };
+  }
+}
+
+/**
+ * 部屋から退出
+ */
+export async function leaveRoomAction(roomId: string): Promise<ActionResult> {
+  try {
+    const supabase = await createClient();
+    const playerId = await getOrCreatePlayerId();
+
+    await updateRoomWithRetry(supabase, roomId, (state) => {
+      return removePlayer(state, playerId);
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("部屋からの退出に失敗:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "部屋からの退出に失敗しました",
+    };
+  }
+}
+
+/**
+ * ゲーム設定を更新（ホストのみ）
+ */
+export async function updateGameConfigAction(
+  roomId: string,
+  config: Partial<GameConfig>
+): Promise<ActionResult> {
+  try {
+    const supabase = await createClient();
+    const playerId = await getOrCreatePlayerId();
+
+    await updateRoomWithRetry(supabase, roomId, (state) => {
+      // ホストチェック
+      const player = state.players.find((p) => p.id === playerId);
+      if (!player?.isHost) {
+        throw new Error("ホストのみがゲーム設定を変更できます");
+      }
+
+      return updateConfig(state, config);
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("ゲーム設定の更新に失敗:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "ゲーム設定の更新に失敗しました",
+    };
+  }
+}
+
+/**
+ * 役職構成を設定（ホストのみ）
+ */
+export async function setRolesAction(
+  roomId: string,
+  roles: Role[]
+): Promise<ActionResult> {
+  return updateGameConfigAction(roomId, { roles });
+}
+
+/**
+ * 部屋が存在するかチェック
+ */
+export async function checkRoomExistsAction(
+  roomId: string
+): Promise<ActionResult<{ exists: boolean }>> {
+  try {
+    const supabase = await createClient();
+    const room = await getGameState(supabase, roomId);
+
+    return { success: true, data: { exists: room !== null } };
+  } catch (error) {
+    console.error("部屋の確認に失敗:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "部屋の確認に失敗しました",
+    };
+  }
+}
