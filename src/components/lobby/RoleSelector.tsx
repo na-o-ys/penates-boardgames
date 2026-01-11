@@ -97,7 +97,7 @@ export function RoleSelector({
       </div>
 
       {/* 選択状況 */}
-      <div className="flex items-center justify-between px-3 py-2 bg-gray-800 rounded-lg">
+      <div className="flex items-center justify-between px-3 py-2 glass-panel rounded-lg">
         <span className="text-gray-300">選択枚数</span>
         <span
           className={`font-bold ${

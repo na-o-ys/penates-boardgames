@@ -79,7 +79,7 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 p-4">
+    <div className="min-h-screen game-overlay p-4">
       <div className="max-w-2xl mx-auto">
         {/* ヘッダー */}
         <div className="text-center mb-8 pt-4">
@@ -97,7 +97,7 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
 
         {hasVoted ? (
           /* 投票済み表示 */
-          <div className="bg-gray-800 rounded-xl p-8 text-center">
+          <div className="glass-card rounded-xl p-8 text-center">
             <div className="text-6xl mb-4">✓</div>
             <h2 className="text-2xl font-bold text-white mb-2">投票済み</h2>
             <p className="text-gray-400">
@@ -115,7 +115,7 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
         ) : (
           /* 投票UI */
           <>
-            <div className="bg-gray-800 rounded-xl p-6 mb-6">
+            <div className="glass-card rounded-xl p-6 mb-6">
               <h2 className="text-lg font-semibold text-white mb-4">
                 誰を処刑しますか？
               </h2>
@@ -166,7 +166,7 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
         )}
 
         {/* 投票状況 */}
-        <div className="mt-8 bg-gray-800 rounded-xl p-6">
+        <div className="mt-8 glass-card rounded-xl p-6">
           <h2 className="text-lg font-semibold text-white mb-4">投票状況</h2>
           <div className="grid grid-cols-2 gap-3">
             {gameState.players.map((player: Player) => {

@@ -14,7 +14,7 @@ export function PlayerColumn({ roomId, playerId, playerName }: PlayerColumnProps
 
   if (isLoading || !gameState) {
     return (
-      <div className="bg-gray-900 h-full flex items-center justify-center text-gray-400">
+      <div className="h-full flex items-center justify-center text-gray-400">
         読み込み中...
       </div>
     );

@@ -26,7 +26,7 @@ export default function TestRoomPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-red-500 p-4 text-center">
           <h1 className="text-xl font-bold mb-2">エラー</h1>
           <p>{error}</p>
@@ -37,14 +37,14 @@ export default function TestRoomPage() {
 
   if (!roomData) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-white p-4 animate-pulse">読み込み中...</div>
       </div>
     );
   }
 
   return (
-    <main className="h-screen bg-gray-950 p-2">
+    <main className="h-screen p-2">
       <div className="grid grid-cols-4 gap-2 h-full">
         {roomData.playerIds.map((playerId, i) => (
           <PlayerColumn

@@ -78,7 +78,7 @@ export function DayScreen({ gameState, playerId, roomId }: DayScreenProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 p-4">
+    <div className="min-h-screen game-overlay p-4">
       <div className="max-w-2xl mx-auto">
         {/* ヘッダー */}
         <div className="text-center mb-8 pt-4">
@@ -92,7 +92,7 @@ export function DayScreen({ gameState, playerId, roomId }: DayScreenProps) {
         </div>
 
         {/* 自分の役職 */}
-        <div className="bg-gray-800 rounded-xl p-6 mb-6">
+        <div className="glass-card rounded-xl p-6 mb-6">
           <h2 className="text-lg font-semibold text-white mb-4 text-center">
             あなたの最初の役職
           </h2>
@@ -103,7 +103,7 @@ export function DayScreen({ gameState, playerId, roomId }: DayScreenProps) {
 
         {/* 夜の情報 */}
         {gameState.actionResults && gameState.actionResults.length > 0 && (
-          <div className="bg-gray-800 rounded-xl p-6 mb-6">
+          <div className="glass-card rounded-xl p-6 mb-6">
             <h2 className="text-lg font-semibold text-white mb-4">
               夜に得た情報
             </h2>
@@ -157,7 +157,7 @@ export function DayScreen({ gameState, playerId, roomId }: DayScreenProps) {
         )}
 
         {/* プレイヤー一覧 */}
-        <div className="bg-gray-800 rounded-xl p-6 mb-6">
+        <div className="glass-card rounded-xl p-6 mb-6">
           <h2 className="text-lg font-semibold text-white mb-4">プレイヤー</h2>
           <div className="grid grid-cols-2 gap-3">
             {gameState.players.map((player: Player) => (

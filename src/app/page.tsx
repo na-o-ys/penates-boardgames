@@ -52,7 +52,7 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gray-900 p-8">
+    <main className="flex min-h-screen flex-col items-center justify-center game-overlay p-8">
       <h1 className="text-4xl font-bold mb-8 text-white">ワンナイト人狼</h1>
       <p className="text-lg text-gray-400 mb-12">
         3〜10人で遊べるブラウザゲーム
@@ -63,7 +63,7 @@ export default function Home() {
           placeholder="プレイヤー名"
           value={playerName}
           onChange={(e) => setPlayerName(e.target.value)}
-          className="px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-slate-500"
+          className="px-4 py-3 glass-input rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-slate-500"
           disabled={isLoading}
         />
         <button
@@ -79,7 +79,7 @@ export default function Home() {
             placeholder="部屋ID"
             value={roomId}
             onChange={(e) => setRoomId(e.target.value)}
-            className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-slate-500"
+            className="flex-1 px-4 py-3 glass-input rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-slate-500"
             disabled={isLoading}
           />
           <button

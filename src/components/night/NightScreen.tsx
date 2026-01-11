@@ -285,7 +285,7 @@ export function NightScreen({
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-900 p-4 md:p-8">
+    <div className="flex flex-col min-h-screen game-overlay p-4 md:p-8">
       {/* ヘッダー */}
       <div className="text-center mb-8 pt-4">
         <h1 className="text-2xl font-bold text-white mb-2">🌙 夜フェーズ</h1>
@@ -311,7 +311,7 @@ export function NightScreen({
           <div className="text-center">
             <p className="text-green-400 mb-4">アクション完了</p>
             {actionResult && actionResult.revealedRoles && actionResult.revealedRoles.length > 0 && (
-              <div className="p-4 bg-gray-800 rounded-lg">
+              <div className="p-4 glass-panel rounded-lg">
                 <p className="text-gray-400 mb-2">確認した役職:</p>
                 <div className="flex justify-center gap-2">
                   {actionResult.revealedRoles.map((role, index) => (

@@ -40,16 +40,16 @@ export function RoomEntryScreen({ roomId, onJoined }: RoomEntryScreenProps) {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gray-900">
+    <main className="flex min-h-screen flex-col items-center justify-center p-8 game-overlay">
       <div className="w-full max-w-md">
         <h1 className="text-3xl font-bold text-center mb-8 text-white">
           ルームに入室
         </h1>
 
-        <div className="bg-gray-800 rounded-xl p-6 space-y-6">
+        <div className="glass-card rounded-xl p-6 space-y-6">
           <div>
             <p className="text-gray-400 text-sm mb-2">部屋ID</p>
-            <code className="block px-3 py-2 bg-gray-700 rounded text-gray-300 text-sm">
+            <code className="block px-3 py-2 glass-panel rounded text-gray-300 text-sm">
               {roomId.slice(0, 8)}...
             </code>
           </div>

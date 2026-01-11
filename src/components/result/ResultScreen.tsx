@@ -20,9 +20,9 @@ const TEAM_NAMES: Record<Team, string> = {
 };
 
 const TEAM_COLORS: Record<Team, string> = {
-  VILLAGE: "bg-gray-900",
-  WEREWOLF: "bg-gray-900",
-  TANNER: "bg-gray-900",
+  VILLAGE: "game-overlay",
+  WEREWOLF: "game-overlay",
+  TANNER: "game-overlay",
 };
 
 export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps) {
@@ -54,7 +54,7 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
 
   return (
     <div className={`min-h-screen ${
-      winningTeam ? TEAM_COLORS[winningTeam] : "bg-gray-900"
+      winningTeam ? TEAM_COLORS[winningTeam] : "game-overlay"
     } p-4`}>
       <div className="max-w-2xl mx-auto">
         {/* 勝敗表示 */}
@@ -77,7 +77,7 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
         </div>
 
         {/* 処刑されたプレイヤー */}
-        <div className="bg-gray-800 rounded-xl p-6 mb-6">
+        <div className="glass-card rounded-xl p-6 mb-6">
           <h2 className="text-lg font-semibold text-white mb-4">処刑結果</h2>
           {executedPlayerIds.length === 0 ? (
             <p className="text-gray-400 text-center">誰も処刑されませんでした</p>
@@ -115,7 +115,7 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
         </div>
 
         {/* 全員の役職公開 */}
-        <div className="bg-gray-800 rounded-xl p-6 mb-6">
+        <div className="glass-card rounded-xl p-6 mb-6">
           <h2 className="text-lg font-semibold text-white mb-4">最終役職</h2>
           <div className="space-y-4">
             {gameState.players.map((player: Player) => {
@@ -161,7 +161,7 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
 
         {/* 中央カードは最終役職から取得 */}
         {gameState.finalRoles && (
-          <div className="bg-gray-800 rounded-xl p-6 mb-6">
+          <div className="glass-card rounded-xl p-6 mb-6">
             <h2 className="text-lg font-semibold text-white mb-4">中央カード</h2>
             <div className="flex justify-center gap-4">
               {["CENTER_0", "CENTER_1"].map((centerId, index) => {

@@ -100,7 +100,7 @@ export function HunterRevengeScreen({
   // 自分が処刑された狩人でない、または既に選択済みの場合は待機画面
   if (!isExecutedHunter || hasChosen) {
     return (
-      <div className="min-h-screen bg-gray-900 p-4">
+      <div className="min-h-screen game-overlay p-4">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-8 pt-4">
             <h1 className="text-3xl font-bold text-red-400 mb-2">
@@ -114,7 +114,7 @@ export function HunterRevengeScreen({
             </p>
           </div>
 
-          <div className="bg-gray-800 rounded-xl p-8 text-center">
+          <div className="glass-card rounded-xl p-8 text-center">
             <div className="text-6xl mb-4">...</div>
             <h2 className="text-2xl font-bold text-white mb-2">
               {hasChosen ? "選択完了" : "待機中"}
@@ -145,7 +145,7 @@ export function HunterRevengeScreen({
   const otherPlayers = gameState.players.filter((p) => p.id !== playerId);
 
   return (
-    <div className="min-h-screen bg-gray-900 p-4">
+    <div className="min-h-screen game-overlay p-4">
       <div className="max-w-2xl mx-auto">
         {/* ヘッダー */}
         <div className="text-center mb-8 pt-4">
@@ -161,7 +161,7 @@ export function HunterRevengeScreen({
         </div>
 
         {/* 道連れ選択UI */}
-        <div className="bg-gray-800 rounded-xl p-6 mb-6">
+        <div className="glass-card rounded-xl p-6 mb-6">
           <h2 className="text-lg font-semibold text-white mb-4">
             誰を道連れにしますか？
           </h2>

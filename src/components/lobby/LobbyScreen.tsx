@@ -76,13 +76,13 @@ export function LobbyScreen({
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-900 p-4 md:p-8">
+    <div className="flex flex-col min-h-screen game-overlay p-4 md:p-8">
       {/* ヘッダー */}
       <div className="text-center mb-8 pt-4">
         <h1 className="text-2xl font-bold text-white mb-2">ロビー</h1>
         <div className="flex items-center justify-center gap-2">
           <span className="text-gray-400 text-sm">部屋ID:</span>
-          <code className="px-3 py-1 bg-gray-800 rounded text-gray-300 text-sm">
+          <code className="px-3 py-1 glass-panel rounded text-gray-300 text-sm">
             {roomId.slice(0, 8)}...
           </code>
           <button
