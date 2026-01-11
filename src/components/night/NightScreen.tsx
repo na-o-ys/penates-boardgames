@@ -66,6 +66,7 @@ export function NightScreen({
   const myRole = gameState.myRole;
   const hasAction = myRole ? ROLE_HAS_ACTION[myRole] : false;
   const actionResult = gameState.actionResults[0];
+  const fellowWerewolves = gameState.fellowWerewolves ?? [];
 
   const otherPlayers = gameState.players.filter((p) => p.id !== playerId);
 
@@ -93,19 +94,17 @@ export function NightScreen({
         return 1;
       case "TROUBLEMAKER":
         return 2;
-      case "WEREWOLF":
-        return 1; // 中央1枚
       default:
         return 0;
     }
   };
 
-  const handleSubmitAction = async (actionType: ActionType) => {
+  const handleSubmitAction = async (actionType: ActionType, targets?: string[]) => {
     setIsSubmitting(true);
     setError(null);
 
     try {
-      const result = await submitNightActionAction(roomId, actionType, selectedTargets);
+      const result = await submitNightActionAction(roomId, actionType, targets ?? selectedTargets);
       if (!result.success) {
         setError(result.error ?? "アクションの実行に失敗しました");
       }
@@ -123,31 +122,46 @@ export function NightScreen({
 
     switch (myRole) {
       case "WEREWOLF":
+        // 仲間の人狼がいる場合
+        if (fellowWerewolves.length > 0) {
+          const fellowNames = fellowWerewolves
+            .map((id) => gameState.players.find((p) => p.id === id)?.name)
+            .filter(Boolean);
+          return (
+            <div className="space-y-4">
+              <p className="text-gray-300">あなたの仲間の人狼:</p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {fellowNames.map((name, index) => (
+                  <span
+                    key={index}
+                    className="px-4 py-2 bg-red-900/50 border border-red-500 rounded-lg text-white font-semibold"
+                  >
+                    {name}
+                  </span>
+                ))}
+              </div>
+              <button
+                onClick={handleSkip}
+                disabled={isSubmitting}
+                className="w-full py-3 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 rounded-lg text-white font-semibold transition-colors"
+              >
+                {isSubmitting ? "処理中..." : "確認した"}
+              </button>
+            </div>
+          );
+        }
+        // 単独人狼の場合
         return (
           <div className="space-y-4">
-            <p className="text-gray-300">中央のカードを1枚選んで確認できます</p>
-            <div className="flex justify-center gap-4">
-              {["CENTER_0", "CENTER_1"].map((centerId, index) => (
-                <button
-                  key={centerId}
-                  onClick={() => handleTargetClick(centerId)}
-                  disabled={isSubmitting}
-                  className={`w-20 h-28 rounded-lg border-2 transition-colors ${
-                    selectedTargets.includes(centerId)
-                      ? "border-slate-400 bg-slate-700"
-                      : "border-gray-600 bg-gray-800 hover:border-gray-500"
-                  }`}
-                >
-                  <span className="text-gray-400">中央{index + 1}</span>
-                </button>
-              ))}
-            </div>
+            <p className="text-gray-300">
+              あなたは唯一の人狼です。
+            </p>
             <button
-              onClick={() => handleSubmitAction("WEREWOLF_LOOK")}
-              disabled={selectedTargets.length !== 1 || isSubmitting}
+              onClick={handleSkip}
+              disabled={isSubmitting}
               className="w-full py-3 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 rounded-lg text-white font-semibold transition-colors"
             >
-              確認する
+              {isSubmitting ? "処理中..." : "確認した"}
             </button>
           </div>
         );
@@ -189,27 +203,10 @@ export function NightScreen({
               </div>
               <div className="text-center text-gray-500">または</div>
               <div>
-                <p className="text-sm text-gray-400 mb-2">中央のカード2枚を選択</p>
-                <div className="flex justify-center gap-4">
-                  {["CENTER_0", "CENTER_1"].map((centerId, index) => (
-                    <button
-                      key={centerId}
-                      onClick={() => handleTargetClick(centerId)}
-                      disabled={isSubmitting}
-                      className={`w-20 h-28 rounded-lg border-2 transition-colors ${
-                        selectedTargets.includes(centerId)
-                          ? "border-slate-400 bg-slate-700"
-                          : "border-gray-600 bg-gray-800 hover:border-gray-500"
-                      }`}
-                    >
-                      <span className="text-gray-400">中央{index + 1}</span>
-                    </button>
-                  ))}
-                </div>
                 <button
-                  onClick={() => handleSubmitAction("SEER_LOOK_CENTER")}
-                  disabled={selectedTargets.filter(t => t.startsWith("CENTER")).length !== 2 || isSubmitting}
-                  className="w-full mt-2 py-2 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 rounded-lg text-white font-semibold transition-colors"
+                  onClick={() => handleSubmitAction("SEER_LOOK_CENTER", ["CENTER_0", "CENTER_1"])}
+                  disabled={isSubmitting}
+                  className="w-full py-3 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 rounded-lg text-white font-semibold transition-colors"
                 >
                   中央を占う
                 </button>

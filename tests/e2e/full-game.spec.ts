@@ -53,9 +53,9 @@ test.describe("フルゲームシナリオ", () => {
     // ========================================
     // 各プレイヤーが自分の役職を確認できる
     for (const player of [playerA, playerB, playerC]) {
-      // 役職カードまたは役職名が表示される
+      // 役職カードまたは役職名が表示される（最初にマッチしたものを確認）
       await expect(
-        player.page.getByText(/人狼|村人|占い師|怪盗|トラブルメーカー|吊人/)
+        player.page.getByText(/人狼|村人|占い師|怪盗|トラブルメーカー|吊人/).first()
       ).toBeVisible({ timeout: 10000 });
     }
 
@@ -64,12 +64,18 @@ test.describe("フルゲームシナリオ", () => {
     for (const player of [playerA, playerB, playerC]) {
       const skipButton = player.page.getByRole("button", { name: "行動をスキップ" });
       const confirmButton = player.page.getByRole("button", { name: "確定" });
+      const werewolfConfirmButton = player.page.getByRole("button", { name: "確認した" });
+      const waitButton = player.page.getByRole("button", { name: "待機する" });
 
-      // スキップまたは確定ボタンがあれば押す
+      // スキップ、確定、人狼確認、または待機ボタンがあれば押す
       if (await skipButton.isVisible({ timeout: 3000 }).catch(() => false)) {
         await skipButton.click();
       } else if (await confirmButton.isVisible({ timeout: 1000 }).catch(() => false)) {
         await confirmButton.click();
+      } else if (await werewolfConfirmButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await werewolfConfirmButton.click();
+      } else if (await waitButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await waitButton.click();
       }
       // ボタンがない場合は自動進行を待つ
     }

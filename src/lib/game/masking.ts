@@ -93,7 +93,7 @@ export function maskGameState(
 export function maskGameStateForWerewolf(
   state: GameState,
   playerId: PlayerId
-): ClientGameState & { fellowWerewolves?: readonly PlayerId[] } {
+): ClientGameState {
   const baseState = maskGameState(state, playerId);
 
   // 自分が人狼でない場合は通常のマスキング

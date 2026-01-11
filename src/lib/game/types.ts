@@ -106,6 +106,8 @@ export interface ClientGameState {
   readonly votedPlayers: readonly PlayerId[]; // 投票済みプレイヤー一覧
   readonly myVote: PlayerId | null;
   readonly phaseStartedAt: number | null;
+  // 人狼用: 仲間の人狼一覧
+  readonly fellowWerewolves?: readonly PlayerId[];
   // RESULTフェーズのみ
   readonly finalRoles?: Record<string, Role>;
   readonly allActions?: readonly GameAction[];
