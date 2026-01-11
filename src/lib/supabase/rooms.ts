@@ -1,7 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { GameState } from "@/lib/game/types";
 import type { Database, RoomRow } from "./database.types";
-import { mockRooms } from "./mock-store";
 
 export type TypedSupabaseClient = SupabaseClient<Database>;
 
@@ -21,22 +20,13 @@ export class RoomNotFoundError extends Error {
   }
 }
 
-/** モックモードかどうかをチェック */
-function isMockMode(): boolean {
-  return !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-}
-
 /**
  * 新規部屋を作成
  */
 export async function createRoom(
-  supabase: TypedSupabaseClient | null,
+  supabase: TypedSupabaseClient,
   gameState: GameState
 ): Promise<string> {
-  if (isMockMode() || !supabase) {
-    return mockRooms.create(gameState);
-  }
-
   const { data, error } = await supabase
     .from("rooms")
     .insert({
@@ -57,15 +47,9 @@ export async function createRoom(
  * 部屋を取得
  */
 export async function getRoom(
-  supabase: TypedSupabaseClient | null,
+  supabase: TypedSupabaseClient,
   roomId: string
 ): Promise<RoomRow | null> {
-  if (isMockMode() || !supabase) {
-    const room = mockRooms.get(roomId);
-    if (!room) return null;
-    return room as RoomRow;
-  }
-
   const { data, error } = await supabase
     .from("rooms")
     .select("*")
@@ -87,7 +71,7 @@ export async function getRoom(
  * 部屋のゲーム状態を取得
  */
 export async function getGameState(
-  supabase: TypedSupabaseClient | null,
+  supabase: TypedSupabaseClient,
   roomId: string
 ): Promise<{ gameState: GameState; version: number } | null> {
   const room = await getRoom(supabase, roomId);
@@ -111,19 +95,11 @@ export async function getGameState(
  * @throws OptimisticLockError - バージョンが一致しない場合
  */
 export async function updateRoom(
-  supabase: TypedSupabaseClient | null,
+  supabase: TypedSupabaseClient,
   roomId: string,
   currentVersion: number,
   newGameState: GameState
 ): Promise<number> {
-  if (isMockMode() || !supabase) {
-    const newVersion = mockRooms.update(roomId, currentVersion, newGameState);
-    if (newVersion === null) {
-      throw new OptimisticLockError();
-    }
-    return newVersion;
-  }
-
   const { data, error } = await supabase
     .from("rooms")
     .update({
@@ -155,7 +131,7 @@ export async function updateRoom(
  * @param maxRetries - 最大リトライ回数
  */
 export async function updateRoomWithRetry(
-  supabase: TypedSupabaseClient | null,
+  supabase: TypedSupabaseClient,
   roomId: string,
   updateFn: (currentState: GameState) => GameState,
   maxRetries: number = 3
@@ -199,14 +175,9 @@ export async function updateRoomWithRetry(
  * 部屋を削除
  */
 export async function deleteRoom(
-  supabase: TypedSupabaseClient | null,
+  supabase: TypedSupabaseClient,
   roomId: string
 ): Promise<void> {
-  if (isMockMode() || !supabase) {
-    mockRooms.delete(roomId);
-    return;
-  }
-
   const { error } = await supabase
     .from("rooms")
     .delete()
@@ -221,13 +192,9 @@ export async function deleteRoom(
  * 部屋が存在するかチェック
  */
 export async function roomExists(
-  supabase: TypedSupabaseClient | null,
+  supabase: TypedSupabaseClient,
   roomId: string
 ): Promise<boolean> {
-  if (isMockMode() || !supabase) {
-    return mockRooms.exists(roomId);
-  }
-
   const { data, error } = await supabase
     .from("rooms")
     .select("id")

@@ -10,9 +10,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed"
+    "test:e2e": "supabase start && playwright test",
+    "test:e2e:ui": "supabase start && playwright test --ui",
+    "test:e2e:headed": "supabase start && playwright test --headed"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
