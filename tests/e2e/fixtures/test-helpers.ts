@@ -80,7 +80,13 @@ export async function waitForPlayerInList(page: Page, playerName: string): Promi
  * 指定のフェーズになるまで待機
  */
 export async function waitForPhase(page: Page, phaseText: string): Promise<void> {
-  await expect(page.getByText(phaseText)).toBeVisible({ timeout: 15000 });
+  // フェーズのヘッダー（h1）を探す（例：「投票フェーズ」「議論フェーズ」など）
+  // level: 1でh1のみを対象にする
+  // 「フェーズ」が既に含まれている場合はそのまま使用
+  const searchText = phaseText.includes("フェーズ") ? phaseText : `${phaseText}フェーズ`;
+  await expect(
+    page.getByRole("heading", { name: searchText, level: 1 })
+  ).toBeVisible({ timeout: 15000 });
 }
 
 /**
@@ -146,15 +152,18 @@ export async function confirmAction(page: Page): Promise<void> {
  * 夜アクション: スキップ
  */
 export async function skipAction(page: Page): Promise<void> {
-  await page.getByRole("button", { name: "スキップ" }).click();
+  await page.getByRole("button", { name: "行動をスキップ" }).click();
 }
 
 /**
  * 投票: プレイヤーに投票
  */
 export async function voteForPlayer(page: Page, playerName: string): Promise<void> {
+  // プレイヤーを選択
   await page.getByRole("button", { name: new RegExp(playerName) }).click();
-  // 投票確定を待機
+  // 投票を確定
+  await page.getByRole("button", { name: "投票する" }).click();
+  // 投票完了を待機
   await expect(page.getByText("投票済み")).toBeVisible({ timeout: 5000 });
 }
 

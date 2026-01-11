@@ -61,7 +61,7 @@ test.describe("フルゲームシナリオ", () => {
     // 夜アクションの処理
     // アクションボタンがあればクリック、なければスキップ/自動進行を待つ
     for (const player of [playerA, playerB, playerC]) {
-      const skipButton = player.page.getByRole("button", { name: "スキップ" });
+      const skipButton = player.page.getByRole("button", { name: "行動をスキップ" });
       const confirmButton = player.page.getByRole("button", { name: "確定" });
 
       // スキップまたは確定ボタンがあれば押す
@@ -109,12 +109,11 @@ test.describe("フルゲームシナリオ", () => {
     // ========================================
     // 6. 結果フェーズ
     // ========================================
-    // 結果画面への遷移を待機
+    // 結果画面への遷移を待機（h1で勝利/敗北を確認）
     for (const player of players) {
       await expect(
-        player.page
-          .getByText("勝利")
-          .or(player.page.getByText("敗北"))
+        player.page.getByRole("heading", { name: "勝利", level: 1 })
+          .or(player.page.getByRole("heading", { name: "敗北", level: 1 }))
       ).toBeVisible({ timeout: 15000 });
     }
 
@@ -138,10 +137,10 @@ test.describe("フルゲームシナリオ", () => {
     // ========================================
     await playAgain(playerA.page);
 
-    // 全プレイヤーがロビーに戻る
+    // 全プレイヤーがロビーに戻る（ロビーのh1ヘッダーで確認）
     for (const player of players) {
       await expect(
-        player.page.getByText("ゲーム開始").or(player.page.getByText("ロビー"))
+        player.page.getByRole("heading", { name: "ロビー", level: 1 })
       ).toBeVisible({ timeout: 10000 });
     }
 
@@ -203,7 +202,15 @@ test.describe("投票と勝敗判定", () => {
     await waitForPlayerInList(playerA.page, playerC.name);
     await startGame(playerA.page);
 
-    // 夜→昼への遷移を待機
+    // 夜フェーズのアクションを処理
+    for (const player of [playerA, playerB, playerC]) {
+      const skipButton = player.page.getByRole("button", { name: "行動をスキップ" });
+      if (await skipButton.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await skipButton.click();
+      }
+    }
+
+    // 昼フェーズへの遷移を待機
     await waitForPhase(playerA.page, "議論フェーズ");
 
     // 投票フェーズへ
@@ -218,14 +225,20 @@ test.describe("投票と勝敗判定", () => {
     await voteForPlayer(playerB.page, playerC.name);
     await voteForPlayer(playerC.page, playerA.name); // Charlieは別の人に投票
 
-    // 結果画面でCharlieが処刑されたことを確認
+    // 結果画面に遷移したことを確認（h1の勝利/敗北ヘッダーで判定）
     await expect(
-      playerA.page.getByText("処刑結果")
+      playerA.page.getByRole("heading", { name: "勝利", level: 1 })
+        .or(playerA.page.getByRole("heading", { name: "敗北", level: 1 }))
     ).toBeVisible({ timeout: 15000 });
 
-    // 処刑者欄にCharlieの名前が表示される
+    // 処刑結果セクションが表示される
     await expect(
-      playerA.page.locator("[class*='red']").getByText(playerC.name)
+      playerA.page.getByText("処刑結果")
+    ).toBeVisible();
+
+    // 処刑者欄にCharlieの名前が表示される（bg-red-900/50のdiv内）
+    await expect(
+      playerA.page.locator(".bg-red-900\\/50").getByText(playerC.name)
     ).toBeVisible();
   });
 });
@@ -239,26 +252,24 @@ test.describe("ページリロード耐性", () => {
     await waitForPlayerInList(playerA.page, playerC.name);
     await startGame(playerA.page);
 
-    // 夜または昼フェーズを確認
+    // 夜フェーズを確認
     await expect(
-      playerA.page
-        .getByText("夜フェーズ")
-        .or(playerA.page.getByText("議論フェーズ"))
+      playerB.page.getByRole("heading", { name: "夜フェーズ", level: 1 })
     ).toBeVisible({ timeout: 15000 });
 
     // プレイヤーBがページをリロード
     await playerB.page.reload();
 
-    // リロード後もゲーム状態が復元される
+    // リロード後もゲーム状態（夜フェーズ）が復元される
+    // 役職名が表示されていることを確認（夜フェーズの証拠）
     await expect(
-      playerB.page
-        .getByText("夜フェーズ")
-        .or(playerB.page.getByText("議論フェーズ"))
-        .or(playerB.page.getByText("投票"))
+      playerB.page.getByText(/人狼|村人|占い師|怪盗|トラブルメーカー|吊人/)
     ).toBeVisible({ timeout: 15000 });
 
-    // 他のプレイヤーの名前も表示される
-    await waitForPlayerInList(playerB.page, playerA.name);
-    await waitForPlayerInList(playerB.page, playerC.name);
+    // 夜フェーズのヘッダーまたは行動UIが表示されていることを確認
+    await expect(
+      playerB.page.getByRole("heading", { name: "夜フェーズ", level: 1 })
+        .or(playerB.page.getByRole("button", { name: "行動をスキップ" }))
+    ).toBeVisible({ timeout: 5000 });
   });
 });

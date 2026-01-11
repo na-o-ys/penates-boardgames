@@ -64,6 +64,7 @@ export function LobbyScreen({
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold text-white mb-2">ロビー</h1>
         <div className="flex items-center justify-center gap-2">
+          <span className="text-gray-400 text-sm">部屋ID:</span>
           <code className="px-3 py-1 bg-gray-800 rounded text-gray-300 text-sm">
             {roomId.slice(0, 8)}...
           </code>

@@ -61,6 +61,10 @@ export async function getRoom(
       // No rows returned
       return null;
     }
+    // 無効なUUID形式の場合も部屋が見つからないとして扱う
+    if (error.message.includes("invalid input syntax for type uuid")) {
+      return null;
+    }
     throw new Error(`部屋の取得に失敗しました: ${error.message}`);
   }
 

@@ -68,7 +68,7 @@ export default function Home() {
         />
         <button
           onClick={handleCreateRoom}
-          disabled={isLoading}
+          disabled={isLoading || !playerName.trim()}
           className="px-8 py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed rounded-lg text-lg font-semibold transition-colors"
         >
           部屋を作成
@@ -84,7 +84,7 @@ export default function Home() {
           />
           <button
             onClick={handleJoinRoom}
-            disabled={isLoading}
+            disabled={isLoading || !playerName.trim() || !roomId.trim()}
             className="px-6 py-3 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed rounded-lg font-semibold transition-colors"
           >
             参加
