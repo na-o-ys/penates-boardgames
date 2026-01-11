@@ -8,6 +8,7 @@ import type { ClientGameState } from "@/lib/game";
 interface UseGameStateResult {
   gameState: ClientGameState | null;
   playerId: string | null;
+  isInRoom: boolean;
   isLoading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
@@ -62,9 +63,15 @@ export function useGameState(roomId: string): UseGameStateResult {
   // Realtimeで更新を購読
   useRealtime(roomId, fetchGameState);
 
+  // プレイヤーがルームに入室しているかチェック
+  const isInRoom = Boolean(
+    gameState && playerId && gameState.players.some((p) => p.id === playerId)
+  );
+
   return {
     gameState,
     playerId,
+    isInRoom,
     isLoading,
     error,
     refresh: fetchGameState,

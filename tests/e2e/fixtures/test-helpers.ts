@@ -94,9 +94,10 @@ export async function waitForPhase(page: Page, phaseText: string): Promise<void>
  */
 export async function startGame(page: Page): Promise<void> {
   await page.getByRole("button", { name: "ゲーム開始" }).click();
-  // 夜フェーズまたは昼フェーズへの遷移を待機
+  // 夜フェーズまたは昼フェーズへの遷移を待機（h1ヘッダーで判定）
   await expect(
-    page.getByText("夜フェーズ").or(page.getByText("議論フェーズ"))
+    page.getByRole("heading", { level: 1 }).filter({ hasText: "夜フェーズ" })
+      .or(page.getByRole("heading", { level: 1 }).filter({ hasText: "議論フェーズ" }))
   ).toBeVisible({ timeout: 10000 });
 }
 
@@ -212,4 +213,16 @@ export async function waitForText(page: Page, text: string): Promise<void> {
  */
 export async function screenshot(page: Page, name: string): Promise<void> {
   await page.screenshot({ path: `test-results/${name}.png` });
+}
+
+/**
+ * タイマー設定を変更（ホストのみ）
+ */
+export async function setTimerDuration(
+  page: Page,
+  type: "night" | "day",
+  duration: number
+): Promise<void> {
+  const selectTestId = type === "night" ? "night-duration-select" : "day-duration-select";
+  await page.getByTestId(selectTestId).selectOption(String(duration));
 }

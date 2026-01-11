@@ -7,6 +7,7 @@ import { NightScreen } from "@/components/night/NightScreen";
 import { DayScreen } from "@/components/day/DayScreen";
 import { VotingScreen } from "@/components/voting/VotingScreen";
 import { ResultScreen } from "@/components/result/ResultScreen";
+import { RoomEntryScreen } from "@/components/room/RoomEntryScreen";
 
 interface RoomPageProps {
   params: Promise<{ roomId: string }>;
@@ -14,7 +15,7 @@ interface RoomPageProps {
 
 export default function RoomPage({ params }: RoomPageProps) {
   const { roomId } = use(params);
-  const { gameState, playerId, isLoading, error, refresh } = useGameState(roomId);
+  const { gameState, playerId, isInRoom, isLoading, error, refresh } = useGameState(roomId);
 
   if (isLoading) {
     return (
@@ -26,19 +27,39 @@ export default function RoomPage({ params }: RoomPageProps) {
     );
   }
 
-  if (error || !gameState || !playerId) {
+  if (error) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-8">
+      <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gray-900">
         <h1 className="text-2xl font-bold mb-4 text-red-500">エラー</h1>
-        <p className="text-gray-400">{error || "ゲーム状態を取得できませんでした"}</p>
+        <p className="text-gray-400">{error}</p>
         <button
           onClick={refresh}
-          className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white"
+          className="mt-4 px-4 py-2 bg-slate-600 hover:bg-slate-500 rounded-lg text-white"
         >
           再読み込み
         </button>
       </main>
     );
+  }
+
+  if (!gameState || !playerId) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gray-900">
+        <h1 className="text-2xl font-bold mb-4 text-red-500">エラー</h1>
+        <p className="text-gray-400">ゲーム状態を取得できませんでした</p>
+        <button
+          onClick={refresh}
+          className="mt-4 px-4 py-2 bg-slate-600 hover:bg-slate-500 rounded-lg text-white"
+        >
+          再読み込み
+        </button>
+      </main>
+    );
+  }
+
+  // 未入室の場合は入室画面を表示
+  if (!isInRoom) {
+    return <RoomEntryScreen roomId={roomId} onJoined={refresh} />;
   }
 
   switch (gameState.phase) {

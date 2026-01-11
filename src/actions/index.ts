@@ -3,6 +3,7 @@ export {
   createRoomAction,
   joinRoomAction,
   leaveRoomAction,
+  kickPlayerAction,
   updateGameConfigAction,
   setRolesAction,
   checkRoomExistsAction,
@@ -13,6 +14,7 @@ export {
 export {
   startGameAction,
   submitNightActionAction,
+  autoSkipNightActionAction,
   submitVoteAction,
   advancePhaseAction,
   resetGameAction,

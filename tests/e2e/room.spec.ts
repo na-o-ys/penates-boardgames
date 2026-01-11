@@ -69,6 +69,71 @@ test.describe("部屋作成・参加フロー", () => {
   });
 });
 
+test.describe("直接URL訪問", () => {
+  test("TC-1.5: ルームURLに直接アクセスすると入室画面が表示される", async ({ playerA, playerB }) => {
+    // プレイヤーAが部屋を作成
+    const roomId = await createRoom(playerA.page, playerA.name);
+
+    // プレイヤーBがルームURLに直接アクセス
+    await playerB.page.goto(`/room/${roomId}`);
+
+    // 入室画面が表示される
+    await expect(playerB.page.getByText("ルームに入室")).toBeVisible();
+    await expect(playerB.page.getByPlaceholder("プレイヤー名を入力")).toBeVisible();
+    await expect(playerB.page.getByRole("button", { name: "入室する" })).toBeVisible();
+  });
+
+  test("TC-1.6: 入室画面からプレイヤー名を入力して入室できる", async ({ playerA, playerB }) => {
+    // プレイヤーAが部屋を作成
+    const roomId = await createRoom(playerA.page, playerA.name);
+
+    // プレイヤーBがルームURLに直接アクセス
+    await playerB.page.goto(`/room/${roomId}`);
+
+    // 入室画面が表示される
+    await expect(playerB.page.getByText("ルームに入室")).toBeVisible();
+
+    // プレイヤー名を入力
+    await playerB.page.getByPlaceholder("プレイヤー名を入力").fill(playerB.name);
+
+    // 入室ボタンをクリック
+    await playerB.page.getByRole("button", { name: "入室する" }).click();
+
+    // ロビー画面に遷移
+    await expect(playerB.page.getByRole("heading", { name: "ロビー" })).toBeVisible({ timeout: 5000 });
+
+    // 両方のプレイヤーが表示される
+    await expect(playerB.page.getByText(playerA.name)).toBeVisible();
+    await expect(playerB.page.getByText(playerB.name)).toBeVisible();
+
+    // プレイヤーAの画面にもプレイヤーBが表示される（リアルタイム更新）
+    await waitForPlayerInList(playerA.page, playerB.name);
+  });
+
+  test("TC-1.7: 存在しないルームURLにアクセスするとエラー表示", async ({ playerA }) => {
+    // 存在しないルームURLにアクセス
+    await playerA.page.goto("/room/non-existent-room-id-12345");
+
+    // エラーが表示される
+    await expect(playerA.page.getByText("エラー")).toBeVisible({ timeout: 5000 });
+  });
+
+  test("TC-1.8: 入室済みのプレイヤーがURLにアクセスするとロビーが表示される", async ({ playerA }) => {
+    // プレイヤーAが部屋を作成
+    const roomId = await createRoom(playerA.page, playerA.name);
+
+    // ロビー画面を確認
+    await expect(playerA.page.getByRole("heading", { name: "ロビー" })).toBeVisible();
+
+    // 同じURLに再度アクセス
+    await playerA.page.goto(`/room/${roomId}`);
+
+    // 入室画面ではなくロビーが表示される
+    await expect(playerA.page.getByRole("heading", { name: "ロビー" })).toBeVisible();
+    await expect(playerA.page.getByText("ルームに入室")).not.toBeVisible();
+  });
+});
+
 test.describe("ランディングページ", () => {
   test("プレイヤー名が空の場合はボタンが非活性", async ({ page }) => {
     await page.goto("/");

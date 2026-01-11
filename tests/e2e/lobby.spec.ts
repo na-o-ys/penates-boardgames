@@ -110,10 +110,11 @@ test.describe("役職設定の検証", () => {
     // デフォルト設定で役職数が足りているかテスト
     const startButton = playerA.page.getByRole("button", { name: "ゲーム開始" });
 
-    // ゲームが開始できる = 役職数が正しい
+    // ゲームが開始できる = 役職数が正しい（h1ヘッダーで判定）
     await startButton.click();
     await expect(
-      playerA.page.getByText("夜フェーズ").or(playerA.page.getByText("議論フェーズ"))
+      playerA.page.getByRole("heading", { level: 1 }).filter({ hasText: "夜フェーズ" })
+        .or(playerA.page.getByRole("heading", { level: 1 }).filter({ hasText: "議論フェーズ" }))
     ).toBeVisible({ timeout: 10000 });
   });
 });

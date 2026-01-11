@@ -83,6 +83,47 @@ export async function submitNightActionAction(
 }
 
 /**
+ * 夜フェーズのタイマー終了時に自動スキップを実行
+ */
+export async function autoSkipNightActionAction(
+  roomId: string
+): Promise<ActionResult> {
+  try {
+    const supabase = await createClient();
+    const playerId = await getOrCreatePlayerId();
+
+    await updateRoomWithRetry(supabase, roomId, (state) => {
+      // 夜フェーズ以外では何もしない
+      if (state.phase !== "NIGHT") {
+        return state;
+      }
+
+      // 既にアクション済みなら何もしない
+      if (state.actions.some((action) => action.actorId === playerId)) {
+        return state;
+      }
+
+      const action: GameAction = {
+        actorId: playerId,
+        type: "SKIP",
+        targetIds: [],
+        timestamp: Date.now(),
+      };
+
+      return executeNightAction(state, action);
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("自動スキップに失敗:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "自動スキップに失敗しました",
+    };
+  }
+}
+
+/**
  * 投票を実行
  */
 export async function submitVoteAction(

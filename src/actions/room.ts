@@ -141,6 +141,48 @@ export async function leaveRoomAction(roomId: string): Promise<ActionResult> {
 }
 
 /**
+ * プレイヤーを退室させる（ホストのみ）
+ */
+export async function kickPlayerAction(
+  roomId: string,
+  targetPlayerId: string
+): Promise<ActionResult> {
+  try {
+    const supabase = await createClient();
+    const playerId = await getOrCreatePlayerId();
+
+    await updateRoomWithRetry(supabase, roomId, (state) => {
+      // ホストチェック
+      const player = state.players.find((p) => p.id === playerId);
+      if (!player?.isHost) {
+        throw new Error("ホストのみがプレイヤーを退室させられます");
+      }
+
+      // 自分自身は退室させられない
+      if (targetPlayerId === playerId) {
+        throw new Error("自分自身を退室させることはできません");
+      }
+
+      // 対象プレイヤーが存在するか確認
+      const targetPlayer = state.players.find((p) => p.id === targetPlayerId);
+      if (!targetPlayer) {
+        throw new Error("対象プレイヤーが見つかりません");
+      }
+
+      return removePlayer(state, targetPlayerId);
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("プレイヤーの退室に失敗:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "プレイヤーの退室に失敗しました",
+    };
+  }
+}
+
+/**
  * ゲーム設定を更新（ホストのみ）
  */
 export async function updateGameConfigAction(

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { submitNightActionAction } from "@/actions";
+import { useState, useEffect, useCallback } from "react";
+import { submitNightActionAction, autoSkipNightActionAction } from "@/actions";
 import { ROLE_NAMES, ROLE_HAS_ACTION, type ClientGameState, type ActionType } from "@/lib/game";
 import { RoleCard } from "./RoleCard";
 
@@ -21,9 +21,50 @@ export function NightScreen({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const nightDuration = gameState.config.nightDuration;
+  const phaseStartedAt = gameState.phaseStartedAt;
+
+  // phaseStartedAtから残り時間を計算
+  const calculateTimeLeft = useCallback(() => {
+    if (!phaseStartedAt) return nightDuration;
+    const elapsed = Math.floor((Date.now() - phaseStartedAt) / 1000);
+    return Math.max(0, nightDuration - elapsed);
+  }, [phaseStartedAt, nightDuration]);
+
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft);
+
+  useEffect(() => {
+    // phaseStartedAtが変わったら再計算
+    setTimeLeft(calculateTimeLeft());
+  }, [calculateTimeLeft]);
+
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft, calculateTimeLeft]);
+
+  // タイマー終了時の自動スキップ
+  const hasActed = gameState.hasActed;
+  useEffect(() => {
+    if (timeLeft <= 0 && !hasActed) {
+      // タイマー終了時に未行動なら自動スキップを実行
+      autoSkipNightActionAction(roomId).catch(console.error);
+    }
+  }, [timeLeft, hasActed, roomId]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
   const myRole = gameState.myRole;
   const hasAction = myRole ? ROLE_HAS_ACTION[myRole] : false;
-  const hasActed = gameState.hasActed;
   const actionResult = gameState.actionResults[0];
 
   const otherPlayers = gameState.players.filter((p) => p.id !== playerId);
@@ -251,6 +292,9 @@ export function NightScreen({
       {/* ヘッダー */}
       <div className="text-center mb-8 pt-4">
         <h1 className="text-2xl font-bold text-white mb-2">🌙 夜フェーズ</h1>
+        <div className="text-5xl font-bold text-white mb-4">
+          {formatTime(timeLeft)}
+        </div>
         <p className="text-gray-400">目を閉じて、能力を使ってください</p>
       </div>
 

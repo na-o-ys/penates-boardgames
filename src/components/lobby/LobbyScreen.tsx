@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { startGameAction, setRolesAction } from "@/actions";
+import { startGameAction, setRolesAction, updateGameConfigAction, kickPlayerAction } from "@/actions";
 import { type ClientGameState, type Role } from "@/lib/game";
 import { PlayerList } from "./PlayerList";
 import { RoleSelector } from "./RoleSelector";
+import { TimerSettings } from "./TimerSettings";
 
 interface LobbyScreenProps {
   roomId: string;
@@ -32,6 +33,22 @@ export function LobbyScreen({
     const result = await setRolesAction(roomId, roles);
     if (!result.success) {
       setError(result.error ?? "役職の設定に失敗しました");
+    }
+  };
+
+  const handleTimerChange = async (settings: { nightDuration?: number; dayDuration?: number }) => {
+    setError(null);
+    const result = await updateGameConfigAction(roomId, settings);
+    if (!result.success) {
+      setError(result.error ?? "タイマー設定に失敗しました");
+    }
+  };
+
+  const handleKickPlayer = async (targetPlayerId: string) => {
+    setError(null);
+    const result = await kickPlayerAction(roomId, targetPlayerId);
+    if (!result.success) {
+      setError(result.error ?? "プレイヤーの退室に失敗しました");
     }
   };
 
@@ -89,7 +106,12 @@ export function LobbyScreen({
           <h2 className="text-lg font-semibold text-white mb-4">
             プレイヤー ({playerCount}人)
           </h2>
-          <PlayerList players={gameState.players} currentPlayerId={playerId} />
+          <PlayerList
+            players={gameState.players}
+            currentPlayerId={playerId}
+            isHost={isHost}
+            onKickPlayer={handleKickPlayer}
+          />
         </div>
 
         {/* 役職設定（ホストのみ） */}
@@ -107,6 +129,20 @@ export function LobbyScreen({
           <p className="mt-2 text-sm text-gray-400">
             必要枚数: {requiredRoles}枚（プレイヤー{playerCount}人 + 中央2枚）
           </p>
+
+          {/* タイマー設定 */}
+          <div className="mt-6">
+            <h3 className="text-md font-semibold text-white mb-3">
+              タイマー設定
+              {!isHost && <span className="text-sm text-gray-400 ml-2">(ホストが設定)</span>}
+            </h3>
+            <TimerSettings
+              nightDuration={gameState.config.nightDuration}
+              dayDuration={gameState.config.dayDuration}
+              onChange={handleTimerChange}
+              disabled={!isHost}
+            />
+          </div>
         </div>
       </div>
 

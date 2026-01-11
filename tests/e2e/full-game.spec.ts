@@ -9,6 +9,7 @@ import {
   advancePhase,
   voteForPlayer,
   playAgain,
+  setTimerDuration,
   type PlayerContext,
 } from "./fixtures/test-helpers";
 
@@ -180,12 +181,11 @@ test.describe("フルゲームシナリオ", () => {
     const startButton = playerA.page.getByRole("button", { name: "ゲーム開始" });
     await startButton.click();
 
-    // 全プレイヤーが同時にゲームフェーズに移行することを確認
+    // 全プレイヤーが同時にゲームフェーズに移行することを確認（h1ヘッダーで判定）
     const phasePromises = [playerA, playerB, playerC].map((player) =>
       expect(
-        player.page
-          .getByText("夜フェーズ")
-          .or(player.page.getByText("議論フェーズ"))
+        player.page.getByRole("heading", { level: 1 }).filter({ hasText: "夜フェーズ" })
+          .or(player.page.getByRole("heading", { level: 1 }).filter({ hasText: "議論フェーズ" }))
       ).toBeVisible({ timeout: 15000 })
     );
 
@@ -337,5 +337,103 @@ test.describe("ページリロード耐性", () => {
     const actualElapsed = initialSeconds - afterReloadSeconds;
     expect(actualElapsed).toBeGreaterThanOrEqual(expectedElapsed - 2); // 誤差考慮
     expect(actualElapsed).toBeLessThanOrEqual(expectedElapsed + 5); // リロード時間考慮
+  });
+});
+
+test.describe("夜フェーズタイマー", () => {
+  test("夜フェーズタイマー終了時に能力が自動スキップされる", async ({ playerA, playerB, playerC }) => {
+    const roomId = await createRoom(playerA.page, playerA.name);
+    await joinRoom(playerB.page, playerB.name, roomId);
+    await joinRoom(playerC.page, playerC.name, roomId);
+
+    await waitForPlayerInList(playerA.page, playerC.name);
+
+    // 夜フェーズのタイマーを10秒に設定
+    await setTimerDuration(playerA.page, "night", 10);
+
+    // ゲーム開始
+    await startGame(playerA.page);
+
+    // 夜フェーズであることを確認
+    await waitForPhase(playerA.page, "夜フェーズ");
+    await waitForPhase(playerB.page, "夜フェーズ");
+    await waitForPhase(playerC.page, "夜フェーズ");
+
+    // タイマーが表示されていることを確認
+    await expect(
+      playerA.page.locator("text=/^\\d:\\d{2}$/")
+    ).toBeVisible();
+
+    // 誰もアクションを実行しない - タイマー終了を待つ
+    // 10秒 + 余裕の3秒で自動スキップが発動するはず
+    await playerA.page.waitForTimeout(13000);
+
+    // 議論フェーズに自動遷移したことを確認
+    await expect(
+      playerA.page.getByRole("heading", { level: 1 }).filter({ hasText: "議論フェーズ" })
+    ).toBeVisible({ timeout: 5000 });
+
+    // 全プレイヤーが議論フェーズにいることを確認
+    await expect(
+      playerB.page.getByRole("heading", { level: 1 }).filter({ hasText: "議論フェーズ" })
+    ).toBeVisible({ timeout: 5000 });
+
+    await expect(
+      playerC.page.getByRole("heading", { level: 1 }).filter({ hasText: "議論フェーズ" })
+    ).toBeVisible({ timeout: 5000 });
+  });
+
+  test("夜フェーズでリロードしてもタイマーがリセットされない", async ({ playerA, playerB, playerC }) => {
+    const roomId = await createRoom(playerA.page, playerA.name);
+    await joinRoom(playerB.page, playerB.name, roomId);
+    await joinRoom(playerC.page, playerC.name, roomId);
+
+    await waitForPlayerInList(playerA.page, playerC.name);
+    await startGame(playerA.page);
+
+    // 夜フェーズを確認
+    await waitForPhase(playerB.page, "夜フェーズ");
+
+    // タイマー表示を取得する関数
+    const getTimerText = async () => {
+      const timerElement = playerB.page.locator("text=/^\\d:\\d{2}$/");
+      return await timerElement.textContent();
+    };
+
+    // 初期タイマー値を取得
+    const initialTimer = await getTimerText();
+    expect(initialTimer).toBeTruthy();
+
+    // 3秒待機してタイマーが動いていることを確認
+    await playerB.page.waitForTimeout(3000);
+    const timerAfterWait = await getTimerText();
+    expect(timerAfterWait).toBeTruthy();
+
+    // ページをリロード
+    await playerB.page.reload();
+
+    // 夜フェーズが復元されることを確認
+    await waitForPhase(playerB.page, "夜フェーズ");
+
+    // リロード後のタイマー値を取得
+    const timerAfterReload = await getTimerText();
+    expect(timerAfterReload).toBeTruthy();
+
+    // タイマー値をパースして検証
+    const parseTimer = (timerStr: string | null): number => {
+      if (!timerStr) return 0;
+      const [mins, secs] = timerStr.split(":").map(Number);
+      return mins * 60 + secs;
+    };
+
+    const initialSeconds = parseTimer(initialTimer);
+    const afterReloadSeconds = parseTimer(timerAfterReload);
+
+    // リロード後のタイマーは初期値にリセットされていないこと
+    expect(afterReloadSeconds).toBeLessThan(initialSeconds);
+
+    // 少なくとも3秒以上経過しているはず
+    const actualElapsed = initialSeconds - afterReloadSeconds;
+    expect(actualElapsed).toBeGreaterThanOrEqual(3);
   });
 });
