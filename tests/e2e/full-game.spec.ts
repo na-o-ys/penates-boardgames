@@ -252,9 +252,9 @@ test.describe("ページリロード耐性", () => {
     await waitForPlayerInList(playerA.page, playerC.name);
     await startGame(playerA.page);
 
-    // 夜フェーズを確認
+    // 夜フェーズを確認（絵文字付きヘッダー）
     await expect(
-      playerB.page.getByRole("heading", { name: "夜フェーズ", level: 1 })
+      playerB.page.getByRole("heading", { level: 1 }).filter({ hasText: "夜フェーズ" })
     ).toBeVisible({ timeout: 15000 });
 
     // プレイヤーBがページをリロード
@@ -266,10 +266,76 @@ test.describe("ページリロード耐性", () => {
       playerB.page.getByText(/人狼|村人|占い師|怪盗|トラブルメーカー|吊人/)
     ).toBeVisible({ timeout: 15000 });
 
-    // 夜フェーズのヘッダーまたは行動UIが表示されていることを確認
+    // 夜フェーズのヘッダーが表示されていることを確認
     await expect(
-      playerB.page.getByRole("heading", { name: "夜フェーズ", level: 1 })
-        .or(playerB.page.getByRole("button", { name: "行動をスキップ" }))
+      playerB.page.getByRole("heading", { level: 1 }).filter({ hasText: "夜フェーズ" })
     ).toBeVisible({ timeout: 5000 });
+  });
+
+  test("議論フェーズでリロードしてもタイマーがリセットされない", async ({ playerA, playerB, playerC }) => {
+    const roomId = await createRoom(playerA.page, playerA.name);
+    await joinRoom(playerB.page, playerB.name, roomId);
+    await joinRoom(playerC.page, playerC.name, roomId);
+
+    await waitForPlayerInList(playerA.page, playerC.name);
+    await startGame(playerA.page);
+
+    // 夜フェーズのアクションをスキップ
+    for (const player of [playerA, playerB, playerC]) {
+      const skipButton = player.page.getByRole("button", { name: "行動をスキップ" });
+      if (await skipButton.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await skipButton.click();
+      }
+    }
+
+    // 議論フェーズへの遷移を待機
+    await waitForPhase(playerB.page, "議論フェーズ");
+
+    // タイマー表示を取得する関数
+    const getTimerText = async () => {
+      // タイマーは "X:XX" 形式で表示される大きなテキスト
+      const timerElement = playerB.page.locator("text=/^\\d:\\d{2}$/");
+      return await timerElement.textContent();
+    };
+
+    // 初期タイマー値を取得
+    const initialTimer = await getTimerText();
+    expect(initialTimer).toBeTruthy();
+
+    // 3秒待機してタイマーが動いていることを確認
+    await playerB.page.waitForTimeout(3000);
+    const timerAfterWait = await getTimerText();
+    expect(timerAfterWait).toBeTruthy();
+
+    // ページをリロード
+    await playerB.page.reload();
+
+    // 議論フェーズが復元されることを確認
+    await waitForPhase(playerB.page, "議論フェーズ");
+
+    // リロード後のタイマー値を取得
+    const timerAfterReload = await getTimerText();
+    expect(timerAfterReload).toBeTruthy();
+
+    // タイマー値をパースして検証
+    const parseTimer = (timerStr: string | null): number => {
+      if (!timerStr) return 0;
+      const [mins, secs] = timerStr.split(":").map(Number);
+      return mins * 60 + secs;
+    };
+
+    const initialSeconds = parseTimer(initialTimer);
+    const afterReloadSeconds = parseTimer(timerAfterReload);
+
+    // リロード後のタイマーは初期値（3:00 = 180秒）にリセットされていないこと
+    // 少なくとも3秒以上経過しているはずなので、初期値より小さいはず
+    expect(afterReloadSeconds).toBeLessThan(initialSeconds);
+
+    // タイマーは概ね経過時間に基づいている（許容誤差5秒以内）
+    // 3秒待機 + リロード時間で約5秒程度経過しているはず
+    const expectedElapsed = 5; // 最低でも5秒は経過
+    const actualElapsed = initialSeconds - afterReloadSeconds;
+    expect(actualElapsed).toBeGreaterThanOrEqual(expectedElapsed - 2); // 誤差考慮
+    expect(actualElapsed).toBeLessThanOrEqual(expectedElapsed + 5); // リロード時間考慮
   });
 });

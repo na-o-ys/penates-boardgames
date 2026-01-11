@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { ClientGameState, Player, Role, ActionResult } from "@/lib/game";
 import { ROLE_NAMES } from "@/lib/game";
 import { advancePhaseAction } from "@/actions";
@@ -15,20 +15,35 @@ interface DayScreenProps {
 
 export function DayScreen({ gameState, playerId, roomId }: DayScreenProps) {
   const currentPlayerId = playerId;
-  const [timeLeft, setTimeLeft] = useState(180); // 3分間の議論時間
   const [isAdvancing, setIsAdvancing] = useState(false);
 
   const isHost = gameState.players[0]?.id === currentPlayerId;
+  const dayDuration = gameState.config.dayDuration;
+  const phaseStartedAt = gameState.phaseStartedAt;
+
+  // phaseStartedAtから残り時間を計算
+  const calculateTimeLeft = useCallback(() => {
+    if (!phaseStartedAt) return dayDuration;
+    const elapsed = Math.floor((Date.now() - phaseStartedAt) / 1000);
+    return Math.max(0, dayDuration - elapsed);
+  }, [phaseStartedAt, dayDuration]);
+
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft);
+
+  useEffect(() => {
+    // phaseStartedAtが変わったら再計算
+    setTimeLeft(calculateTimeLeft());
+  }, [calculateTimeLeft]);
 
   useEffect(() => {
     if (timeLeft <= 0) return;
 
     const timer = setInterval(() => {
-      setTimeLeft((prev) => Math.max(0, prev - 1));
+      setTimeLeft(calculateTimeLeft());
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft]);
+  }, [timeLeft, calculateTimeLeft]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
