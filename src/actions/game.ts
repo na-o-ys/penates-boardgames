@@ -19,15 +19,19 @@ import {
   type ClientGameState,
 } from "@/lib/game";
 import { getOrCreatePlayerId } from "@/lib/session";
+import { authorizePlayer } from "@/lib/auth";
 import type { ActionResult } from "./room";
 
 /**
  * ゲームを開始（ホストのみ）
  */
-export async function startGameAction(roomId: string): Promise<ActionResult> {
+export async function startGameAction(
+  roomId: string,
+  playerId: string
+): Promise<ActionResult> {
   try {
+    await authorizePlayer(playerId);
     const supabase = await createClient();
-    const playerId = await getOrCreatePlayerId();
 
     await updateRoomWithRetry(supabase, roomId, (state) => {
       // ホストチェック
@@ -54,12 +58,13 @@ export async function startGameAction(roomId: string): Promise<ActionResult> {
  */
 export async function submitNightActionAction(
   roomId: string,
+  playerId: string,
   actionType: ActionType,
   targetIds: string[]
 ): Promise<ActionResult> {
   try {
+    await authorizePlayer(playerId);
     const supabase = await createClient();
-    const playerId = await getOrCreatePlayerId();
 
     await updateRoomWithRetry(supabase, roomId, (state) => {
       const action: GameAction = {
@@ -86,11 +91,12 @@ export async function submitNightActionAction(
  * 夜フェーズのタイマー終了時に自動スキップを実行
  */
 export async function autoSkipNightActionAction(
-  roomId: string
+  roomId: string,
+  playerId: string
 ): Promise<ActionResult> {
   try {
+    await authorizePlayer(playerId);
     const supabase = await createClient();
-    const playerId = await getOrCreatePlayerId();
 
     await updateRoomWithRetry(supabase, roomId, (state) => {
       // 夜フェーズ以外では何もしない
@@ -128,11 +134,12 @@ export async function autoSkipNightActionAction(
  */
 export async function submitVoteAction(
   roomId: string,
+  playerId: string,
   targetId: string
 ): Promise<ActionResult> {
   try {
+    await authorizePlayer(playerId);
     const supabase = await createClient();
-    const playerId = await getOrCreatePlayerId();
 
     await updateRoomWithRetry(supabase, roomId, (state) => {
       return executeVote(state, playerId, targetId);
@@ -151,8 +158,12 @@ export async function submitVoteAction(
 /**
  * フェーズを進行（タイマー終了時など）
  */
-export async function advancePhaseAction(roomId: string): Promise<ActionResult> {
+export async function advancePhaseAction(
+  roomId: string,
+  playerId: string
+): Promise<ActionResult> {
   try {
+    await authorizePlayer(playerId);
     const supabase = await createClient();
 
     await updateRoomWithRetry(supabase, roomId, (state) => {
@@ -172,10 +183,13 @@ export async function advancePhaseAction(roomId: string): Promise<ActionResult> 
 /**
  * ゲームをリセット（結果画面から再戦）
  */
-export async function resetGameAction(roomId: string): Promise<ActionResult> {
+export async function resetGameAction(
+  roomId: string,
+  playerId: string
+): Promise<ActionResult> {
   try {
+    await authorizePlayer(playerId);
     const supabase = await createClient();
-    const playerId = await getOrCreatePlayerId();
 
     await updateRoomWithRetry(supabase, roomId, (state) => {
       // ホストチェック
@@ -201,11 +215,12 @@ export async function resetGameAction(roomId: string): Promise<ActionResult> {
  * マスク済みゲーム状態を取得
  */
 export async function getClientGameStateAction(
-  roomId: string
+  roomId: string,
+  playerId: string
 ): Promise<ActionResult<ClientGameState>> {
   try {
+    await authorizePlayer(playerId);
     const supabase = await createClient();
-    const playerId = await getOrCreatePlayerId();
 
     const result = await getGameState(supabase, roomId);
     if (!result) {

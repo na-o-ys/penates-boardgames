@@ -1,6 +1,7 @@
 "use client";
 
-import { use } from "react";
+import { use, useState, useEffect } from "react";
+import { getCurrentPlayerIdAction } from "@/actions";
 import { useGameState } from "@/hooks/useGameState";
 import { LobbyScreen } from "@/components/lobby/LobbyScreen";
 import { NightScreen } from "@/components/night/NightScreen";
@@ -15,9 +16,26 @@ interface RoomPageProps {
 
 export default function RoomPage({ params }: RoomPageProps) {
   const { roomId } = use(params);
-  const { gameState, playerId, isInRoom, isLoading, error, refresh } = useGameState(roomId);
+  const [playerId, setPlayerId] = useState<string | null>(null);
+  const [playerIdLoading, setPlayerIdLoading] = useState(true);
 
-  if (isLoading) {
+  // まずplayerIdを取得
+  useEffect(() => {
+    getCurrentPlayerIdAction().then((result) => {
+      if (result.success && result.data) {
+        setPlayerId(result.data.playerId);
+      }
+      setPlayerIdLoading(false);
+    });
+  }, []);
+
+  // playerIdが取得できたらuseGameStateを呼ぶ
+  const { gameState, isInRoom, isLoading, error, refresh } = useGameState(
+    roomId,
+    playerId ?? ""
+  );
+
+  if (playerIdLoading || isLoading) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center p-8">
         <div className="animate-pulse">

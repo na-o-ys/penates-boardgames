@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { getClientGameStateAction, getCurrentPlayerIdAction } from "@/actions";
+import { getClientGameStateAction } from "@/actions";
 import { useRealtime } from "./useRealtime";
 import type { ClientGameState } from "@/lib/game";
 
 interface UseGameStateResult {
   gameState: ClientGameState | null;
-  playerId: string | null;
   isInRoom: boolean;
   isLoading: boolean;
   error: string | null;
@@ -18,17 +17,16 @@ interface UseGameStateResult {
  * ゲーム状態を管理するフック
  * Realtimeで更新を受信し、自動的に最新状態を取得する
  */
-export function useGameState(roomId: string): UseGameStateResult {
+export function useGameState(roomId: string, playerId: string): UseGameStateResult {
   const [gameState, setGameState] = useState<ClientGameState | null>(null);
-  const [playerId, setPlayerId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchGameState = useCallback(async () => {
-    if (!roomId) return;
+    if (!roomId || !playerId) return;
 
     try {
-      const result = await getClientGameStateAction(roomId);
+      const result = await getClientGameStateAction(roomId, playerId);
       if (result.success && result.data) {
         setGameState(result.data);
         setError(null);
@@ -40,25 +38,13 @@ export function useGameState(roomId: string): UseGameStateResult {
     } finally {
       setIsLoading(false);
     }
-  }, [roomId]);
-
-  const fetchPlayerId = useCallback(async () => {
-    try {
-      const result = await getCurrentPlayerIdAction();
-      if (result.success && result.data) {
-        setPlayerId(result.data.playerId);
-      }
-    } catch (e) {
-      console.error("プレイヤーID取得エラー:", e);
-    }
-  }, []);
+  }, [roomId, playerId]);
 
   // 初期ロード
   useEffect(() => {
     setIsLoading(true);
-    fetchPlayerId();
     fetchGameState();
-  }, [fetchGameState, fetchPlayerId]);
+  }, [fetchGameState]);
 
   // Realtimeで更新を購読
   useRealtime(roomId, fetchGameState);
@@ -70,7 +56,6 @@ export function useGameState(roomId: string): UseGameStateResult {
 
   return {
     gameState,
-    playerId,
     isInRoom,
     isLoading,
     error,

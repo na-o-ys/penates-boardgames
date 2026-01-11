@@ -26,7 +26,7 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
 
     setIsSubmitting(true);
     try {
-      const result = await submitVoteAction(roomId, selectedTarget);
+      const result = await submitVoteAction(roomId, playerId, selectedTarget);
       if (result.success) {
         setHasVoted(true);
       } else {

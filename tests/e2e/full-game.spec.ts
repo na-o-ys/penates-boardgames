@@ -269,7 +269,7 @@ test.describe("ページリロード耐性", () => {
     // リロード後もゲーム状態（夜フェーズ）が復元される
     // 役職名が表示されていることを確認（夜フェーズの証拠）
     await expect(
-      playerB.page.getByText(/人狼|村人|占い師|怪盗|トラブルメーカー|吊人/)
+      playerB.page.getByText(/人狼|村人|占い師|怪盗|トラブルメーカー|吊人/).first()
     ).toBeVisible({ timeout: 15000 });
 
     // 夜フェーズのヘッダーが表示されていることを確認

@@ -7,6 +7,7 @@ export {
   updateGameConfigAction,
   setRolesAction,
   checkRoomExistsAction,
+  createTestRoomAction,
   type ActionResult,
 } from "./room";
 

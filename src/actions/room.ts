@@ -1,5 +1,6 @@
 "use server";
 
+import { v4 as uuidv4 } from "uuid";
 import { createClient } from "@/lib/supabase/server";
 import {
   createRoom as dbCreateRoom,
@@ -17,6 +18,7 @@ import {
   type Role,
 } from "@/lib/game";
 import { getOrCreatePlayerId, setPlayerName } from "@/lib/session";
+import { authorizePlayer } from "@/lib/auth";
 
 export interface ActionResult<T = void> {
   success: boolean;
@@ -121,10 +123,13 @@ export async function joinRoomAction(
 /**
  * 部屋から退出
  */
-export async function leaveRoomAction(roomId: string): Promise<ActionResult> {
+export async function leaveRoomAction(
+  roomId: string,
+  playerId: string
+): Promise<ActionResult> {
   try {
+    await authorizePlayer(playerId);
     const supabase = await createClient();
-    const playerId = await getOrCreatePlayerId();
 
     await updateRoomWithRetry(supabase, roomId, (state) => {
       return removePlayer(state, playerId);
@@ -145,11 +150,12 @@ export async function leaveRoomAction(roomId: string): Promise<ActionResult> {
  */
 export async function kickPlayerAction(
   roomId: string,
+  playerId: string,
   targetPlayerId: string
 ): Promise<ActionResult> {
   try {
+    await authorizePlayer(playerId);
     const supabase = await createClient();
-    const playerId = await getOrCreatePlayerId();
 
     await updateRoomWithRetry(supabase, roomId, (state) => {
       // ホストチェック
@@ -187,11 +193,12 @@ export async function kickPlayerAction(
  */
 export async function updateGameConfigAction(
   roomId: string,
+  playerId: string,
   config: Partial<GameConfig>
 ): Promise<ActionResult> {
   try {
+    await authorizePlayer(playerId);
     const supabase = await createClient();
-    const playerId = await getOrCreatePlayerId();
 
     await updateRoomWithRetry(supabase, roomId, (state) => {
       // ホストチェック
@@ -218,9 +225,10 @@ export async function updateGameConfigAction(
  */
 export async function setRolesAction(
   roomId: string,
+  playerId: string,
   roles: Role[]
 ): Promise<ActionResult> {
-  return updateGameConfigAction(roomId, { roles });
+  return updateGameConfigAction(roomId, playerId, { roles });
 }
 
 /**
@@ -239,6 +247,71 @@ export async function checkRoomExistsAction(
     return {
       success: false,
       error: error instanceof Error ? error.message : "部屋の確認に失敗しました",
+    };
+  }
+}
+
+/**
+ * テスト用ルームを作成（開発モードのみ）
+ */
+export async function createTestRoomAction(): Promise<
+  ActionResult<{
+    roomId: string;
+    playerIds: string[];
+    playerNames: string[];
+  }>
+> {
+  if (process.env.NODE_ENV !== "development") {
+    return { success: false, error: "本番環境では使用できません" };
+  }
+
+  try {
+    const supabase = await createClient();
+
+    // 4人のプレイヤーを生成
+    const playerIds = [uuidv4(), uuidv4(), uuidv4(), uuidv4()];
+    const playerNames = ["Player1", "Player2", "Player3", "Player4"];
+
+    // 初期ゲーム状態を作成
+    let state = createInitialGameState("");
+
+    // 4人のプレイヤーを追加
+    playerIds.forEach((id, index) => {
+      const player: Player = {
+        id,
+        name: playerNames[index],
+        isHost: index === 0,
+        isConnected: true,
+      };
+      state = addPlayer(state, player);
+    });
+
+    // 4人用のデフォルト役職を設定（4人 + 中央2枚 = 6役職）
+    state = updateConfig(state, {
+      roles: ["WEREWOLF", "SEER", "ROBBER", "TROUBLEMAKER", "VILLAGER", "VILLAGER"],
+    });
+
+    // DBに保存
+    const roomId = await dbCreateRoom(supabase, {
+      ...state,
+      roomId: "",
+    });
+
+    // roomIdを更新
+    await updateRoomWithRetry(supabase, roomId, (s) => ({
+      ...s,
+      roomId,
+    }));
+
+    return {
+      success: true,
+      data: { roomId, playerIds, playerNames },
+    };
+  } catch (error) {
+    console.error("テストルームの作成に失敗:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "テストルームの作成に失敗しました",
     };
   }
 }

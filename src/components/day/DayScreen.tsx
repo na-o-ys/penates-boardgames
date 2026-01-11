@@ -54,7 +54,7 @@ export function DayScreen({ gameState, playerId, roomId }: DayScreenProps) {
   const handleAdvanceToVoting = async () => {
     setIsAdvancing(true);
     try {
-      const result = await advancePhaseAction(roomId);
+      const result = await advancePhaseAction(roomId, playerId);
       if (!result.success) {
         console.error("Failed to advance phase:", result.error);
       }

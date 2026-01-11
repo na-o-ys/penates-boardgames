@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useId } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { subscribeToRoom, unsubscribeFromRoom } from "@/lib/supabase/realtime";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 /**
@@ -10,7 +9,8 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
  */
 export function useRealtime(roomId: string, onUpdate: () => void) {
   const channelRef = useRef<RealtimeChannel | null>(null);
-  const supabaseRef = useRef(createClient());
+  const supabase = createClient();
+  const uniqueId = useId();
 
   const handleUpdate = useCallback(() => {
     onUpdate();
@@ -21,21 +21,32 @@ export function useRealtime(roomId: string, onUpdate: () => void) {
 
     // 既存のチャンネルを解除
     if (channelRef.current) {
-      unsubscribeFromRoom(channelRef.current);
+      channelRef.current.unsubscribe();
     }
 
-    // 新しいチャンネルを購読
-    channelRef.current = subscribeToRoom(
-      supabaseRef.current,
-      roomId,
-      handleUpdate
-    );
+    // ユニークなチャンネル名で購読（同じroomIdでも競合しない）
+    const channelName = `room:${roomId}:${uniqueId.replace(/:/g, "_")}`;
+    channelRef.current = supabase
+      .channel(channelName)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "rooms",
+          filter: `id=eq.${roomId}`,
+        },
+        () => {
+          handleUpdate();
+        }
+      )
+      .subscribe();
 
     return () => {
       if (channelRef.current) {
-        unsubscribeFromRoom(channelRef.current);
+        channelRef.current.unsubscribe();
         channelRef.current = null;
       }
     };
-  }, [roomId, handleUpdate]);
+  }, [roomId, handleUpdate, supabase, uniqueId]);
 }

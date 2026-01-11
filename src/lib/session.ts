@@ -1,22 +1,57 @@
 import { cookies } from "next/headers";
 import { v4 as uuidv4 } from "uuid";
+import { createHmac } from "crypto";
 
 const PLAYER_ID_COOKIE = "player_id";
 const PLAYER_NAME_COOKIE = "player_name";
 
+const SESSION_SECRET = process.env.SESSION_SECRET || "dev-secret-key";
+
+/**
+ * playerIdにHMAC署名を付与
+ */
+function signPlayerId(playerId: string): string {
+  const signature = createHmac("sha256", SESSION_SECRET)
+    .update(playerId)
+    .digest("hex")
+    .slice(0, 16);
+  return `${playerId}:${signature}`;
+}
+
+/**
+ * 署名を検証してplayerIdを抽出
+ * 検証失敗時はnullを返す
+ */
+function verifyAndExtractPlayerId(signedValue: string): string | null {
+  const [playerId, signature] = signedValue.split(":");
+  if (!playerId || !signature) return null;
+
+  const expectedSig = createHmac("sha256", SESSION_SECRET)
+    .update(playerId)
+    .digest("hex")
+    .slice(0, 16);
+
+  if (signature !== expectedSig) return null;
+
+  return playerId;
+}
+
 /**
  * プレイヤーIDを取得（なければ生成）
+ * Cookie改ざん時は新規生成
  */
 export async function getOrCreatePlayerId(): Promise<string> {
   const cookieStore = await cookies();
-  const existingId = cookieStore.get(PLAYER_ID_COOKIE)?.value;
+  const signedValue = cookieStore.get(PLAYER_ID_COOKIE)?.value;
 
-  if (existingId) {
-    return existingId;
+  if (signedValue) {
+    const playerId = verifyAndExtractPlayerId(signedValue);
+    if (playerId) return playerId;
+    // 署名検証失敗 = 改ざん → 新規生成
   }
 
   const newId = uuidv4();
-  cookieStore.set(PLAYER_ID_COOKIE, newId, {
+  cookieStore.set(PLAYER_ID_COOKIE, signPlayerId(newId), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

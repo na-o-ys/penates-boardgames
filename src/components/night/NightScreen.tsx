@@ -53,9 +53,9 @@ export function NightScreen({
   useEffect(() => {
     if (timeLeft <= 0 && !hasActed) {
       // タイマー終了時に未行動なら自動スキップを実行
-      autoSkipNightActionAction(roomId).catch(console.error);
+      autoSkipNightActionAction(roomId, playerId).catch(console.error);
     }
-  }, [timeLeft, hasActed, roomId]);
+  }, [timeLeft, hasActed, roomId, playerId]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -104,7 +104,7 @@ export function NightScreen({
     setError(null);
 
     try {
-      const result = await submitNightActionAction(roomId, actionType, targets ?? selectedTargets);
+      const result = await submitNightActionAction(roomId, playerId, actionType, targets ?? selectedTargets);
       if (!result.success) {
         setError(result.error ?? "アクションの実行に失敗しました");
       }

@@ -30,7 +30,7 @@ export function LobbyScreen({
 
   const handleRolesChange = async (roles: Role[]) => {
     setError(null);
-    const result = await setRolesAction(roomId, roles);
+    const result = await setRolesAction(roomId, playerId, roles);
     if (!result.success) {
       setError(result.error ?? "役職の設定に失敗しました");
     }
@@ -38,7 +38,7 @@ export function LobbyScreen({
 
   const handleTimerChange = async (settings: { nightDuration?: number; dayDuration?: number }) => {
     setError(null);
-    const result = await updateGameConfigAction(roomId, settings);
+    const result = await updateGameConfigAction(roomId, playerId, settings);
     if (!result.success) {
       setError(result.error ?? "タイマー設定に失敗しました");
     }
@@ -46,7 +46,7 @@ export function LobbyScreen({
 
   const handleKickPlayer = async (targetPlayerId: string) => {
     setError(null);
-    const result = await kickPlayerAction(roomId, targetPlayerId);
+    const result = await kickPlayerAction(roomId, playerId, targetPlayerId);
     if (!result.success) {
       setError(result.error ?? "プレイヤーの退室に失敗しました");
     }
@@ -59,7 +59,7 @@ export function LobbyScreen({
     setError(null);
 
     try {
-      const result = await startGameAction(roomId);
+      const result = await startGameAction(roomId, playerId);
       if (!result.success) {
         setError(result.error ?? "ゲームの開始に失敗しました");
       }

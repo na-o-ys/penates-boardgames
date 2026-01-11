@@ -41,7 +41,7 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
   const handlePlayAgain = async () => {
     setIsResetting(true);
     try {
-      const resetResult = await resetGameAction(roomId);
+      const resetResult = await resetGameAction(roomId, playerId);
       if (!resetResult.success) {
         console.error("Failed to reset game:", resetResult.error);
       }
