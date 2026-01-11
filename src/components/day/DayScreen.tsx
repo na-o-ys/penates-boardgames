@@ -45,6 +45,13 @@ export function DayScreen({ gameState, playerId, roomId }: DayScreenProps) {
     return () => clearInterval(timer);
   }, [timeLeft, calculateTimeLeft]);
 
+  // タイマー終了時の自動進行
+  useEffect(() => {
+    if (timeLeft <= 0) {
+      advancePhaseAction(roomId, playerId).catch(console.error);
+    }
+  }, [timeLeft, roomId, playerId]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;

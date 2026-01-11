@@ -3,7 +3,8 @@
 interface TimerSettingsProps {
   nightDuration: number;
   dayDuration: number;
-  onChange: (settings: { nightDuration?: number; dayDuration?: number }) => void;
+  votingDuration: number;
+  onChange: (settings: { nightDuration?: number; dayDuration?: number; votingDuration?: number }) => void;
   disabled?: boolean;
 }
 
@@ -19,6 +20,7 @@ const DURATION_OPTIONS = [
 export function TimerSettings({
   nightDuration,
   dayDuration,
+  votingDuration,
   onChange,
   disabled = false,
 }: TimerSettingsProps) {
@@ -48,6 +50,22 @@ export function TimerSettings({
           disabled={disabled}
           className="bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50"
           data-testid="day-duration-select"
+        >
+          {DURATION_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="text-gray-300">投票フェーズ時間</span>
+        <select
+          value={votingDuration}
+          onChange={(e) => onChange({ votingDuration: Number(e.target.value) })}
+          disabled={disabled}
+          className="bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50"
+          data-testid="voting-duration-select"
         >
           {DURATION_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>

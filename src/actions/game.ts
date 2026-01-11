@@ -156,6 +156,49 @@ export async function submitVoteAction(
 }
 
 /**
+ * 投票フェーズのタイマー終了時に自動投票を実行
+ * ランダムに他プレイヤーを選んで投票する
+ */
+export async function autoVoteAction(
+  roomId: string,
+  playerId: string
+): Promise<ActionResult> {
+  try {
+    await authorizePlayer(playerId);
+    const supabase = await createClient();
+
+    await updateRoomWithRetry(supabase, roomId, (state) => {
+      // 投票フェーズ以外では何もしない
+      if (state.phase !== "VOTING") {
+        return state;
+      }
+
+      // 既に投票済みなら何もしない
+      if (state.votes[playerId]) {
+        return state;
+      }
+
+      // 自分以外のプレイヤーからランダムに選ぶ
+      const otherPlayers = state.players.filter((p) => p.id !== playerId);
+      if (otherPlayers.length === 0) {
+        return state;
+      }
+
+      const randomTarget = otherPlayers[Math.floor(Math.random() * otherPlayers.length)];
+      return executeVote(state, playerId, randomTarget.id);
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("自動投票に失敗:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "自動投票に失敗しました",
+    };
+  }
+}
+
+/**
  * フェーズを進行（タイマー終了時など）
  */
 export async function advancePhaseAction(

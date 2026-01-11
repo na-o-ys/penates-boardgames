@@ -17,6 +17,7 @@ export {
   submitNightActionAction,
   autoSkipNightActionAction,
   submitVoteAction,
+  autoVoteAction,
   advancePhaseAction,
   resetGameAction,
   getClientGameStateAction,

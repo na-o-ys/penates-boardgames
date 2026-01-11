@@ -139,6 +139,7 @@ export function LobbyScreen({
             <TimerSettings
               nightDuration={gameState.config.nightDuration}
               dayDuration={gameState.config.dayDuration}
+              votingDuration={gameState.config.votingDuration}
               onChange={handleTimerChange}
               disabled={!isHost}
             />

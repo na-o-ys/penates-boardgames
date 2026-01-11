@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { ClientGameState, Player } from "@/lib/game";
-import { submitVoteAction } from "@/actions";
+import { submitVoteAction, autoVoteAction } from "@/actions";
 
 interface VotingScreenProps {
   gameState: ClientGameState;
@@ -15,11 +15,51 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
   const currentPlayerId = playerId;
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hasVoted, setHasVoted] = useState(false);
 
   const otherPlayers = gameState.players.filter((p) => p.id !== currentPlayerId);
   const votedCount = gameState.votedPlayers?.length ?? 0;
   const totalPlayers = gameState.players.length;
+  const hasVoted = gameState.votedPlayers?.includes(playerId) ?? false;
+
+  const votingDuration = gameState.config.votingDuration;
+  const phaseStartedAt = gameState.phaseStartedAt;
+
+  // phaseStartedAtから残り時間を計算
+  const calculateTimeLeft = useCallback(() => {
+    if (!phaseStartedAt) return votingDuration;
+    const elapsed = Math.floor((Date.now() - phaseStartedAt) / 1000);
+    return Math.max(0, votingDuration - elapsed);
+  }, [phaseStartedAt, votingDuration]);
+
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft);
+
+  useEffect(() => {
+    // phaseStartedAtが変わったら再計算
+    setTimeLeft(calculateTimeLeft());
+  }, [calculateTimeLeft]);
+
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft, calculateTimeLeft]);
+
+  // タイマー終了時の自動投票
+  useEffect(() => {
+    if (timeLeft <= 0 && !hasVoted) {
+      autoVoteAction(roomId, playerId).catch(console.error);
+    }
+  }, [timeLeft, hasVoted, roomId, playerId]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
 
   const handleVote = async () => {
     if (!selectedTarget) return;
@@ -27,9 +67,7 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
     setIsSubmitting(true);
     try {
       const result = await submitVoteAction(roomId, playerId, selectedTarget);
-      if (result.success) {
-        setHasVoted(true);
-      } else {
+      if (!result.success) {
         console.error("Failed to submit vote:", result.error);
       }
     } catch (error) {
@@ -45,6 +83,9 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
         {/* ヘッダー */}
         <div className="text-center mb-8 pt-4">
           <h1 className="text-3xl font-bold text-white mb-2">🗳️ 投票フェーズ</h1>
+          <div className="text-5xl font-bold text-white mb-4">
+            {formatTime(timeLeft)}
+          </div>
           <p className="text-gray-400">
             処刑したいプレイヤーに投票してください
           </p>
