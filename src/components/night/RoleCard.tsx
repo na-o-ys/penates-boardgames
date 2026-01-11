@@ -8,6 +8,7 @@ const ROLE_COLORS: Record<Role, string> = {
   ROBBER: "from-blue-600 to-blue-800",
   TROUBLEMAKER: "from-orange-600 to-orange-800",
   VILLAGER: "from-green-600 to-green-800",
+  HUNTER: "from-emerald-600 to-emerald-800",
   TANNER: "from-amber-700 to-amber-900",
 };
 
@@ -17,6 +18,7 @@ const ROLE_ICONS: Record<Role, string> = {
   ROBBER: "🦹",
   TROUBLEMAKER: "🃏",
   VILLAGER: "👨‍🌾",
+  HUNTER: "🏹",
   TANNER: "💀",
 };
 

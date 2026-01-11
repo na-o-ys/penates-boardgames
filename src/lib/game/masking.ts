@@ -5,7 +5,7 @@ import type {
   PlayerId,
 } from "./types";
 import { resolveFinalRoles } from "./resolver";
-import { calculateGameResult } from "./judge";
+import { calculateExecutedPlayers, calculateGameResult } from "./judge";
 
 /**
  * サーバー側のGameStateをクライアント用にマスキングする
@@ -67,11 +67,39 @@ export function maskGameState(
     phaseStartedAt: state.phaseStartedAt,
   };
 
+  // HUNTER_REVENGEフェーズの場合
+  if (state.phase === "HUNTER_REVENGE") {
+    const executedIds = calculateExecutedPlayers(state.votes);
+    const finalRoles = resolveFinalRoles(state.initialDistribution, state.actions);
+    const executedHunterIds = executedIds.filter(
+      (id) => finalRoles[id] === "HUNTER"
+    );
+
+    // 狩人が道連れを選択済みかどうか
+    const hunterRevengeChosen: Record<PlayerId, boolean> = {};
+    for (const hunterId of executedHunterIds) {
+      hunterRevengeChosen[hunterId] =
+        state.hunterRevengeTarget[hunterId] !== undefined;
+    }
+
+    return {
+      ...baseClientState,
+      executedHunterIds,
+      isExecutedHunter: executedHunterIds.includes(playerId),
+      hunterRevengeChosen,
+    };
+  }
+
   // RESULTフェーズの場合は全情報を開示
   if (state.phase === "RESULT") {
     const playerIds = state.players.map((p) => p.id);
     const finalRoles = resolveFinalRoles(state.initialDistribution, state.actions);
-    const gameResult = calculateGameResult(state.votes, finalRoles, playerIds);
+    const gameResult = calculateGameResult(
+      state.votes,
+      finalRoles,
+      playerIds,
+      state.hunterRevengeTarget
+    );
 
     return {
       ...baseClientState,
@@ -79,6 +107,7 @@ export function maskGameState(
       allActions: state.actions,
       allVotes: state.votes,
       executedPlayerIds: gameResult.executedPlayerIds,
+      hunterRevengeTargets: state.hunterRevengeTarget,
       winners: gameResult.winners,
       winningTeam: gameResult.winningTeam,
     };

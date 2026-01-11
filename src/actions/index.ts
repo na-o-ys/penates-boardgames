@@ -18,6 +18,8 @@ export {
   autoSkipNightActionAction,
   submitVoteAction,
   autoVoteAction,
+  submitHunterRevengeAction,
+  autoHunterRevengeAction,
   advancePhaseAction,
   resetGameAction,
   getClientGameStateAction,

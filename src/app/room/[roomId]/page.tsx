@@ -3,11 +3,7 @@
 import { use, useState, useEffect } from "react";
 import { getCurrentPlayerIdAction } from "@/actions";
 import { useGameState } from "@/hooks/useGameState";
-import { LobbyScreen } from "@/components/lobby/LobbyScreen";
-import { NightScreen } from "@/components/night/NightScreen";
-import { DayScreen } from "@/components/day/DayScreen";
-import { VotingScreen } from "@/components/voting/VotingScreen";
-import { ResultScreen } from "@/components/result/ResultScreen";
+import { GamePhaseRenderer } from "@/components/game/GamePhaseRenderer";
 import { RoomEntryScreen } from "@/components/room/RoomEntryScreen";
 
 interface RoomPageProps {
@@ -80,58 +76,12 @@ export default function RoomPage({ params }: RoomPageProps) {
     return <RoomEntryScreen roomId={roomId} onJoined={refresh} />;
   }
 
-  switch (gameState.phase) {
-    case "LOBBY":
-      return (
-        <LobbyScreen
-          roomId={roomId}
-          gameState={gameState}
-          playerId={playerId}
-          onRefresh={refresh}
-        />
-      );
-    case "NIGHT":
-      return (
-        <NightScreen
-          roomId={roomId}
-          gameState={gameState}
-          playerId={playerId}
-          onRefresh={refresh}
-        />
-      );
-    case "DAY":
-      return (
-        <DayScreen
-          roomId={roomId}
-          gameState={gameState}
-          playerId={playerId}
-          onRefresh={refresh}
-        />
-      );
-    case "VOTING":
-      return (
-        <VotingScreen
-          roomId={roomId}
-          gameState={gameState}
-          playerId={playerId}
-          onRefresh={refresh}
-        />
-      );
-    case "RESULT":
-      return (
-        <ResultScreen
-          roomId={roomId}
-          gameState={gameState}
-          playerId={playerId}
-          onRefresh={refresh}
-        />
-      );
-    default:
-      return (
-        <main className="flex min-h-screen flex-col items-center justify-center p-8">
-          <h1 className="text-2xl font-bold mb-4 text-white">不明なフェーズ</h1>
-          <p className="text-gray-400">フェーズ: {gameState.phase}</p>
-        </main>
-      );
-  }
+  return (
+    <GamePhaseRenderer
+      roomId={roomId}
+      playerId={playerId}
+      gameState={gameState}
+      onRefresh={refresh}
+    />
+  );
 }

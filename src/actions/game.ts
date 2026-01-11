@@ -10,6 +10,7 @@ import {
   startGame,
   executeNightAction,
   executeVote,
+  executeHunterRevenge,
   advancePhase,
   resetGame,
   maskGameState,
@@ -188,6 +189,72 @@ export async function autoVoteAction(
     return {
       success: false,
       error: error instanceof Error ? error.message : "自動投票に失敗しました",
+    };
+  }
+}
+
+/**
+ * 狩人の道連れアクションを実行
+ */
+export async function submitHunterRevengeAction(
+  roomId: string,
+  playerId: string,
+  targetId: string
+): Promise<ActionResult> {
+  try {
+    await authorizePlayer(playerId);
+    const supabase = await createClient();
+
+    await updateRoomWithRetry(supabase, roomId, (state) => {
+      return executeHunterRevenge(state, playerId, targetId);
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("狩人道連れに失敗:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "道連れ選択に失敗しました",
+    };
+  }
+}
+
+/**
+ * 狩人の自動道連れ（タイマー終了時）
+ */
+export async function autoHunterRevengeAction(
+  roomId: string,
+  playerId: string
+): Promise<ActionResult> {
+  try {
+    await authorizePlayer(playerId);
+    const supabase = await createClient();
+
+    await updateRoomWithRetry(supabase, roomId, (state) => {
+      // HUNTER_REVENGEフェーズ以外では何もしない
+      if (state.phase !== "HUNTER_REVENGE") {
+        return state;
+      }
+
+      // 既に選択済みなら何もしない
+      if (state.hunterRevengeTarget[playerId]) {
+        return state;
+      }
+
+      // 自分以外のプレイヤーからランダムに1人選択
+      const otherPlayers = state.players.filter((p) => p.id !== playerId);
+      const randomIndex = Math.floor(Math.random() * otherPlayers.length);
+      const targetId = otherPlayers[randomIndex].id;
+
+      return executeHunterRevenge(state, playerId, targetId);
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("自動道連れに失敗:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "自動道連れに失敗しました",
     };
   }
 }

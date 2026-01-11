@@ -26,6 +26,7 @@ export function getValidActionTypes(role: Role): readonly ActionType[] {
     case "TROUBLEMAKER":
       return ["TROUBLEMAKER_SWAP", "SKIP"];
     case "VILLAGER":
+    case "HUNTER":
     case "TANNER":
       return ["SKIP"];
   }
@@ -290,6 +291,37 @@ function validateTargets(
       }
       return { valid: true };
 
+    case "HUNTER_REVENGE":
+      // 狩人: 自分以外のプレイヤー1人を道連れにする
+      if (action.targetIds.length !== 1) {
+        return {
+          valid: false,
+          error: {
+            code: "INVALID_TARGET_COUNT",
+            message: "プレイヤーを1人選択してください",
+          },
+        };
+      }
+      if (!playerIds.includes(action.targetIds[0])) {
+        return {
+          valid: false,
+          error: {
+            code: "INVALID_TARGET",
+            message: "プレイヤーを選択してください",
+          },
+        };
+      }
+      if (action.targetIds[0] === action.actorId) {
+        return {
+          valid: false,
+          error: {
+            code: "CANNOT_TARGET_SELF",
+            message: "自分自身は選択できません",
+          },
+        };
+      }
+      return { valid: true };
+
     default:
       return {
         valid: false,
@@ -368,4 +400,84 @@ export function validateVote(
  */
 export function haveAllPlayersVoted(state: GameState): boolean {
   return state.players.every((player) => state.votes[player.id] !== undefined);
+}
+
+/**
+ * 狩人の道連れアクションのバリデーション
+ */
+export function validateHunterRevenge(
+  state: GameState,
+  hunterId: string,
+  targetId: string
+): ValidationResult {
+  // 1. フェーズチェック
+  if (state.phase !== "HUNTER_REVENGE") {
+    return {
+      valid: false,
+      error: {
+        code: "INVALID_PHASE",
+        message: "狩人の道連れフェーズでのみ実行できます",
+      },
+    };
+  }
+
+  // 2. 狩人存在チェック
+  const hunter = state.players.find((p) => p.id === hunterId);
+  if (!hunter) {
+    return {
+      valid: false,
+      error: {
+        code: "HUNTER_NOT_FOUND",
+        message: "狩人が見つかりません",
+      },
+    };
+  }
+
+  // 3. ターゲット存在チェック
+  const target = state.players.find((p) => p.id === targetId);
+  if (!target) {
+    return {
+      valid: false,
+      error: {
+        code: "TARGET_NOT_FOUND",
+        message: "道連れ対象が見つかりません",
+      },
+    };
+  }
+
+  // 4. 自分自身チェック
+  if (hunterId === targetId) {
+    return {
+      valid: false,
+      error: {
+        code: "CANNOT_TARGET_SELF",
+        message: "自分自身は選択できません",
+      },
+    };
+  }
+
+  // 5. 重複選択チェック
+  if (state.hunterRevengeTarget[hunterId] !== undefined) {
+    return {
+      valid: false,
+      error: {
+        code: "ALREADY_CHOSEN",
+        message: "既に道連れを選択済みです",
+      },
+    };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * 全ての処刑された狩人が道連れを選択したかチェック
+ */
+export function haveAllExecutedHuntersChosen(
+  state: GameState,
+  executedHunterIds: readonly string[]
+): boolean {
+  return executedHunterIds.every(
+    (hunterId) => state.hunterRevengeTarget[hunterId] !== undefined
+  );
 }

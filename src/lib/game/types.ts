@@ -12,10 +12,11 @@ export type Role =
   | "SEER"
   | "ROBBER"
   | "TROUBLEMAKER"
+  | "HUNTER"
   | "TANNER";
 
 /** ゲームフェーズ */
-export type Phase = "LOBBY" | "NIGHT" | "DAY" | "VOTING" | "RESULT";
+export type Phase = "LOBBY" | "NIGHT" | "DAY" | "VOTING" | "HUNTER_REVENGE" | "RESULT";
 
 /** 陣営 */
 export type Team = "VILLAGE" | "WEREWOLF" | "TANNER";
@@ -27,13 +28,14 @@ export type DistributionKey = PlayerId | "CENTER_0" | "CENTER_1";
 // アクション型
 // ========================================
 
-/** 夜アクションの種類 */
+/** アクションの種類 */
 export type ActionType =
   | "WEREWOLF_LOOK" // 人狼: 中央カード確認（単独時）
   | "SEER_LOOK_PLAYER" // 占い師: プレイヤー確認
   | "SEER_LOOK_CENTER" // 占い師: 中央2枚確認
   | "ROBBER_SWAP" // 怪盗: カード交換
   | "TROUBLEMAKER_SWAP" // トラブルメーカー: 交換
+  | "HUNTER_REVENGE" // 狩人: 道連れ選択
   | "SKIP"; // 行動スキップ
 
 /** ゲームアクション（イベントソーシング用） */
@@ -78,6 +80,7 @@ export interface GameState {
   readonly initialDistribution: Record<string, Role>; // Key: PlayerId | 'CENTER_n'
   readonly actions: readonly GameAction[];
   readonly votes: Record<PlayerId, PlayerId>;
+  readonly hunterRevengeTarget: Record<PlayerId, PlayerId>; // 狩人ID → 道連れ対象ID
   readonly phaseStartedAt: number | null;
 }
 
@@ -108,11 +111,16 @@ export interface ClientGameState {
   readonly phaseStartedAt: number | null;
   // 人狼用: 仲間の人狼一覧
   readonly fellowWerewolves?: readonly PlayerId[];
+  // HUNTER_REVENGEフェーズ用
+  readonly executedHunterIds?: readonly PlayerId[]; // 処刑された狩人のID
+  readonly isExecutedHunter?: boolean; // 自分が処刑された狩人か
+  readonly hunterRevengeChosen?: Record<PlayerId, boolean>; // 狩人が道連れを選択済みか
   // RESULTフェーズのみ
   readonly finalRoles?: Record<string, Role>;
   readonly allActions?: readonly GameAction[];
   readonly allVotes?: Record<PlayerId, PlayerId>;
   readonly executedPlayerIds?: readonly PlayerId[];
+  readonly hunterRevengeTargets?: Record<PlayerId, PlayerId>; // 狩人の道連れ結果
   readonly winners?: readonly PlayerId[];
   readonly winningTeam?: Team | null;
 }
@@ -152,6 +160,7 @@ export const ROLE_PRIORITY: Record<Role, number> = {
   ROBBER: 3,
   TROUBLEMAKER: 4,
   VILLAGER: 99,
+  HUNTER: 99,
   TANNER: 99,
 };
 
@@ -162,6 +171,7 @@ export const ROLE_TEAM: Record<Role, Team> = {
   SEER: "VILLAGE",
   ROBBER: "VILLAGE",
   TROUBLEMAKER: "VILLAGE",
+  HUNTER: "VILLAGE",
   TANNER: "TANNER",
 };
 
@@ -172,6 +182,7 @@ export const ROLE_NAMES: Record<Role, string> = {
   SEER: "占い師",
   ROBBER: "怪盗",
   TROUBLEMAKER: "トラブルメーカー",
+  HUNTER: "狩人",
   TANNER: "吊人",
 };
 
@@ -182,5 +193,6 @@ export const ROLE_HAS_ACTION: Record<Role, boolean> = {
   ROBBER: true,
   TROUBLEMAKER: true,
   VILLAGER: false,
+  HUNTER: false,
   TANNER: false,
 };

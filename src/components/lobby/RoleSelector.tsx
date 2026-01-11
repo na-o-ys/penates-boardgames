@@ -8,6 +8,7 @@ const ALL_ROLES: Role[] = [
   "ROBBER",
   "TROUBLEMAKER",
   "VILLAGER",
+  "HUNTER",
   "TANNER",
 ];
 
@@ -17,6 +18,7 @@ const ROLE_COLORS: Record<Role, string> = {
   ROBBER: "bg-blue-600 hover:bg-blue-700",
   TROUBLEMAKER: "bg-orange-600 hover:bg-orange-700",
   VILLAGER: "bg-green-600 hover:bg-green-700",
+  HUNTER: "bg-emerald-600 hover:bg-emerald-700",
   TANNER: "bg-amber-700 hover:bg-amber-800",
 };
 

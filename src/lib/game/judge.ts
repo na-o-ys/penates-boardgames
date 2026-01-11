@@ -136,12 +136,34 @@ export function determineWinner(
 
 /**
  * ゲーム終了時の完全な結果を計算
+ *
+ * @param votes - 投票結果
+ * @param finalRoles - 最終的な役職配置
+ * @param allPlayerIds - 全プレイヤーのID
+ * @param hunterRevengeTarget - 狩人の道連れ対象（狩人ID → 対象ID）
  */
 export function calculateGameResult(
   votes: Record<PlayerId, PlayerId>,
   finalRoles: Record<string, Role>,
-  allPlayerIds: readonly PlayerId[]
+  allPlayerIds: readonly PlayerId[],
+  hunterRevengeTarget?: Record<PlayerId, PlayerId>
 ): WinResult {
-  const executedPlayerIds = calculateExecutedPlayers(votes);
+  // 投票による処刑者
+  const votedExecutedIds = calculateExecutedPlayers(votes);
+  const executedPlayerIds: PlayerId[] = [...votedExecutedIds];
+
+  // 狩人の道連れを追加
+  if (hunterRevengeTarget) {
+    for (const [hunterId, targetId] of Object.entries(hunterRevengeTarget)) {
+      // 狩人が処刑された場合のみ道連れ有効
+      if (
+        executedPlayerIds.includes(hunterId) &&
+        !executedPlayerIds.includes(targetId)
+      ) {
+        executedPlayerIds.push(targetId);
+      }
+    }
+  }
+
   return determineWinner(executedPlayerIds, finalRoles, allPlayerIds);
 }

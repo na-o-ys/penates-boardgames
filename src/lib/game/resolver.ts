@@ -150,6 +150,7 @@ export function getActionResult(
 
     case "TROUBLEMAKER_SWAP":
     case "SKIP":
+    case "HUNTER_REVENGE":
       // 見える役職はない
       return [];
   }

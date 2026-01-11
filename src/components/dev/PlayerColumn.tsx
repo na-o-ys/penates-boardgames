@@ -1,11 +1,7 @@
 "use client";
 
 import { useGameState } from "@/hooks/useGameState";
-import { LobbyScreen } from "@/components/lobby/LobbyScreen";
-import { NightScreen } from "@/components/night/NightScreen";
-import { DayScreen } from "@/components/day/DayScreen";
-import { VotingScreen } from "@/components/voting/VotingScreen";
-import { ResultScreen } from "@/components/result/ResultScreen";
+import { GamePhaseRenderer } from "@/components/game/GamePhaseRenderer";
 
 interface PlayerColumnProps {
   roomId: string;
@@ -35,46 +31,12 @@ export function PlayerColumn({ roomId, playerId, playerName }: PlayerColumnProps
         )}
       </header>
       <div className="flex-1 overflow-y-auto">
-        {gameState.phase === "LOBBY" && (
-          <LobbyScreen
-            roomId={roomId}
-            gameState={gameState}
-            playerId={playerId}
-            onRefresh={refresh}
-          />
-        )}
-        {gameState.phase === "NIGHT" && (
-          <NightScreen
-            roomId={roomId}
-            gameState={gameState}
-            playerId={playerId}
-            onRefresh={refresh}
-          />
-        )}
-        {gameState.phase === "DAY" && (
-          <DayScreen
-            roomId={roomId}
-            gameState={gameState}
-            playerId={playerId}
-            onRefresh={refresh}
-          />
-        )}
-        {gameState.phase === "VOTING" && (
-          <VotingScreen
-            roomId={roomId}
-            gameState={gameState}
-            playerId={playerId}
-            onRefresh={refresh}
-          />
-        )}
-        {gameState.phase === "RESULT" && (
-          <ResultScreen
-            roomId={roomId}
-            gameState={gameState}
-            playerId={playerId}
-            onRefresh={refresh}
-          />
-        )}
+        <GamePhaseRenderer
+          roomId={roomId}
+          playerId={playerId}
+          gameState={gameState}
+          onRefresh={refresh}
+        />
       </div>
     </div>
   );

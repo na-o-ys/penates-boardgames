@@ -2,7 +2,9 @@ import type { GameAction, GameConfig, GameState, Phase, Player, PlayerId, Role }
 import { ROLE_HAS_ACTION } from "./types";
 import { distributeRoles } from "./distribution";
 import { getActionResult } from "./resolver";
-import { validateAction, validateVote, haveAllPlayersVoted } from "./validator";
+import { resolveFinalRoles } from "./resolver";
+import { calculateExecutedPlayers } from "./judge";
+import { validateAction, validateVote, validateHunterRevenge, haveAllPlayersVoted, haveAllExecutedHuntersChosen } from "./validator";
 
 /**
  * 初期ゲーム状態を作成
@@ -22,6 +24,7 @@ export function createInitialGameState(roomId: string): GameState {
     initialDistribution: {},
     actions: [],
     votes: {},
+    hunterRevengeTarget: {},
     phaseStartedAt: null,
   };
 }
@@ -240,7 +243,7 @@ export function executeVote(
  * フェーズを進行
  */
 export function advancePhase(state: GameState): GameState {
-  const nextPhase = getNextPhase(state.phase);
+  const nextPhase = getNextPhase(state.phase, state);
 
   if (nextPhase === null) {
     throw new Error("これ以上フェーズを進行できません");
@@ -256,7 +259,7 @@ export function advancePhase(state: GameState): GameState {
 /**
  * 次のフェーズを取得
  */
-function getNextPhase(currentPhase: Phase): Phase | null {
+function getNextPhase(currentPhase: Phase, state?: GameState): Phase | null {
   switch (currentPhase) {
     case "LOBBY":
       return "NIGHT";
@@ -265,10 +268,56 @@ function getNextPhase(currentPhase: Phase): Phase | null {
     case "DAY":
       return "VOTING";
     case "VOTING":
+      // 投票完了時に狩人が処刑されるかチェック
+      if (state) {
+        const executedIds = calculateExecutedPlayers(state.votes);
+        const finalRoles = resolveFinalRoles(state.initialDistribution, state.actions);
+        const hasExecutedHunter = executedIds.some((id) => finalRoles[id] === "HUNTER");
+        if (hasExecutedHunter) {
+          return "HUNTER_REVENGE";
+        }
+      }
+      return "RESULT";
+    case "HUNTER_REVENGE":
       return "RESULT";
     case "RESULT":
       return null;
   }
+}
+
+/**
+ * 狩人の道連れアクションを実行
+ */
+export function executeHunterRevenge(
+  state: GameState,
+  hunterId: PlayerId,
+  targetId: PlayerId
+): GameState {
+  // バリデーション
+  const validation = validateHunterRevenge(state, hunterId, targetId);
+  if (!validation.valid) {
+    throw new Error(validation.error.message);
+  }
+
+  // 処刑された狩人のIDリストを取得
+  const executedIds = calculateExecutedPlayers(state.votes);
+  const finalRoles = resolveFinalRoles(state.initialDistribution, state.actions);
+  const executedHunterIds = executedIds.filter((id) => finalRoles[id] === "HUNTER");
+
+  const newState: GameState = {
+    ...state,
+    hunterRevengeTarget: {
+      ...state.hunterRevengeTarget,
+      [hunterId]: targetId,
+    },
+  };
+
+  // 全ての処刑された狩人が道連れを選択したかチェック
+  if (haveAllExecutedHuntersChosen(newState, executedHunterIds)) {
+    return advancePhase(newState);
+  }
+
+  return newState;
 }
 
 /**
@@ -281,6 +330,7 @@ export function resetGame(state: GameState): GameState {
     initialDistribution: {},
     actions: [],
     votes: {},
+    hunterRevengeTarget: {},
     phaseStartedAt: null,
   };
 }

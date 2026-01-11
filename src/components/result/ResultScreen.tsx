@@ -86,13 +86,23 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
               {executedPlayerIds.map((execPlayerId: PlayerId) => {
                 const player = gameState.players.find((p) => p.id === execPlayerId);
                 const role = gameState.finalRoles?.[execPlayerId];
+                // 道連れかどうかをチェック
+                const isHunterVictim = Object.values(
+                  gameState.hunterRevengeTargets ?? {}
+                ).includes(execPlayerId);
+
                 return (
                   <div
                     key={execPlayerId}
                     className="flex items-center justify-between bg-red-900/50 p-3 rounded-lg"
                   >
-                    <span className="text-white font-medium">
+                    <span className="text-white font-medium flex items-center gap-2">
                       {player?.name ?? "不明"}
+                      {isHunterVictim && (
+                        <span className="text-xs bg-red-600 px-2 py-0.5 rounded text-white">
+                          道連れ
+                        </span>
+                      )}
                     </span>
                     <span className="text-red-200">
                       {role ? ROLE_NAMES[role] : "不明"}

@@ -42,6 +42,7 @@ export {
   startGameWithDistribution,
   executeNightAction,
   executeVote,
+  executeHunterRevenge,
   advancePhase,
   resetGame,
   gameReducer,
