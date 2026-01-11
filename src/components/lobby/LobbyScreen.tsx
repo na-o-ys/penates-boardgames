@@ -94,7 +94,7 @@ export function LobbyScreen({
         {/* 役職設定（ホストのみ） */}
         <div>
           <h2 className="text-lg font-semibold text-white mb-4">
-            役職構成
+            役職設定
             {!isHost && <span className="text-sm text-gray-400 ml-2">(ホストが設定)</span>}
           </h2>
           <RoleSelector

@@ -1,6 +1,16 @@
 import { createBrowserClient } from "@supabase/ssr";
+import type { TypedSupabaseClient } from "./rooms";
 
-export function createClient() {
+/** モックモードかどうかをチェック */
+function isMockMode(): boolean {
+  return !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+}
+
+export function createClient(): TypedSupabaseClient | null {
+  if (isMockMode()) {
+    return null;
+  }
+
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!

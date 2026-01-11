@@ -13,7 +13,8 @@ export function createInitialGameState(roomId: string): GameState {
     phase: "LOBBY",
     players: [],
     config: {
-      roles: [],
+      // デフォルト役職（3人プレイ用: 3人 + 中央2枚 = 5枚）
+      roles: ["WEREWOLF", "SEER", "ROBBER", "VILLAGER", "VILLAGER"],
       nightDuration: 30,
       dayDuration: 180,
       votingDuration: 30,

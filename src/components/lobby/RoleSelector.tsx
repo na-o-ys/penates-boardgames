@@ -54,7 +54,7 @@ export function RoleSelector({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="role-selector">
       {/* 役職選択ボタン */}
       <div className="grid grid-cols-2 gap-2">
         {ALL_ROLES.map((role) => {
@@ -62,6 +62,7 @@ export function RoleSelector({
           return (
             <div
               key={role}
+              data-testid={`role-${role}`}
               className={`flex items-center justify-between px-3 py-2 rounded-lg ${
                 disabled ? "bg-gray-800" : ROLE_COLORS[role]
               } ${disabled ? "opacity-60" : ""}`}
@@ -77,7 +78,7 @@ export function RoleSelector({
                 >
                   -
                 </button>
-                <span className="w-6 text-center text-white font-bold">
+                <span data-testid="role-count" className="w-6 text-center text-white font-bold">
                   {count}
                 </span>
                 <button
