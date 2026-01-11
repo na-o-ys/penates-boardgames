@@ -15,7 +15,7 @@ export function PlayerList({ players, currentPlayerId }: PlayerListProps) {
           key={player.id}
           className={`flex items-center justify-between px-4 py-3 rounded-lg ${
             player.id === currentPlayerId
-              ? "bg-blue-900/30 border border-blue-500"
+              ? "bg-slate-700 border border-slate-500"
               : "bg-gray-800"
           }`}
         >
@@ -27,11 +27,11 @@ export function PlayerList({ players, currentPlayerId }: PlayerListProps) {
             />
             <span className="text-white font-medium">{player.name}</span>
             {player.id === currentPlayerId && (
-              <span className="text-xs text-blue-400">(あなた)</span>
+              <span className="text-xs text-gray-400">(あなた)</span>
             )}
           </div>
           {player.isHost && (
-            <span className="px-2 py-1 bg-yellow-600/30 text-yellow-400 text-xs rounded">
+            <span className="px-2 py-1 bg-slate-600 text-slate-200 text-xs rounded">
               ホスト
             </span>
           )}

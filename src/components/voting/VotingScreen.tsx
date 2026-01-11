@@ -40,12 +40,12 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-500 to-red-600 p-4">
+    <div className="min-h-screen bg-gray-900 p-4">
       <div className="max-w-2xl mx-auto">
         {/* ヘッダー */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">投票フェーズ</h1>
-          <p className="text-orange-100">
+        <div className="text-center mb-8 pt-4">
+          <h1 className="text-3xl font-bold text-white mb-2">🗳️ 投票フェーズ</h1>
+          <p className="text-gray-400">
             処刑したいプレイヤーに投票してください
           </p>
           <div className="mt-4 text-white">
@@ -55,16 +55,16 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
 
         {hasVoted ? (
           /* 投票済み表示 */
-          <div className="bg-white/20 backdrop-blur rounded-xl p-8 text-center">
+          <div className="bg-gray-800 rounded-xl p-8 text-center">
             <div className="text-6xl mb-4">✓</div>
-            <h2 className="text-2xl font-bold text-white mb-2">投票完了</h2>
-            <p className="text-orange-100">
+            <h2 className="text-2xl font-bold text-white mb-2">投票済み</h2>
+            <p className="text-gray-400">
               他のプレイヤーの投票を待っています...
             </p>
             <div className="mt-6">
-              <div className="w-full bg-white/20 rounded-full h-3">
+              <div className="w-full bg-gray-700 rounded-full h-3">
                 <div
-                  className="bg-white rounded-full h-3 transition-all duration-500"
+                  className="bg-slate-500 rounded-full h-3 transition-all duration-500"
                   style={{ width: `${(votedCount / totalPlayers) * 100}%` }}
                 />
               </div>
@@ -73,7 +73,7 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
         ) : (
           /* 投票UI */
           <>
-            <div className="bg-white/20 backdrop-blur rounded-xl p-6 mb-6">
+            <div className="bg-gray-800 rounded-xl p-6 mb-6">
               <h2 className="text-lg font-semibold text-white mb-4">
                 誰を処刑しますか？
               </h2>
@@ -84,8 +84,8 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
                     onClick={() => setSelectedTarget(player.id)}
                     className={`w-full p-4 rounded-lg text-left transition-all ${
                       selectedTarget === player.id
-                        ? "bg-red-500 border-2 border-white"
-                        : "bg-white/10 hover:bg-white/20 border-2 border-transparent"
+                        ? "bg-slate-600 border-2 border-slate-400"
+                        : "bg-gray-700 hover:bg-gray-600 border-2 border-transparent"
                     }`}
                   >
                     <span className="text-white font-medium text-lg">
@@ -99,19 +99,19 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
             <button
               onClick={handleVote}
               disabled={!selectedTarget || isSubmitting}
-              className="w-full py-4 bg-red-700 hover:bg-red-800 disabled:bg-gray-500 disabled:cursor-not-allowed rounded-lg text-white font-bold text-lg transition-colors"
+              className="w-full py-4 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg text-white font-bold text-lg transition-colors"
             >
               {isSubmitting ? "投票中..." : "投票する"}
             </button>
 
-            <p className="text-center text-orange-100 mt-4 text-sm">
+            <p className="text-center text-gray-400 mt-4 text-sm">
               ※ 投票は取り消せません
             </p>
           </>
         )}
 
         {/* 投票状況 */}
-        <div className="mt-8 bg-white/20 backdrop-blur rounded-xl p-6">
+        <div className="mt-8 bg-gray-800 rounded-xl p-6">
           <h2 className="text-lg font-semibold text-white mb-4">投票状況</h2>
           <div className="grid grid-cols-2 gap-3">
             {gameState.players.map((player: Player) => {
@@ -121,15 +121,15 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
                   key={player.id}
                   className={`p-3 rounded-lg flex items-center justify-between ${
                     player.id === currentPlayerId
-                      ? "bg-orange-500/50"
-                      : "bg-white/10"
+                      ? "bg-slate-700 border border-slate-500"
+                      : "bg-gray-700"
                   }`}
                 >
                   <span className="text-white">{player.name}</span>
                   {voted ? (
-                    <span className="text-green-300">✓</span>
+                    <span className="text-green-400">✓</span>
                   ) : (
-                    <span className="text-orange-200">...</span>
+                    <span className="text-gray-500">...</span>
                   )}
                 </div>
               );

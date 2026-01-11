@@ -59,9 +59,9 @@ export function LobbyScreen({
   };
 
   return (
-    <div className="flex flex-col min-h-screen p-4 md:p-8">
+    <div className="flex flex-col min-h-screen bg-gray-900 p-4 md:p-8">
       {/* ヘッダー */}
-      <div className="text-center mb-8">
+      <div className="text-center mb-8 pt-4">
         <h1 className="text-2xl font-bold text-white mb-2">ロビー</h1>
         <div className="flex items-center justify-center gap-2">
           <span className="text-gray-400 text-sm">部屋ID:</span>
@@ -116,7 +116,7 @@ export function LobbyScreen({
           <button
             onClick={handleStartGame}
             disabled={!canStart || isStarting}
-            className="px-8 py-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg text-lg font-semibold text-white transition-colors"
+            className="px-8 py-4 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg text-lg font-semibold text-white transition-colors"
           >
             {isStarting ? "開始中..." : "ゲーム開始"}
           </button>

@@ -93,7 +93,7 @@ export function NightScreen({
                   disabled={isSubmitting}
                   className={`w-20 h-28 rounded-lg border-2 transition-colors ${
                     selectedTargets.includes(centerId)
-                      ? "border-red-500 bg-red-900/30"
+                      ? "border-slate-400 bg-slate-700"
                       : "border-gray-600 bg-gray-800 hover:border-gray-500"
                   }`}
                 >
@@ -104,7 +104,7 @@ export function NightScreen({
             <button
               onClick={() => handleSubmitAction("WEREWOLF_LOOK")}
               disabled={selectedTargets.length !== 1 || isSubmitting}
-              className="w-full py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 rounded-lg text-white font-semibold transition-colors"
+              className="w-full py-3 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 rounded-lg text-white font-semibold transition-colors"
             >
               確認する
             </button>
@@ -130,7 +130,7 @@ export function NightScreen({
                       disabled={isSubmitting}
                       className={`px-4 py-2 rounded-lg border-2 transition-colors ${
                         selectedTargets.includes(player.id)
-                          ? "border-purple-500 bg-purple-900/30"
+                          ? "border-slate-400 bg-slate-700"
                           : "border-gray-600 bg-gray-800 hover:border-gray-500"
                       }`}
                     >
@@ -141,7 +141,7 @@ export function NightScreen({
                 <button
                   onClick={() => handleSubmitAction("SEER_LOOK_PLAYER")}
                   disabled={selectedTargets.length !== 1 || selectedTargets[0]?.startsWith("CENTER") || isSubmitting}
-                  className="w-full mt-2 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 rounded-lg text-white font-semibold transition-colors"
+                  className="w-full mt-2 py-2 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 rounded-lg text-white font-semibold transition-colors"
                 >
                   プレイヤーを占う
                 </button>
@@ -157,7 +157,7 @@ export function NightScreen({
                       disabled={isSubmitting}
                       className={`w-20 h-28 rounded-lg border-2 transition-colors ${
                         selectedTargets.includes(centerId)
-                          ? "border-purple-500 bg-purple-900/30"
+                          ? "border-slate-400 bg-slate-700"
                           : "border-gray-600 bg-gray-800 hover:border-gray-500"
                       }`}
                     >
@@ -168,7 +168,7 @@ export function NightScreen({
                 <button
                   onClick={() => handleSubmitAction("SEER_LOOK_CENTER")}
                   disabled={selectedTargets.filter(t => t.startsWith("CENTER")).length !== 2 || isSubmitting}
-                  className="w-full mt-2 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 rounded-lg text-white font-semibold transition-colors"
+                  className="w-full mt-2 py-2 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 rounded-lg text-white font-semibold transition-colors"
                 >
                   中央を占う
                 </button>
@@ -191,7 +191,7 @@ export function NightScreen({
                   disabled={isSubmitting}
                   className={`px-4 py-2 rounded-lg border-2 transition-colors ${
                     selectedTargets.includes(player.id)
-                      ? "border-blue-500 bg-blue-900/30"
+                      ? "border-slate-400 bg-slate-700"
                       : "border-gray-600 bg-gray-800 hover:border-gray-500"
                   }`}
                 >
@@ -202,7 +202,7 @@ export function NightScreen({
             <button
               onClick={() => handleSubmitAction("ROBBER_SWAP")}
               disabled={selectedTargets.length !== 1 || isSubmitting}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 rounded-lg text-white font-semibold transition-colors"
+              className="w-full py-3 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 rounded-lg text-white font-semibold transition-colors"
             >
               カードを奪う
             </button>
@@ -223,7 +223,7 @@ export function NightScreen({
                   disabled={isSubmitting}
                   className={`px-4 py-2 rounded-lg border-2 transition-colors ${
                     selectedTargets.includes(player.id)
-                      ? "border-orange-500 bg-orange-900/30"
+                      ? "border-slate-400 bg-slate-700"
                       : "border-gray-600 bg-gray-800 hover:border-gray-500"
                   }`}
                 >
@@ -234,7 +234,7 @@ export function NightScreen({
             <button
               onClick={() => handleSubmitAction("TROUBLEMAKER_SWAP")}
               disabled={selectedTargets.length !== 2 || isSubmitting}
-              className="w-full py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 rounded-lg text-white font-semibold transition-colors"
+              className="w-full py-3 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 rounded-lg text-white font-semibold transition-colors"
             >
               カードを入れ替える
             </button>
@@ -247,9 +247,9 @@ export function NightScreen({
   };
 
   return (
-    <div className="flex flex-col min-h-screen p-4 md:p-8">
+    <div className="flex flex-col min-h-screen bg-gray-900 p-4 md:p-8">
       {/* ヘッダー */}
-      <div className="text-center mb-8">
+      <div className="text-center mb-8 pt-4">
         <h1 className="text-2xl font-bold text-white mb-2">🌙 夜フェーズ</h1>
         <p className="text-gray-400">目を閉じて、能力を使ってください</p>
       </div>

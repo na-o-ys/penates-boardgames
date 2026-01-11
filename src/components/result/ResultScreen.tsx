@@ -20,9 +20,9 @@ const TEAM_NAMES: Record<Team, string> = {
 };
 
 const TEAM_COLORS: Record<Team, string> = {
-  VILLAGE: "from-green-500 to-green-700",
-  WEREWOLF: "from-red-600 to-red-800",
-  TANNER: "from-amber-600 to-amber-800",
+  VILLAGE: "bg-gray-900",
+  WEREWOLF: "bg-gray-900",
+  TANNER: "bg-gray-900",
 };
 
 export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps) {
@@ -53,8 +53,8 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-b ${
-      winningTeam ? TEAM_COLORS[winningTeam] : "from-gray-600 to-gray-800"
+    <div className={`min-h-screen ${
+      winningTeam ? TEAM_COLORS[winningTeam] : "bg-gray-900"
     } p-4`}>
       <div className="max-w-2xl mx-auto">
         {/* 勝敗表示 */}
@@ -66,21 +66,21 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
             {isWinner ? "勝利！" : "敗北..."}
           </h1>
           {winningTeam ? (
-            <p className="text-2xl text-white/90">
+            <p className="text-2xl text-gray-300">
               {TEAM_NAMES[winningTeam]}の勝利
             </p>
           ) : (
-            <p className="text-2xl text-white/90">
+            <p className="text-2xl text-gray-300">
               引き分け（勝者なし）
             </p>
           )}
         </div>
 
         {/* 処刑されたプレイヤー */}
-        <div className="bg-white/20 backdrop-blur rounded-xl p-6 mb-6">
+        <div className="bg-gray-800 rounded-xl p-6 mb-6">
           <h2 className="text-lg font-semibold text-white mb-4">処刑結果</h2>
           {executedPlayerIds.length === 0 ? (
-            <p className="text-white text-center">誰も処刑されませんでした</p>
+            <p className="text-gray-400 text-center">誰も処刑されませんでした</p>
           ) : (
             <div className="space-y-2">
               {executedPlayerIds.map((execPlayerId: PlayerId) => {
@@ -105,7 +105,7 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
         </div>
 
         {/* 全員の役職公開 */}
-        <div className="bg-white/20 backdrop-blur rounded-xl p-6 mb-6">
+        <div className="bg-gray-800 rounded-xl p-6 mb-6">
           <h2 className="text-lg font-semibold text-white mb-4">最終役職</h2>
           <div className="space-y-4">
             {gameState.players.map((player: Player) => {
@@ -118,8 +118,8 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
                   key={player.id}
                   className={`flex items-center gap-4 p-4 rounded-lg ${
                     isCurrentPlayer
-                      ? "bg-white/30 border-2 border-white"
-                      : "bg-white/10"
+                      ? "bg-slate-700 border-2 border-slate-500"
+                      : "bg-gray-700"
                   }`}
                 >
                   <RoleCard role={finalRole ?? null} small />
@@ -129,17 +129,17 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
                         {player.name}
                       </span>
                       {isCurrentPlayer && (
-                        <span className="text-xs bg-white/30 px-2 py-0.5 rounded text-white">
+                        <span className="text-xs bg-slate-600 px-2 py-0.5 rounded text-white">
                           あなた
                         </span>
                       )}
                       {isPlayerWinner && (
-                        <span className="text-xs bg-yellow-500 px-2 py-0.5 rounded text-white">
+                        <span className="text-xs bg-green-600 px-2 py-0.5 rounded text-white">
                           勝者
                         </span>
                       )}
                     </div>
-                    <div className="text-white/80 text-sm">
+                    <div className="text-gray-400 text-sm">
                       {finalRole ? ROLE_NAMES[finalRole] : "不明"}
                     </div>
                   </div>
@@ -151,7 +151,7 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
 
         {/* 中央カードは最終役職から取得 */}
         {gameState.finalRoles && (
-          <div className="bg-white/20 backdrop-blur rounded-xl p-6 mb-6">
+          <div className="bg-gray-800 rounded-xl p-6 mb-6">
             <h2 className="text-lg font-semibold text-white mb-4">中央カード</h2>
             <div className="flex justify-center gap-4">
               {["CENTER_0", "CENTER_1"].map((centerId, index) => {
@@ -159,7 +159,7 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
                 return (
                   <div key={centerId} className="text-center">
                     <RoleCard role={role ?? null} small />
-                    <p className="text-white/80 text-sm mt-2">
+                    <p className="text-gray-400 text-sm mt-2">
                       中央{index + 1}
                     </p>
                   </div>
@@ -174,12 +174,12 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
           <button
             onClick={handlePlayAgain}
             disabled={isResetting}
-            className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed rounded-lg text-white font-bold text-lg transition-colors"
+            className="w-full py-4 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg text-white font-bold text-lg transition-colors"
           >
             {isResetting ? "準備中..." : "もう一度遊ぶ"}
           </button>
         ) : (
-          <p className="text-center text-white/80">
+          <p className="text-center text-gray-400">
             ホストが次のゲームを開始するのを待っています...
           </p>
         )}

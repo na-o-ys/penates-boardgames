@@ -52,8 +52,8 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8">
-      <h1 className="text-4xl font-bold mb-8">ワンナイト人狼</h1>
+    <main className="flex min-h-screen flex-col items-center justify-center bg-gray-900 p-8">
+      <h1 className="text-4xl font-bold mb-8 text-white">ワンナイト人狼</h1>
       <p className="text-lg text-gray-400 mb-12">
         3〜10人で遊べるブラウザゲーム
       </p>
@@ -63,13 +63,13 @@ export default function Home() {
           placeholder="プレイヤー名"
           value={playerName}
           onChange={(e) => setPlayerName(e.target.value)}
-          className="px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-slate-500"
           disabled={isLoading}
         />
         <button
           onClick={handleCreateRoom}
           disabled={isLoading || !playerName.trim()}
-          className="px-8 py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed rounded-lg text-lg font-semibold transition-colors"
+          className="px-8 py-4 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg text-lg font-semibold text-white transition-colors"
         >
           部屋を作成
         </button>
@@ -79,19 +79,19 @@ export default function Home() {
             placeholder="部屋ID"
             value={roomId}
             onChange={(e) => setRoomId(e.target.value)}
-            className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-slate-500"
             disabled={isLoading}
           />
           <button
             onClick={handleJoinRoom}
             disabled={isLoading || !playerName.trim() || !roomId.trim()}
-            className="px-6 py-3 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed rounded-lg font-semibold transition-colors"
+            className="px-6 py-3 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-semibold text-white transition-colors"
           >
             参加
           </button>
         </div>
         {error && (
-          <p className="text-red-500 text-sm text-center">{error}</p>
+          <p className="text-red-400 text-sm text-center">{error}</p>
         )}
       </div>
     </main>
