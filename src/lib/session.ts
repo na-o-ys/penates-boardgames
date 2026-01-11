@@ -9,19 +9,21 @@ const PLAYER_NAME_COOKIE = "player_name";
  */
 export async function getOrCreatePlayerId(): Promise<string> {
   const cookieStore = await cookies();
-  let playerId = cookieStore.get(PLAYER_ID_COOKIE)?.value;
+  const existingId = cookieStore.get(PLAYER_ID_COOKIE)?.value;
 
-  if (!playerId) {
-    playerId = uuidv4();
-    cookieStore.set(PLAYER_ID_COOKIE, playerId, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-    });
+  if (existingId) {
+    return existingId;
   }
 
-  return playerId;
+  const newId = uuidv4();
+  cookieStore.set(PLAYER_ID_COOKIE, newId, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 30, // 30 days
+  });
+
+  return newId;
 }
 
 /**
