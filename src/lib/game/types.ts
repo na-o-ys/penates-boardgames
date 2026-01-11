@@ -196,3 +196,46 @@ export const ROLE_HAS_ACTION: Record<Role, boolean> = {
   HUNTER: false,
   TANNER: false,
 };
+
+/** 役職の説明 */
+export const ROLE_DESCRIPTIONS: Record<Role, {
+  team: string;
+  ability: string;
+  winCondition: string;
+}> = {
+  WEREWOLF: {
+    team: "人狼陣営",
+    ability: "夜に仲間の人狼を確認できます。単独の場合、中央カード1枚を確認できます。",
+    winCondition: "人狼が1人も処刑されなければ勝利",
+  },
+  VILLAGER: {
+    team: "村人陣営",
+    ability: "特殊能力はありません。",
+    winCondition: "人狼を1人以上処刑すれば勝利",
+  },
+  SEER: {
+    team: "村人陣営",
+    ability: "夜に他プレイヤー1人の役職、または中央カード2枚を確認できます。",
+    winCondition: "人狼を1人以上処刑すれば勝利",
+  },
+  ROBBER: {
+    team: "村人陣営",
+    ability: "夜に他プレイヤー1人と役職を交換し、新しい役職を確認できます。",
+    winCondition: "交換後の役職の陣営として勝敗判定",
+  },
+  TROUBLEMAKER: {
+    team: "村人陣営",
+    ability: "夜に他の2人のプレイヤーの役職を交換します（中身は見られません）。",
+    winCondition: "人狼を1人以上処刑すれば勝利",
+  },
+  HUNTER: {
+    team: "村人陣営",
+    ability: "処刑された場合、道連れにするプレイヤーを1人選べます。",
+    winCondition: "人狼を1人以上処刑すれば勝利",
+  },
+  TANNER: {
+    team: "第三陣営",
+    ability: "特殊能力はありません。",
+    winCondition: "自分が処刑されれば単独勝利",
+  },
+};

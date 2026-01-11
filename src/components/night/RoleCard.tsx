@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { ROLE_NAMES, type Role } from "@/lib/game";
+import { RoleDetailModal } from "../common/RoleDetailModal";
 
 // 画像がある役職のマッピング
 const ROLE_IMAGES: Partial<Record<Role, string>> = {
@@ -11,7 +13,7 @@ const ROLE_IMAGES: Partial<Record<Role, string>> = {
   HUNTER: "/images/roles/hunter.jpeg",
   TANNER: "/images/roles/tanner.jpeg",
   WEREWOLF: "/images/roles/werewolf.jpeg",
-  // WEREWOLF, TROUBLEMAKER は後で追加
+  // TROUBLEMAKER は後で追加
 };
 
 // 画像がない役職のフォールバック用
@@ -39,9 +41,25 @@ interface RoleCardProps {
   role: Role | null;
   revealed?: boolean;
   small?: boolean;
+  interactive?: boolean;
 }
 
-export function RoleCard({ role, revealed = true, small = false }: RoleCardProps) {
+export function RoleCard({
+  role,
+  revealed = true,
+  small = false,
+  interactive = true,
+}: RoleCardProps) {
+  const [showDetail, setShowDetail] = useState(false);
+
+  const handleClick = () => {
+    if (interactive && role && revealed) {
+      setShowDetail(true);
+    }
+  };
+
+  const cardClassName = interactive && role && revealed ? "cursor-pointer" : "";
+
   if (!role) {
     return (
       <div
@@ -71,38 +89,50 @@ export function RoleCard({ role, revealed = true, small = false }: RoleCardProps
 
   if (imageSrc) {
     return (
-      <div
-        className={`relative overflow-hidden rounded-xl ${
-          small ? "w-16 h-24" : "w-32 h-44"
-        }`}
-      >
-        <Image
-          src={imageSrc}
-          alt={ROLE_NAMES[role]}
-          fill
-          className="object-cover"
-        />
-      </div>
+      <>
+        <div
+          onClick={handleClick}
+          className={`relative overflow-hidden rounded-xl ${
+            small ? "w-16 h-24" : "w-32 h-44"
+          } ${cardClassName}`}
+        >
+          <Image
+            src={imageSrc}
+            alt={ROLE_NAMES[role]}
+            fill
+            className="object-cover"
+          />
+        </div>
+        {showDetail && (
+          <RoleDetailModal role={role} onClose={() => setShowDetail(false)} />
+        )}
+      </>
     );
   }
 
   // 画像がない場合は既存の絵文字表示
   return (
-    <div
-      className={`flex flex-col items-center justify-center rounded-xl bg-gradient-to-b ${
-        ROLE_COLORS[role]
-      } ${small ? "w-16 h-24 p-2" : "w-32 h-44 p-4"}`}
-    >
-      <span className={small ? "text-2xl mb-1" : "text-5xl mb-2"}>
-        {ROLE_ICONS[role]}
-      </span>
-      <span
-        className={`text-white font-bold text-center ${
-          small ? "text-xs" : "text-sm"
-        }`}
+    <>
+      <div
+        onClick={handleClick}
+        className={`flex flex-col items-center justify-center rounded-xl bg-gradient-to-b ${
+          ROLE_COLORS[role]
+        } ${small ? "w-16 h-24 p-2" : "w-32 h-44 p-4"} ${cardClassName}`}
       >
-        {ROLE_NAMES[role]}
-      </span>
-    </div>
+        <span className={small ? "text-2xl mb-1" : "text-5xl mb-2"}>
+          {ROLE_ICONS[role]}
+        </span>
+        <span
+          className={`text-white font-bold text-center ${
+            small ? "text-xs" : "text-sm"
+          }`}
+        >
+          {ROLE_NAMES[role]}
+        </span>
+      </div>
+      {showDetail && (
+        <RoleDetailModal role={role} onClose={() => setShowDetail(false)} />
+      )}
+    </>
   );
 }
