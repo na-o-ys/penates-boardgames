@@ -8,8 +8,10 @@ import {
   waitForPhase,
   advancePhase,
   voteForPlayer,
+  skipVote,
   playAgain,
   setTimerDuration,
+  setRoles,
   type PlayerContext,
 } from "./fixtures/test-helpers";
 
@@ -441,5 +443,167 @@ test.describe("夜フェーズタイマー", () => {
     // 少なくとも3秒以上経過しているはず
     const actualElapsed = initialSeconds - afterReloadSeconds;
     expect(actualElapsed).toBeGreaterThanOrEqual(3);
+  });
+});
+
+test.describe("平和村（全員村人陣営）", () => {
+  test("全員が投票スキップ → 全員勝利", async ({ playerA, playerB, playerC }) => {
+    // ========================================
+    // 1. 部屋作成と参加
+    // ========================================
+    const roomId = await createRoom(playerA.page, playerA.name);
+    await joinRoom(playerB.page, playerB.name, roomId);
+    await joinRoom(playerC.page, playerC.name, roomId);
+
+    await waitForPlayerInList(playerA.page, playerC.name);
+
+    // ========================================
+    // 2. 役職を全員村人系に設定（人狼なし）
+    // 3人 + 中央2枚 = 5枚（占い師、怪盗、村人x3）
+    // ========================================
+    await setRoles(playerA.page, {
+      WEREWOLF: 0,
+      SEER: 1,
+      ROBBER: 1,
+      TROUBLEMAKER: 0,
+      VILLAGER: 3,
+      TANNER: 0,
+    });
+
+    // ========================================
+    // 3. ゲーム開始
+    // ========================================
+    await startGame(playerA.page);
+
+    // 夜フェーズをスキップ（夜アクションがある役職は待機or確認）
+    for (const player of [playerA, playerB, playerC]) {
+      const skipButton = player.page.getByRole("button", { name: "行動をスキップ" });
+      const confirmButton = player.page.getByRole("button", { name: "確定" });
+      const werewolfConfirmButton = player.page.getByRole("button", { name: "確認した" });
+      const waitButton = player.page.getByRole("button", { name: "待機する" });
+
+      if (await skipButton.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await skipButton.click();
+      } else if (await confirmButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await confirmButton.click();
+      } else if (await werewolfConfirmButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await werewolfConfirmButton.click();
+      } else if (await waitButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await waitButton.click();
+      }
+    }
+
+    // ========================================
+    // 4. 議論フェーズ → 投票フェーズへ進む
+    // ========================================
+    await waitForPhase(playerA.page, "議論フェーズ");
+    await advancePhase(playerA.page, "投票フェーズへ進む");
+
+    // ========================================
+    // 5. 全員が投票スキップ
+    // ========================================
+    await waitForPhase(playerA.page, "投票フェーズ");
+    await waitForPhase(playerB.page, "投票フェーズ");
+    await waitForPhase(playerC.page, "投票フェーズ");
+
+    // 全員が投票スキップ
+    await skipVote(playerA.page);
+    await skipVote(playerB.page);
+    await skipVote(playerC.page);
+
+    // ========================================
+    // 6. 結果確認 - 村人陣営の勝利
+    // ========================================
+    // 結果画面を待機（h1が「勝利！」または「敗北」）
+    await expect(
+      playerA.page.getByRole("heading", { level: 1, name: /勝利|敗北/ })
+    ).toBeVisible({ timeout: 15000 });
+
+    // 全員が勝者であることを確認
+    for (const player of [playerA, playerB, playerC]) {
+      await expect(player.page.getByText("村人陣営の勝利")).toBeVisible({ timeout: 10000 });
+      await expect(player.page.getByRole("heading", { level: 1, name: "勝利！" })).toBeVisible();
+    }
+
+    // 誰も処刑されていないことを確認
+    await expect(playerA.page.getByText("誰も処刑されませんでした")).toBeVisible();
+  });
+
+  test("誰かが処刑される → 全員敗北", async ({ playerA, playerB, playerC }) => {
+    // ========================================
+    // 1. 部屋作成と参加
+    // ========================================
+    const roomId = await createRoom(playerA.page, playerA.name);
+    await joinRoom(playerB.page, playerB.name, roomId);
+    await joinRoom(playerC.page, playerC.name, roomId);
+
+    await waitForPlayerInList(playerA.page, playerC.name);
+
+    // ========================================
+    // 2. 役職を全員村人系に設定（人狼なし）
+    // ========================================
+    await setRoles(playerA.page, {
+      WEREWOLF: 0,
+      SEER: 1,
+      ROBBER: 1,
+      TROUBLEMAKER: 0,
+      VILLAGER: 3,
+      TANNER: 0,
+    });
+
+    // ========================================
+    // 3. ゲーム開始
+    // ========================================
+    await startGame(playerA.page);
+
+    // 夜フェーズをスキップ
+    for (const player of [playerA, playerB, playerC]) {
+      const skipButton = player.page.getByRole("button", { name: "行動をスキップ" });
+      const confirmButton = player.page.getByRole("button", { name: "確定" });
+      const werewolfConfirmButton = player.page.getByRole("button", { name: "確認した" });
+      const waitButton = player.page.getByRole("button", { name: "待機する" });
+
+      if (await skipButton.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await skipButton.click();
+      } else if (await confirmButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await confirmButton.click();
+      } else if (await werewolfConfirmButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await werewolfConfirmButton.click();
+      } else if (await waitButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await waitButton.click();
+      }
+    }
+
+    // ========================================
+    // 4. 議論フェーズ → 投票フェーズへ進む
+    // ========================================
+    await waitForPhase(playerA.page, "議論フェーズ");
+    await advancePhase(playerA.page, "投票フェーズへ進む");
+
+    // ========================================
+    // 5. 全員がCharlie（playerC）に投票
+    // ========================================
+    await waitForPhase(playerA.page, "投票フェーズ");
+    await waitForPhase(playerB.page, "投票フェーズ");
+    await waitForPhase(playerC.page, "投票フェーズ");
+
+    await voteForPlayer(playerA.page, playerC.name);
+    await voteForPlayer(playerB.page, playerC.name);
+    // Charlieは自分に投票できないので、Aliceに投票
+    await voteForPlayer(playerC.page, playerA.name);
+
+    // ========================================
+    // 6. 結果確認 - 全員敗北（勝者なし）
+    // ========================================
+    // 結果画面への遷移を待機（敗北の場合は "敗北..." が表示される）
+    await expect(playerA.page.getByText("敗北...")).toBeVisible({ timeout: 10000 });
+
+    // 全員が敗北であることを確認
+    for (const player of [playerA, playerB, playerC]) {
+      await expect(player.page.getByText("敗北...")).toBeVisible({ timeout: 10000 });
+    }
+
+    // 処刑者が表示されていることを確認
+    await expect(playerA.page.getByText(playerC.name).first()).toBeVisible();
   });
 });

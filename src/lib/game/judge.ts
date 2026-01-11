@@ -1,5 +1,6 @@
 import type { PlayerId, Role, WinResult } from "./types";
 import { ROLE_TEAM } from "./types";
+import { SKIP_VOTE } from "./validator";
 
 /**
  * 投票結果から処刑されるプレイヤーを計算
@@ -10,10 +11,11 @@ import { ROLE_TEAM } from "./types";
 export function calculateExecutedPlayers(
   votes: Record<PlayerId, PlayerId>
 ): readonly PlayerId[] {
-  // 得票数をカウント
+  // 得票数をカウント（SKIP_VOTEは無視）
   const voteCount: Record<PlayerId, number> = {};
 
   for (const targetId of Object.values(votes)) {
+    if (targetId === SKIP_VOTE) continue; // スキップ投票は無視
     voteCount[targetId] = (voteCount[targetId] || 0) + 1;
   }
 

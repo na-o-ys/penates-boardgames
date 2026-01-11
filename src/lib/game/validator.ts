@@ -301,6 +301,9 @@ function validateTargets(
   }
 }
 
+/** 投票スキップ用の特別な値 */
+export const SKIP_VOTE = "SKIP_VOTE";
+
 /**
  * 投票のバリデーションを行う
  */
@@ -332,16 +335,18 @@ export function validateVote(
     };
   }
 
-  // 3. 投票先存在チェック
-  const target = state.players.find((p) => p.id === targetId);
-  if (!target) {
-    return {
-      valid: false,
-      error: {
-        code: "TARGET_NOT_FOUND",
-        message: "投票先が見つかりません",
-      },
-    };
+  // 3. 投票先存在チェック（SKIP_VOTEは許可）
+  if (targetId !== SKIP_VOTE) {
+    const target = state.players.find((p) => p.id === targetId);
+    if (!target) {
+      return {
+        valid: false,
+        error: {
+          code: "TARGET_NOT_FOUND",
+          message: "投票先が見つかりません",
+        },
+      };
+    }
   }
 
   // 4. 重複投票チェック

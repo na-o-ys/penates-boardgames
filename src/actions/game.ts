@@ -14,6 +14,7 @@ import {
   resetGame,
   maskGameState,
   maskGameStateForWerewolf,
+  SKIP_VOTE,
   type GameAction,
   type ActionType,
   type ClientGameState,
@@ -156,8 +157,7 @@ export async function submitVoteAction(
 }
 
 /**
- * 投票フェーズのタイマー終了時に自動投票を実行
- * ランダムに他プレイヤーを選んで投票する
+ * 投票フェーズのタイマー終了時に自動スキップ投票を実行
  */
 export async function autoVoteAction(
   roomId: string,
@@ -178,14 +178,8 @@ export async function autoVoteAction(
         return state;
       }
 
-      // 自分以外のプレイヤーからランダムに選ぶ
-      const otherPlayers = state.players.filter((p) => p.id !== playerId);
-      if (otherPlayers.length === 0) {
-        return state;
-      }
-
-      const randomTarget = otherPlayers[Math.floor(Math.random() * otherPlayers.length)];
-      return executeVote(state, playerId, randomTarget.id);
+      // タイムアウト時はスキップ投票
+      return executeVote(state, playerId, SKIP_VOTE);
     });
 
     return { success: true };

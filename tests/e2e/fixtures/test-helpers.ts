@@ -169,6 +169,18 @@ export async function voteForPlayer(page: Page, playerName: string): Promise<voi
 }
 
 /**
+ * 投票: スキップ（誰にも投票しない）
+ */
+export async function skipVote(page: Page): Promise<void> {
+  // スキップを選択
+  await page.getByRole("button", { name: "投票しない（スキップ）" }).click();
+  // 投票を確定
+  await page.getByRole("button", { name: "投票する" }).click();
+  // 投票完了を待機
+  await expect(page.getByText("投票済み")).toBeVisible({ timeout: 5000 });
+}
+
+/**
  * フェーズ進行（ホストのみ）
  */
 export async function advancePhase(page: Page, buttonText: string): Promise<void> {
@@ -220,9 +232,50 @@ export async function screenshot(page: Page, name: string): Promise<void> {
  */
 export async function setTimerDuration(
   page: Page,
-  type: "night" | "day",
+  type: "night" | "day" | "voting",
   duration: number
 ): Promise<void> {
-  const selectTestId = type === "night" ? "night-duration-select" : "day-duration-select";
-  await page.getByTestId(selectTestId).selectOption(String(duration));
+  const selectTestIdMap = {
+    night: "night-duration-select",
+    day: "day-duration-select",
+    voting: "voting-duration-select",
+  };
+  await page.getByTestId(selectTestIdMap[type]).selectOption(String(duration));
+}
+
+/**
+ * 役職を設定（ホストのみ）
+ * 指定した役職構成に設定する
+ */
+export async function setRoles(
+  page: Page,
+  roles: Record<string, number>
+): Promise<void> {
+  const allRoles = ["WEREWOLF", "SEER", "ROBBER", "TROUBLEMAKER", "VILLAGER", "TANNER"];
+
+  for (const role of allRoles) {
+    const targetCount = roles[role] ?? 0;
+    const roleElement = page.getByTestId(`role-${role}`);
+    const countElement = roleElement.getByTestId("role-count");
+    const currentCountText = await countElement.textContent();
+    const currentCount = parseInt(currentCountText ?? "0");
+
+    const diff = targetCount - currentCount;
+
+    if (diff > 0) {
+      const addButton = roleElement.getByRole("button", { name: "+" });
+      for (let i = 0; i < diff; i++) {
+        await addButton.click();
+        // カウントが更新されるのを待つ
+        await expect(countElement).toHaveText(String(currentCount + i + 1), { timeout: 2000 });
+      }
+    } else if (diff < 0) {
+      const removeButton = roleElement.getByRole("button", { name: "-" });
+      for (let i = 0; i < Math.abs(diff); i++) {
+        await removeButton.click();
+        // カウントが更新されるのを待つ
+        await expect(countElement).toHaveText(String(currentCount - i - 1), { timeout: 2000 });
+      }
+    }
+  }
 }

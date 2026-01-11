@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { ClientGameState, Player } from "@/lib/game";
+import { SKIP_VOTE } from "@/lib/game";
 import { submitVoteAction, autoVoteAction } from "@/actions";
 
 interface VotingScreenProps {
@@ -134,6 +135,19 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
                     </span>
                   </button>
                 ))}
+                {/* 投票スキップオプション */}
+                <button
+                  onClick={() => setSelectedTarget(SKIP_VOTE)}
+                  className={`w-full p-4 rounded-lg text-left transition-all ${
+                    selectedTarget === SKIP_VOTE
+                      ? "bg-gray-600 border-2 border-gray-400"
+                      : "bg-gray-700 hover:bg-gray-600 border-2 border-transparent"
+                  }`}
+                >
+                  <span className="text-gray-300 font-medium text-lg">
+                    投票しない（スキップ）
+                  </span>
+                </button>
               </div>
             </div>
 
