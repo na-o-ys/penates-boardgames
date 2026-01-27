@@ -28,6 +28,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja" className={`${cinzel.variable} ${notoSansJP.variable}`}>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/icon?family=Material+Icons"
+          rel="stylesheet"
+        />
+      </head>
       <body className="min-h-screen antialiased bg-game font-[family-name:var(--font-body)]">
         {children}
       </body>

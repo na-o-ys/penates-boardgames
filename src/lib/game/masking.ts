@@ -103,6 +103,7 @@ export function maskGameState(
 
     return {
       ...baseClientState,
+      initialRoles: state.initialDistribution,
       finalRoles,
       allActions: state.actions,
       allVotes: state.votes,

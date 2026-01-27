@@ -116,6 +116,7 @@ export interface ClientGameState {
   readonly isExecutedHunter?: boolean; // 自分が処刑された狩人か
   readonly hunterRevengeChosen?: Record<PlayerId, boolean>; // 狩人が道連れを選択済みか
   // RESULTフェーズのみ
+  readonly initialRoles?: Record<string, Role>;
   readonly finalRoles?: Record<string, Role>;
   readonly allActions?: readonly GameAction[];
   readonly allVotes?: Record<PlayerId, PlayerId>;
@@ -195,6 +196,32 @@ export const ROLE_HAS_ACTION: Record<Role, boolean> = {
   VILLAGER: false,
   HUNTER: false,
   TANNER: false,
+};
+
+/** 役職のMaterial Iconsアイコン名 */
+export const ROLE_MATERIAL_ICONS: Record<Role, string> = {
+  WEREWOLF: "pets",
+  SEER: "visibility",
+  ROBBER: "theater_comedy",
+  TROUBLEMAKER: "sync_alt",
+  VILLAGER: "accessibility_new",
+  HUNTER: "gps_fixed",
+  TANNER: "sentiment_very_dissatisfied",
+};
+
+/** 役職カードの配色 */
+export const ROLE_CARD_COLORS: Record<Role, {
+  bg: string;
+  border: string;
+  text: string;
+}> = {
+  WEREWOLF: { bg: "bg-red-900", border: "border-red-500", text: "text-red-200" },
+  SEER: { bg: "bg-indigo-900", border: "border-indigo-400", text: "text-indigo-200" },
+  ROBBER: { bg: "bg-gray-800", border: "border-gray-400", text: "text-gray-200" },
+  TROUBLEMAKER: { bg: "bg-emerald-900", border: "border-emerald-400", text: "text-emerald-200" },
+  VILLAGER: { bg: "bg-slate-700", border: "border-slate-500", text: "text-slate-300" },
+  HUNTER: { bg: "bg-green-900", border: "border-green-400", text: "text-green-200" },
+  TANNER: { bg: "bg-orange-900", border: "border-orange-400", text: "text-orange-200" },
 };
 
 /** 役職の説明 */

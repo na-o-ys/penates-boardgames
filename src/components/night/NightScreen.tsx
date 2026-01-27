@@ -303,7 +303,7 @@ export function NightScreen({
 
         {/* 自分の役職 */}
         <div className="flex justify-center mb-8">
-          <RoleCard role={myRole} />
+          <RoleCard role={myRole} size="large" />
         </div>
 
         <div className="flex-1">

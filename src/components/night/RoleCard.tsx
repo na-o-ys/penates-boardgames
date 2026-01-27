@@ -1,43 +1,37 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
-import { ROLE_NAMES, type Role } from "@/lib/game";
+import { ROLE_NAMES, ROLE_MATERIAL_ICONS, ROLE_CARD_COLORS, type Role } from "@/lib/game";
 import { RoleDetailModal } from "../common/RoleDetailModal";
 
-const ROLE_IMAGES: Partial<Record<Role, string>> = {
-  VILLAGER: "/images/roles/villager.jpeg",
-  SEER: "/images/roles/seer.jpeg",
-  ROBBER: "/images/roles/robber.jpeg",
-  HUNTER: "/images/roles/hunter.jpeg",
-  TANNER: "/images/roles/tanner.jpeg",
-  WEREWOLF: "/images/roles/werewolf.jpeg",
-};
-
-const ROLE_ICONS: Record<Role, string> = {
-  WEREWOLF: "🐺",
-  SEER: "🔮",
-  ROBBER: "🦹",
-  TROUBLEMAKER: "🃏",
-  VILLAGER: "👨‍🌾",
-  HUNTER: "🏹",
-  TANNER: "💀",
-};
+type RoleCardSize = "small" | "medium" | "large";
 
 interface RoleCardProps {
   role: Role | null;
   revealed?: boolean;
+  size?: RoleCardSize;
+  /** @deprecated Use size="small" instead */
   small?: boolean;
   interactive?: boolean;
 }
 
+const SIZE_CLASSES: Record<RoleCardSize, { card: string; icon: string; label: string }> = {
+  small: { card: "w-9 h-12", icon: "text-base", label: "text-[9px]" },
+  medium: { card: "w-10 h-14", icon: "text-lg", label: "text-[9px]" },
+  large: { card: "w-24 h-32", icon: "text-4xl", label: "text-sm" },
+};
+
 export function RoleCard({
   role,
   revealed = true,
+  size: sizeProp,
   small = false,
   interactive = true,
 }: RoleCardProps) {
   const [showDetail, setShowDetail] = useState(false);
+
+  const size: RoleCardSize = sizeProp ?? (small ? "small" : "medium");
+  const sizeConfig = SIZE_CLASSES[size];
 
   const handleClick = () => {
     if (interactive && role && revealed) {
@@ -47,73 +41,40 @@ export function RoleCard({
 
   const cardClassName = interactive && role && revealed ? "cursor-pointer" : "";
 
+  // 不明カード (role === null)
   if (!role) {
     return (
-      <div
-        className={`flex flex-col items-center justify-center rounded-xl glass-card ${
-          small ? "w-16 h-24" : "w-32 h-44"
-        }`}
-      >
-        <span className={small ? "text-xl" : "text-4xl"}>❓</span>
+      <div className={`${sizeConfig.card} bg-gray-800 rounded border border-gray-600 flex items-center justify-center opacity-80`}>
+        <span className={`material-icons text-gray-400 ${sizeConfig.icon}`}>question_mark</span>
       </div>
     );
   }
 
+  // 未公開カード
   if (!revealed) {
     return (
-      <div
-        className={`flex flex-col items-center justify-center rounded-xl glass-card border-[var(--color-border)] ${
-          small ? "w-16 h-24" : "w-32 h-44"
-        }`}
-      >
-        <span className={small ? "text-xl" : "text-4xl"}>🎴</span>
+      <div className={`${sizeConfig.card} glass-card rounded border border-[var(--color-border)] flex items-center justify-center`}>
+        <span className={`material-icons text-[var(--color-text-muted)] ${sizeConfig.icon}`}>help_outline</span>
       </div>
     );
   }
 
-  const imageSrc = ROLE_IMAGES[role];
-
-  if (imageSrc) {
-    return (
-      <>
-        <div
-          onClick={handleClick}
-          className={`relative overflow-hidden rounded-xl border border-[var(--color-border)] ${
-            small ? "w-16 h-24" : "w-32 h-44"
-          } ${cardClassName}`}
-        >
-          <Image
-            src={imageSrc}
-            alt={ROLE_NAMES[role]}
-            fill
-            className="object-cover"
-          />
-        </div>
-        {showDetail && (
-          <RoleDetailModal role={role} onClose={() => setShowDetail(false)} />
-        )}
-      </>
-    );
-  }
+  const colors = ROLE_CARD_COLORS[role];
 
   return (
     <>
       <div
         onClick={handleClick}
-        className={`flex flex-col items-center justify-center rounded-xl glass-card ${
-          small ? "w-16 h-24 p-2" : "w-32 h-44 p-4"
-        } ${cardClassName}`}
+        className={`${sizeConfig.card} ${colors.bg} rounded border ${colors.border} flex flex-col items-center justify-center ${cardClassName}`}
       >
-        <span className={small ? "text-2xl mb-1" : "text-5xl mb-2"}>
-          {ROLE_ICONS[role]}
+        <span className={`material-icons ${colors.text} ${sizeConfig.icon}`}>
+          {ROLE_MATERIAL_ICONS[role]}
         </span>
-        <span
-          className={`text-white font-bold text-center ${
-            small ? "text-xs" : "text-sm"
-          }`}
-        >
-          {ROLE_NAMES[role]}
-        </span>
+        {size === "large" && (
+          <span className={`${colors.text} ${sizeConfig.label} font-bold mt-1`}>
+            {ROLE_NAMES[role]}
+          </span>
+        )}
       </div>
       {showDetail && (
         <RoleDetailModal role={role} onClose={() => setShowDetail(false)} />

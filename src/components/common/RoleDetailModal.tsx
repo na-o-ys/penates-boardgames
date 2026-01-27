@@ -2,27 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import Image from "next/image";
-import { ROLE_NAMES, ROLE_DESCRIPTIONS, type Role } from "@/lib/game";
-
-const ROLE_IMAGES: Partial<Record<Role, string>> = {
-  VILLAGER: "/images/roles/villager.jpeg",
-  SEER: "/images/roles/seer.jpeg",
-  ROBBER: "/images/roles/robber.jpeg",
-  HUNTER: "/images/roles/hunter.jpeg",
-  TANNER: "/images/roles/tanner.jpeg",
-  WEREWOLF: "/images/roles/werewolf.jpeg",
-};
-
-const ROLE_ICONS: Record<Role, string> = {
-  WEREWOLF: "🐺",
-  SEER: "🔮",
-  ROBBER: "🦹",
-  TROUBLEMAKER: "🃏",
-  VILLAGER: "👨‍🌾",
-  HUNTER: "🏹",
-  TANNER: "💀",
-};
+import { ROLE_NAMES, ROLE_DESCRIPTIONS, ROLE_MATERIAL_ICONS, ROLE_CARD_COLORS, type Role } from "@/lib/game";
 
 const TEAM_COLORS: Record<string, string> = {
   "人狼陣営": "text-[var(--color-role-werewolf)]",
@@ -38,7 +18,7 @@ interface RoleDetailModalProps {
 export function RoleDetailModal({ role, onClose }: RoleDetailModalProps) {
   const [mounted, setMounted] = useState(false);
   const description = ROLE_DESCRIPTIONS[role];
-  const imageSrc = ROLE_IMAGES[role];
+  const colors = ROLE_CARD_COLORS[role];
 
   useEffect(() => {
     setMounted(true);
@@ -83,18 +63,11 @@ export function RoleDetailModal({ role, onClose }: RoleDetailModalProps) {
         </button>
 
         <div className="flex flex-col items-center mb-4">
-          {imageSrc ? (
-            <div className="relative w-28 h-40 rounded-xl overflow-hidden mb-3">
-              <Image
-                src={imageSrc}
-                alt={ROLE_NAMES[role]}
-                fill
-                className="object-cover"
-              />
-            </div>
-          ) : (
-            <div className="text-6xl mb-3">{ROLE_ICONS[role]}</div>
-          )}
+          <div className={`w-20 h-20 rounded-full ${colors.bg} border-2 ${colors.border} flex items-center justify-center mb-3`}>
+            <span className={`material-icons text-5xl ${colors.text}`}>
+              {ROLE_MATERIAL_ICONS[role]}
+            </span>
+          </div>
 
           <h2 className="font-[family-name:var(--font-display)] text-2xl font-bold gold-text">
             {ROLE_NAMES[role]}

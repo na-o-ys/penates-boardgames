@@ -113,7 +113,7 @@ export function DayScreen({ gameState, playerId, roomId }: DayScreenProps) {
                 あなたの現在の役職
               </h2>
               <div className="flex justify-center mb-4">
-                <RoleCard role={currentRole} />
+                <RoleCard role={currentRole} size="large" />
               </div>
               <p className="text-center text-[var(--color-text-muted)] text-sm">
                 最初の役職: {ROLE_NAMES[gameState.myRole!]}
@@ -125,7 +125,7 @@ export function DayScreen({ gameState, playerId, roomId }: DayScreenProps) {
                 あなたの役職
               </h2>
               <div className="flex justify-center">
-                <RoleCard role={gameState.myRole} />
+                <RoleCard role={gameState.myRole} size="large" />
               </div>
             </>
           )}

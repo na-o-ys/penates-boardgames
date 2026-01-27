@@ -1,10 +1,9 @@
 "use client";
 
-import type { ClientGameState, Player, Role, Team, PlayerId } from "@/lib/game";
-import { ROLE_NAMES } from "@/lib/game";
+import type { ClientGameState, Player, Role, Team, PlayerId, GameAction } from "@/lib/game";
+import { ROLE_NAMES, ROLE_MATERIAL_ICONS, ROLE_CARD_COLORS } from "@/lib/game";
 import { resetGameAction } from "@/actions";
 import { useState } from "react";
-import { RoleCard } from "../night/RoleCard";
 
 interface ResultScreenProps {
   gameState: ClientGameState;
@@ -19,6 +18,65 @@ const TEAM_NAMES: Record<Team, string> = {
   TANNER: "吊人",
 };
 
+/**
+ * 交換によって役職が変わったプレイヤーの交換理由を返す
+ */
+function getSwapReason(
+  playerId: string,
+  allActions: readonly GameAction[],
+  players: readonly Player[]
+): string | null {
+  for (const action of allActions) {
+    if (action.type === "ROBBER_SWAP" && action.targetIds[0] === playerId) {
+      const robberName = players.find((p) => p.id === action.actorId)?.name;
+      return `${robberName ?? "怪盗"}に奪われた`;
+    }
+    if (action.type === "ROBBER_SWAP" && action.actorId === playerId) {
+      const targetName = players.find((p) => p.id === action.targetIds[0])?.name;
+      return `${targetName ?? "相手"}から奪った`;
+    }
+    if (
+      action.type === "TROUBLEMAKER_SWAP" &&
+      (action.targetIds[0] === playerId || action.targetIds[1] === playerId)
+    ) {
+      const makerName = players.find((p) => p.id === action.actorId)?.name;
+      return `${makerName ?? "トラブルメーカー"}に交換された`;
+    }
+  }
+  return null;
+}
+
+function RoleMiniCard({ role, size = "medium" }: { role: Role; size?: "small" | "medium" }) {
+  const colors = ROLE_CARD_COLORS[role];
+  const sizeClass = size === "small" ? "w-9 h-12" : "w-10 h-14";
+  const iconSize = size === "small" ? "text-base" : "text-lg";
+  const labelSize = size === "small" ? "text-[8px]" : "text-[9px]";
+  const labelColor = size === "small" ? "text-gray-400" : colors.text;
+
+  return (
+    <div className="flex flex-col items-center">
+      <div className={`${sizeClass} ${colors.bg} rounded border ${colors.border} flex items-center justify-center ${size === "medium" ? "shadow-[0_0_15px_rgba(212,175,55,0.2)]" : ""}`}>
+        <span className={`material-icons ${colors.text} ${iconSize}`}>
+          {ROLE_MATERIAL_ICONS[role]}
+        </span>
+      </div>
+      <span className={`${labelSize} ${labelColor} mt-0.5 font-bold`}>
+        {ROLE_NAMES[role]}
+      </span>
+    </div>
+  );
+}
+
+function UnknownMiniCard() {
+  return (
+    <div className="flex flex-col items-center">
+      <div className="w-12 h-16 bg-gray-800 rounded border border-gray-600 flex items-center justify-center opacity-80">
+        <span className="material-icons text-gray-400">question_mark</span>
+      </div>
+    </div>
+  );
+}
+
 export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps) {
   const currentPlayerId = playerId;
   const [isResetting, setIsResetting] = useState(false);
@@ -28,6 +86,9 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
   const winningTeam = gameState.winningTeam;
   const winners = gameState.winners ?? [];
   const executedPlayerIds = gameState.executedPlayerIds ?? [];
+  const initialRoles = gameState.initialRoles ?? {};
+  const finalRoles = gameState.finalRoles ?? {};
+  const allActions = gameState.allActions ?? [];
 
   const isWinner = winners.includes(currentPlayerId);
 
@@ -46,142 +107,163 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
   };
 
   return (
-    <div className="min-h-screen game-overlay p-4">
-      <div className="max-w-md mx-auto">
-        {/* 勝敗表示 */}
-        <div className="text-center mb-8 pt-8">
-          <h1 className={`font-[family-name:var(--font-display)] font-black tracking-wider mb-2 ${
-            isWinner ? "text-5xl gold-text" : "text-4xl text-[var(--color-text-secondary)]"
-          }`}>
+    <div className="flex flex-col min-h-screen game-overlay">
+      <div className="max-w-md mx-auto w-full flex flex-col flex-1">
+        {/* ヘッダー */}
+        <div className="pt-8 pb-4 text-center">
+          <h1
+            className={`font-[family-name:var(--font-display)] font-black tracking-wider mb-2 ${
+              isWinner ? "text-4xl gold-text" : "text-3xl text-[var(--color-text-secondary)]"
+            }`}
+          >
             {isWinner ? "勝利！" : "敗北..."}
           </h1>
           {winningTeam ? (
-            <p className="text-lg text-[var(--color-text-secondary)]">
+            <p className="text-sm text-[var(--color-text-secondary)]">
               {TEAM_NAMES[winningTeam]}の勝利
             </p>
           ) : (
-            <p className="text-lg text-[var(--color-text-secondary)]">
+            <p className="text-sm text-[var(--color-text-secondary)]">
               引き分け（勝者なし）
             </p>
           )}
         </div>
 
-        {/* 処刑されたプレイヤー */}
-        <div className="glass-card rounded-xl p-6 mb-6">
-          <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold text-white mb-4">処刑結果</h2>
-          {executedPlayerIds.length === 0 ? (
-            <p className="text-[var(--color-text-muted)] text-center">誰も処刑されませんでした</p>
-          ) : (
-            <div className="space-y-2">
-              {executedPlayerIds.map((execPlayerId: PlayerId) => {
-                const player = gameState.players.find((p) => p.id === execPlayerId);
-                const role = gameState.finalRoles?.[execPlayerId];
-                const isHunterVictim = Object.values(
-                  gameState.hunterRevengeTargets ?? {}
-                ).includes(execPlayerId);
+        {/* プレイヤーカード (scrollable) */}
+        <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-24">
+          {gameState.players.map((player: Player) => {
+            const isCurrentPlayer = player.id === currentPlayerId;
+            const isPlayerWinner = winners.includes(player.id);
+            const isExecuted = executedPlayerIds.includes(player.id);
+            const isHunterVictim = Object.values(
+              gameState.hunterRevengeTargets ?? {}
+            ).includes(player.id);
 
-                return (
-                  <div
-                    key={execPlayerId}
-                    className="flex items-center justify-between bg-[var(--color-error)]/20 border border-[var(--color-error)]/30 p-3 rounded-xl"
-                  >
-                    <span className="text-white font-medium flex items-center gap-2">
-                      {player?.name ?? "不明"}
-                      {isHunterVictim && (
-                        <span className="text-xs bg-[var(--color-error)]/40 px-2 py-0.5 rounded-lg text-[var(--color-error)] font-semibold">
-                          道連れ
-                        </span>
-                      )}
-                    </span>
-                    <span className="text-[var(--color-error)]">
-                      {role ? ROLE_NAMES[role] : "不明"}
-                    </span>
+            const initRole = initialRoles[player.id];
+            const finalRole = finalRoles[player.id];
+            const roleChanged = initRole && finalRole && initRole !== finalRole;
+            const swapReason = roleChanged
+              ? getSwapReason(player.id, allActions, gameState.players)
+              : null;
+
+            return (
+              <div
+                key={player.id}
+                className={`rounded-xl p-3 relative overflow-hidden ${
+                  isCurrentPlayer
+                    ? "bg-gray-800/90 border-2 border-[var(--color-primary)] shadow-[0_0_15px_rgba(212,175,55,0.5)]"
+                    : "bg-white/10 backdrop-blur-md border border-white/10"
+                }`}
+              >
+                {/* あなたバッジ */}
+                {isCurrentPlayer && (
+                  <div className="absolute top-0 right-0 bg-[var(--color-primary)] text-[var(--color-bg-deep)] text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">
+                    あなた
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                )}
 
-        {/* 全員の役職公開 */}
-        <div className="glass-card rounded-xl p-6 mb-6">
-          <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold text-white mb-4">最終役職</h2>
-          <div className="space-y-4">
-            {gameState.players.map((player: Player) => {
-              const finalRole = gameState.finalRoles?.[player.id];
-              const isCurrentPlayer = player.id === currentPlayerId;
-              const isPlayerWinner = winners.includes(player.id);
+                {/* 処刑マーカー（左赤ライン） */}
+                {isExecuted && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[var(--color-error)] rounded-l-xl" />
+                )}
 
-              return (
-                <div
-                  key={player.id}
-                  className={`flex items-center gap-4 p-4 rounded-xl ${
-                    isCurrentPlayer
-                      ? "glass-card card-highlight"
-                      : "glass-panel"
-                  }`}
-                >
-                  <RoleCard role={finalRole ?? null} small />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-white font-medium text-lg">
-                        {player.name}
-                      </span>
-                      {isCurrentPlayer && (
-                        <span className="text-xs bg-[var(--color-primary)]/20 px-2 py-0.5 rounded-lg text-[var(--color-primary)] font-semibold">
-                          あなた
-                        </span>
+                <div className="flex items-center justify-between">
+                  {/* 左側: 名前 + ステータス */}
+                  <div className={`flex-1 ${isExecuted ? "pl-2" : ""}`}>
+                    <div className="font-bold text-white text-lg">{player.name}</div>
+                    <div className="text-xs space-x-2">
+                      {isExecuted && (
+                        <span className="text-[var(--color-error)] font-bold">処刑</span>
+                      )}
+                      {isHunterVictim && (
+                        <span className="text-[var(--color-error)] font-bold">道連れ</span>
                       )}
                       {isPlayerWinner && (
-                        <span className="text-xs bg-[var(--color-ready)]/20 px-2 py-0.5 rounded-lg text-[var(--color-ready)] font-semibold">
-                          勝者
+                        <span className="text-[var(--color-ready)] font-bold">勝者</span>
+                      )}
+                      {roleChanged && swapReason && (
+                        <span className="text-yellow-500">
+                          <span className="material-icons text-sm align-middle animate-pulse">sync_alt</span>
+                          {" "}{swapReason}
                         </span>
                       )}
                     </div>
-                    <div className="text-[var(--color-text-secondary)] text-sm">
-                      {finalRole ? ROLE_NAMES[finalRole] : "不明"}
-                    </div>
+                  </div>
+
+                  {/* 右側: 役職遷移 */}
+                  <div className="flex items-center space-x-1">
+                    {roleChanged && initRole ? (
+                      <>
+                        <div className="opacity-50 grayscale scale-90">
+                          <RoleMiniCard role={initRole} size="small" />
+                        </div>
+                        <span className="material-icons text-gray-500 text-sm">arrow_forward</span>
+                      </>
+                    ) : null}
+                    {finalRole ? (
+                      <RoleMiniCard role={finalRole} size={roleChanged ? "medium" : "medium"} />
+                    ) : (
+                      <UnknownMiniCard />
+                    )}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
+              </div>
+            );
+          })}
 
-        {/* 中央カード */}
-        {gameState.finalRoles && (
-          <div className="glass-card rounded-xl p-6 mb-6">
-            <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold text-white mb-4">中央カード</h2>
-            <div className="flex justify-center gap-4">
-              {["CENTER_0", "CENTER_1"].map((centerId, index) => {
-                const role = gameState.finalRoles?.[centerId] as Role | undefined;
+          {/* 墓地（中央カード） */}
+          <div className="mt-6 border-t border-white/20 pt-4">
+            <h3 className="text-center text-[var(--color-text-muted)] text-xs uppercase tracking-widest mb-3 font-[family-name:var(--font-display)]">
+              墓地（中央カード）
+            </h3>
+            <div className="flex justify-center space-x-4">
+              {["CENTER_0", "CENTER_1"].map((centerId) => {
+                const role = finalRoles[centerId] as Role | undefined;
                 return (
-                  <div key={centerId} className="text-center">
-                    <RoleCard role={role ?? null} small />
-                    <p className="text-[var(--color-text-muted)] text-sm mt-2">
-                      中央{index + 1}
-                    </p>
+                  <div key={centerId} className="flex flex-col items-center">
+                    {role ? (
+                      <>
+                        <div className={`w-12 h-16 ${ROLE_CARD_COLORS[role].bg} rounded border ${ROLE_CARD_COLORS[role].border} flex items-center justify-center opacity-80`}>
+                          <span className={`material-icons ${ROLE_CARD_COLORS[role].text}`}>
+                            {ROLE_MATERIAL_ICONS[role]}
+                          </span>
+                        </div>
+                        <span className={`text-[9px] ${ROLE_CARD_COLORS[role].text} mt-1 font-bold`}>
+                          {ROLE_NAMES[role]}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-12 h-16 bg-gray-800 rounded border border-gray-600 flex items-center justify-center opacity-80">
+                          <span className="material-icons text-gray-400">question_mark</span>
+                        </div>
+                        <span className="text-[9px] text-gray-400 mt-1">不明</span>
+                      </>
+                    )}
                   </div>
                 );
               })}
             </div>
           </div>
-        )}
+        </div>
 
-        {/* もう一度遊ぶボタン */}
-        {isHost ? (
-          <button
-            onClick={handlePlayAgain}
-            disabled={isResetting}
-            className="w-full py-4 btn-primary rounded-xl text-lg font-[family-name:var(--font-display)] tracking-wider"
-          >
-            {isResetting ? "準備中..." : "もう一度遊ぶ"}
-          </button>
-        ) : (
-          <p className="text-center text-[var(--color-text-muted)]">
-            ホストが次のゲームを開始するのを待っています...
-          </p>
-        )}
+        {/* 固定フッター */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[var(--color-bg-deep)] via-[var(--color-bg-deep)]/95 to-transparent z-20 max-w-md mx-auto">
+          {isHost ? (
+            <button
+              onClick={handlePlayAgain}
+              disabled={isResetting}
+              className="w-full py-3 btn-primary rounded-lg text-lg font-[family-name:var(--font-display)] tracking-wider flex items-center justify-center gap-1"
+            >
+              <span className="material-icons text-sm">replay</span>
+              {isResetting ? "準備中..." : "もう一度遊ぶ"}
+            </button>
+          ) : (
+            <p className="text-center text-[var(--color-text-muted)] py-3">
+              ホストが次のゲームを開始するのを待っています...
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
