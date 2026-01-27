@@ -53,23 +53,25 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center game-overlay p-8">
-      <h1 className="text-4xl font-bold mb-8 text-white">ワンナイト人狼</h1>
-      <p className="text-lg text-gray-400 mb-12">
+      <h1 className="font-[family-name:var(--font-display)] font-black text-5xl gold-text mb-3 tracking-wider">
+        ワンナイト人狼
+      </h1>
+      <p className="text-sm text-[var(--color-text-secondary)] mb-10 tracking-wide">
         3〜10人で遊べるブラウザゲーム
       </p>
-      <div className="flex flex-col gap-4 w-full max-w-sm">
+      <div className="glass-card rounded-xl p-8 w-full max-w-sm space-y-4">
         <input
           type="text"
           placeholder="プレイヤー名"
           value={playerName}
           onChange={(e) => setPlayerName(e.target.value)}
-          className="px-4 py-3 glass-input rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-slate-500"
+          className="w-full px-4 py-3 glass-input rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
           disabled={isLoading}
         />
         <button
           onClick={handleCreateRoom}
           disabled={isLoading || !playerName.trim()}
-          className="px-8 py-4 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg text-lg font-semibold text-white transition-colors"
+          className="w-full px-8 py-4 btn-primary rounded-xl text-lg font-[family-name:var(--font-display)] tracking-wider"
         >
           部屋を作成
         </button>
@@ -79,19 +81,19 @@ export default function Home() {
             placeholder="部屋ID"
             value={roomId}
             onChange={(e) => setRoomId(e.target.value)}
-            className="flex-1 px-4 py-3 glass-input rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-slate-500"
+            className="flex-1 px-4 py-3 glass-input rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
             disabled={isLoading}
           />
           <button
             onClick={handleJoinRoom}
             disabled={isLoading || !playerName.trim() || !roomId.trim()}
-            className="px-6 py-3 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-semibold text-white transition-colors"
+            className="px-6 py-3 btn-secondary rounded-xl"
           >
             参加
           </button>
         </div>
         {error && (
-          <p className="text-red-400 text-sm text-center">{error}</p>
+          <p className="text-[var(--color-error)] text-sm text-center">{error}</p>
         )}
       </div>
     </main>

@@ -7,6 +7,8 @@ import { PlayerList } from "./PlayerList";
 import { RoleSelector } from "./RoleSelector";
 import { TimerSettings } from "./TimerSettings";
 
+type LobbyTab = "players" | "roles" | "settings";
+
 interface LobbyScreenProps {
   roomId: string;
   gameState: ClientGameState;
@@ -21,6 +23,7 @@ export function LobbyScreen({
 }: LobbyScreenProps) {
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<LobbyTab>("players");
 
   const isHost = gameState.players.find((p) => p.id === playerId)?.isHost ?? false;
   const playerCount = gameState.players.length;
@@ -75,105 +78,132 @@ export function LobbyScreen({
     navigator.clipboard.writeText(url);
   };
 
+  const tabs: { id: LobbyTab; label: string }[] = [
+    { id: "players", label: "プレイヤー" },
+    { id: "roles", label: "役職設定" },
+    { id: "settings", label: "タイマー" },
+  ];
+
   return (
     <div className="flex flex-col min-h-screen game-overlay p-4 md:p-8">
-      {/* ヘッダー */}
-      <div className="text-center mb-8 pt-4">
-        <h1 className="text-2xl font-bold text-white mb-2">ロビー</h1>
-        <div className="flex items-center justify-center gap-2">
-          <span className="text-gray-400 text-sm">部屋ID:</span>
-          <code className="px-3 py-1 glass-panel rounded text-gray-300 text-sm">
-            {roomId.slice(0, 8)}...
-          </code>
-          <button
-            onClick={copyRoomLink}
-            className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm text-white transition-colors"
-          >
-            リンクをコピー
-          </button>
-        </div>
-      </div>
-
-      {error && (
-        <div className="mb-6 px-4 py-3 bg-red-900/50 border border-red-500 rounded-lg text-red-200 text-center">
-          {error}
-        </div>
-      )}
-
-      <div className="flex-1 grid md:grid-cols-2 gap-8 max-w-4xl mx-auto w-full">
-        {/* プレイヤーリスト */}
-        <div>
-          <h2 className="text-lg font-semibold text-white mb-4">
-            プレイヤー ({playerCount}人)
-          </h2>
-          <PlayerList
-            players={gameState.players}
-            currentPlayerId={playerId}
-            isHost={isHost}
-            onKickPlayer={handleKickPlayer}
-          />
-        </div>
-
-        {/* 役職設定（ホストのみ） */}
-        <div>
-          <h2 className="text-lg font-semibold text-white mb-4">
-            役職設定
-            {!isHost && <span className="text-sm text-gray-400 ml-2">(ホストが設定)</span>}
-          </h2>
-          <RoleSelector
-            playerCount={playerCount}
-            selectedRoles={gameState.config.roles as Role[]}
-            onChange={handleRolesChange}
-            disabled={!isHost}
-          />
-          <p className="mt-2 text-sm text-gray-400">
-            必要枚数: {requiredRoles}枚（プレイヤー{playerCount}人 + 中央2枚）
-          </p>
-
-          {/* タイマー設定 */}
-          <div className="mt-6">
-            <h3 className="text-md font-semibold text-white mb-3">
-              タイマー設定
-              {!isHost && <span className="text-sm text-gray-400 ml-2">(ホストが設定)</span>}
-            </h3>
-            <TimerSettings
-              nightDuration={gameState.config.nightDuration}
-              dayDuration={gameState.config.dayDuration}
-              votingDuration={gameState.config.votingDuration}
-              onChange={handleTimerChange}
-              disabled={!isHost}
-            />
+      <div className="max-w-md mx-auto w-full flex flex-col flex-1">
+        {/* ヘッダー */}
+        <div className="text-center mb-6 pt-4">
+          <h1 className="font-[family-name:var(--font-display)] font-black text-3xl gold-text mb-3 tracking-wider">
+            ロビー
+          </h1>
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-[var(--color-text-muted)] text-xs uppercase tracking-widest">部屋ID</span>
+            <code className="px-3 py-1 glass-panel rounded-lg text-[var(--color-text-secondary)] text-sm font-mono">
+              {roomId.slice(0, 8)}
+            </code>
+            <button
+              onClick={copyRoomLink}
+              className="px-3 py-1 btn-secondary rounded-lg text-xs"
+            >
+              コピー
+            </button>
+          </div>
+          <div className="mt-2 text-xs text-[var(--color-text-muted)]">
+            {playerCount}人参加中
           </div>
         </div>
-      </div>
 
-      {/* ゲーム開始ボタン */}
-      {isHost && (
-        <div className="mt-8 text-center">
-          <button
-            onClick={handleStartGame}
-            disabled={!canStart || isStarting}
-            className="px-8 py-4 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg text-lg font-semibold text-white transition-colors"
-          >
-            {isStarting ? "開始中..." : "ゲーム開始"}
-          </button>
-          {!canStart && (
-            <p className="mt-2 text-sm text-gray-400">
-              {playerCount < 3
-                ? "3人以上でプレイできます"
-                : !hasValidRoles
-                ? "役職を設定してください"
-                : ""}
-            </p>
+        {error && (
+          <div className="mb-4 px-4 py-3 bg-[var(--color-error)]/20 border border-[var(--color-error)]/40 rounded-xl text-[var(--color-error)] text-center text-sm">
+            {error}
+          </div>
+        )}
+
+        {/* タブバー */}
+        <div className="glass-panel rounded-xl p-1 mb-4 flex">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
+                activeTab === tab.id
+                  ? "bg-[var(--color-primary)] text-[var(--color-bg-deep)]"
+                  : "text-[var(--color-text-secondary)] hover:text-white"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* タブコンテンツ */}
+        <div className="flex-1 glass-card rounded-xl p-4 mb-6">
+          {activeTab === "players" && (
+            <PlayerList
+              players={gameState.players}
+              currentPlayerId={playerId}
+              isHost={isHost}
+              onKickPlayer={handleKickPlayer}
+            />
+          )}
+
+          {activeTab === "roles" && (
+            <div>
+              {!isHost && (
+                <p className="text-xs text-[var(--color-text-muted)] mb-3">ホストが設定</p>
+              )}
+              <RoleSelector
+                playerCount={playerCount}
+                selectedRoles={gameState.config.roles as Role[]}
+                onChange={handleRolesChange}
+                disabled={!isHost}
+              />
+              <p className="mt-2 text-xs text-[var(--color-text-muted)]">
+                必要枚数: {requiredRoles}枚（{playerCount}人 + 中央2枚）
+              </p>
+            </div>
+          )}
+
+          {activeTab === "settings" && (
+            <div>
+              {!isHost && (
+                <p className="text-xs text-[var(--color-text-muted)] mb-3">ホストが設定</p>
+              )}
+              <TimerSettings
+                nightDuration={gameState.config.nightDuration}
+                dayDuration={gameState.config.dayDuration}
+                votingDuration={gameState.config.votingDuration}
+                onChange={handleTimerChange}
+                disabled={!isHost}
+              />
+            </div>
           )}
         </div>
-      )}
 
-      {!isHost && (
-        <div className="mt-8 text-center text-gray-400">
-          ホストがゲームを開始するのを待っています...
-        </div>
-      )}
+        {/* ゲーム開始ボタン */}
+        {isHost && (
+          <div className="text-center pb-4">
+            <button
+              onClick={handleStartGame}
+              disabled={!canStart || isStarting}
+              className="w-full py-4 btn-primary rounded-xl text-lg font-[family-name:var(--font-display)] tracking-wider"
+            >
+              {isStarting ? "開始中..." : "ゲーム開始"}
+            </button>
+            {!canStart && (
+              <p className="mt-2 text-xs text-[var(--color-text-muted)]">
+                {playerCount < 3
+                  ? "3人以上でプレイできます"
+                  : !hasValidRoles
+                  ? "役職を設定してください"
+                  : ""}
+              </p>
+            )}
+          </div>
+        )}
+
+        {!isHost && (
+          <div className="text-center pb-4 text-[var(--color-text-muted)] text-sm">
+            ホストがゲームを開始するのを待っています...
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import { ROLE_NAMES, ROLE_DESCRIPTIONS, ROLE_TEAM, type Role } from "@/lib/game";
+import { ROLE_NAMES, ROLE_DESCRIPTIONS, type Role } from "@/lib/game";
 
-// 画像がある役職のマッピング（RoleCardと共有）
 const ROLE_IMAGES: Partial<Record<Role, string>> = {
   VILLAGER: "/images/roles/villager.jpeg",
   SEER: "/images/roles/seer.jpeg",
@@ -26,9 +25,9 @@ const ROLE_ICONS: Record<Role, string> = {
 };
 
 const TEAM_COLORS: Record<string, string> = {
-  "人狼陣営": "text-red-400",
-  "村人陣営": "text-green-400",
-  "第三陣営": "text-amber-400",
+  "人狼陣営": "text-[var(--color-role-werewolf)]",
+  "村人陣営": "text-[var(--color-ready)]",
+  "第三陣営": "text-[var(--color-role-tanner)]",
 };
 
 interface RoleDetailModalProps {
@@ -59,15 +58,12 @@ export function RoleDetailModal({ role, onClose }: RoleDetailModalProps) {
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       onClick={handleBackdropClick}
     >
-      {/* 背景オーバーレイ */}
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
 
-      {/* モーダル本体 */}
       <div className="relative glass-card rounded-xl p-6 max-w-sm w-full">
-        {/* 閉じるボタン */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors"
+          className="absolute top-3 right-3 text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
           aria-label="閉じる"
         >
           <svg
@@ -86,7 +82,6 @@ export function RoleDetailModal({ role, onClose }: RoleDetailModalProps) {
           </svg>
         </button>
 
-        {/* 役職カード画像/アイコン */}
         <div className="flex flex-col items-center mb-4">
           {imageSrc ? (
             <div className="relative w-28 h-40 rounded-xl overflow-hidden mb-3">
@@ -101,23 +96,23 @@ export function RoleDetailModal({ role, onClose }: RoleDetailModalProps) {
             <div className="text-6xl mb-3">{ROLE_ICONS[role]}</div>
           )}
 
-          <h2 className="text-2xl font-bold text-white">{ROLE_NAMES[role]}</h2>
-          <span className={`text-sm font-semibold ${TEAM_COLORS[description.team] || "text-gray-400"}`}>
+          <h2 className="font-[family-name:var(--font-display)] text-2xl font-bold gold-text">
+            {ROLE_NAMES[role]}
+          </h2>
+          <span className={`text-sm font-semibold ${TEAM_COLORS[description.team] || "text-[var(--color-text-secondary)]"}`}>
             {description.team}
           </span>
         </div>
 
-        {/* 能力説明 */}
-        <div className="glass-panel rounded-lg p-4 mb-3">
-          <h3 className="text-sm font-semibold text-gray-300 mb-2">能力</h3>
+        <div className="glass-panel rounded-xl p-4 mb-3">
+          <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">能力</h3>
           <p className="text-white text-sm leading-relaxed">
             {description.ability}
           </p>
         </div>
 
-        {/* 勝利条件 */}
-        <div className="glass-panel rounded-lg p-4">
-          <h3 className="text-sm font-semibold text-gray-300 mb-2">勝利条件</h3>
+        <div className="glass-panel rounded-xl p-4">
+          <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">勝利条件</h3>
           <p className="text-white text-sm leading-relaxed">
             {description.winCondition}
           </p>

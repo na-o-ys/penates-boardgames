@@ -19,19 +19,12 @@ const TEAM_NAMES: Record<Team, string> = {
   TANNER: "吊人",
 };
 
-const TEAM_COLORS: Record<Team, string> = {
-  VILLAGE: "game-overlay",
-  WEREWOLF: "game-overlay",
-  TANNER: "game-overlay",
-};
-
 export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps) {
   const currentPlayerId = playerId;
   const [isResetting, setIsResetting] = useState(false);
 
   const isHost = gameState.players[0]?.id === currentPlayerId;
 
-  // ClientGameStateから結果情報を取得
   const winningTeam = gameState.winningTeam;
   const winners = gameState.winners ?? [];
   const executedPlayerIds = gameState.executedPlayerIds ?? [];
@@ -53,24 +46,21 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
   };
 
   return (
-    <div className={`min-h-screen ${
-      winningTeam ? TEAM_COLORS[winningTeam] : "game-overlay"
-    } p-4`}>
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen game-overlay p-4">
+      <div className="max-w-md mx-auto">
         {/* 勝敗表示 */}
         <div className="text-center mb-8 pt-8">
-          <div className="text-6xl mb-4">
-            {isWinner ? "🎉" : "😢"}
-          </div>
-          <h1 className="text-4xl font-bold text-white mb-2">
+          <h1 className={`font-[family-name:var(--font-display)] font-black tracking-wider mb-2 ${
+            isWinner ? "text-5xl gold-text" : "text-4xl text-[var(--color-text-secondary)]"
+          }`}>
             {isWinner ? "勝利！" : "敗北..."}
           </h1>
           {winningTeam ? (
-            <p className="text-2xl text-gray-300">
+            <p className="text-lg text-[var(--color-text-secondary)]">
               {TEAM_NAMES[winningTeam]}の勝利
             </p>
           ) : (
-            <p className="text-2xl text-gray-300">
+            <p className="text-lg text-[var(--color-text-secondary)]">
               引き分け（勝者なし）
             </p>
           )}
@@ -78,15 +68,14 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
 
         {/* 処刑されたプレイヤー */}
         <div className="glass-card rounded-xl p-6 mb-6">
-          <h2 className="text-lg font-semibold text-white mb-4">処刑結果</h2>
+          <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold text-white mb-4">処刑結果</h2>
           {executedPlayerIds.length === 0 ? (
-            <p className="text-gray-400 text-center">誰も処刑されませんでした</p>
+            <p className="text-[var(--color-text-muted)] text-center">誰も処刑されませんでした</p>
           ) : (
             <div className="space-y-2">
               {executedPlayerIds.map((execPlayerId: PlayerId) => {
                 const player = gameState.players.find((p) => p.id === execPlayerId);
                 const role = gameState.finalRoles?.[execPlayerId];
-                // 道連れかどうかをチェック
                 const isHunterVictim = Object.values(
                   gameState.hunterRevengeTargets ?? {}
                 ).includes(execPlayerId);
@@ -94,17 +83,17 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
                 return (
                   <div
                     key={execPlayerId}
-                    className="flex items-center justify-between bg-red-900/50 p-3 rounded-lg"
+                    className="flex items-center justify-between bg-[var(--color-error)]/20 border border-[var(--color-error)]/30 p-3 rounded-xl"
                   >
                     <span className="text-white font-medium flex items-center gap-2">
                       {player?.name ?? "不明"}
                       {isHunterVictim && (
-                        <span className="text-xs bg-red-600 px-2 py-0.5 rounded text-white">
+                        <span className="text-xs bg-[var(--color-error)]/40 px-2 py-0.5 rounded-lg text-[var(--color-error)] font-semibold">
                           道連れ
                         </span>
                       )}
                     </span>
-                    <span className="text-red-200">
+                    <span className="text-[var(--color-error)]">
                       {role ? ROLE_NAMES[role] : "不明"}
                     </span>
                   </div>
@@ -116,7 +105,7 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
 
         {/* 全員の役職公開 */}
         <div className="glass-card rounded-xl p-6 mb-6">
-          <h2 className="text-lg font-semibold text-white mb-4">最終役職</h2>
+          <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold text-white mb-4">最終役職</h2>
           <div className="space-y-4">
             {gameState.players.map((player: Player) => {
               const finalRole = gameState.finalRoles?.[player.id];
@@ -126,10 +115,10 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
               return (
                 <div
                   key={player.id}
-                  className={`flex items-center gap-4 p-4 rounded-lg ${
+                  className={`flex items-center gap-4 p-4 rounded-xl ${
                     isCurrentPlayer
-                      ? "bg-slate-700 border-2 border-slate-500"
-                      : "bg-gray-700"
+                      ? "glass-card card-highlight"
+                      : "glass-panel"
                   }`}
                 >
                   <RoleCard role={finalRole ?? null} small />
@@ -139,17 +128,17 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
                         {player.name}
                       </span>
                       {isCurrentPlayer && (
-                        <span className="text-xs bg-slate-600 px-2 py-0.5 rounded text-white">
+                        <span className="text-xs bg-[var(--color-primary)]/20 px-2 py-0.5 rounded-lg text-[var(--color-primary)] font-semibold">
                           あなた
                         </span>
                       )}
                       {isPlayerWinner && (
-                        <span className="text-xs bg-green-600 px-2 py-0.5 rounded text-white">
+                        <span className="text-xs bg-[var(--color-ready)]/20 px-2 py-0.5 rounded-lg text-[var(--color-ready)] font-semibold">
                           勝者
                         </span>
                       )}
                     </div>
-                    <div className="text-gray-400 text-sm">
+                    <div className="text-[var(--color-text-secondary)] text-sm">
                       {finalRole ? ROLE_NAMES[finalRole] : "不明"}
                     </div>
                   </div>
@@ -159,17 +148,17 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
           </div>
         </div>
 
-        {/* 中央カードは最終役職から取得 */}
+        {/* 中央カード */}
         {gameState.finalRoles && (
           <div className="glass-card rounded-xl p-6 mb-6">
-            <h2 className="text-lg font-semibold text-white mb-4">中央カード</h2>
+            <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold text-white mb-4">中央カード</h2>
             <div className="flex justify-center gap-4">
               {["CENTER_0", "CENTER_1"].map((centerId, index) => {
                 const role = gameState.finalRoles?.[centerId] as Role | undefined;
                 return (
                   <div key={centerId} className="text-center">
                     <RoleCard role={role ?? null} small />
-                    <p className="text-gray-400 text-sm mt-2">
+                    <p className="text-[var(--color-text-muted)] text-sm mt-2">
                       中央{index + 1}
                     </p>
                   </div>
@@ -184,12 +173,12 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
           <button
             onClick={handlePlayAgain}
             disabled={isResetting}
-            className="w-full py-4 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg text-white font-bold text-lg transition-colors"
+            className="w-full py-4 btn-primary rounded-xl text-lg font-[family-name:var(--font-display)] tracking-wider"
           >
             {isResetting ? "準備中..." : "もう一度遊ぶ"}
           </button>
         ) : (
-          <p className="text-center text-gray-400">
+          <p className="text-center text-[var(--color-text-muted)]">
             ホストが次のゲームを開始するのを待っています...
           </p>
         )}

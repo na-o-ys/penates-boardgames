@@ -25,7 +25,6 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
   const votingDuration = gameState.config.votingDuration;
   const phaseStartedAt = gameState.phaseStartedAt;
 
-  // phaseStartedAtから残り時間を計算
   const calculateTimeLeft = useCallback(() => {
     if (!phaseStartedAt) return votingDuration;
     const elapsed = Math.floor((Date.now() - phaseStartedAt) / 1000);
@@ -35,7 +34,6 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft);
 
   useEffect(() => {
-    // phaseStartedAtが変わったら再計算
     setTimeLeft(calculateTimeLeft());
   }, [calculateTimeLeft]);
 
@@ -49,7 +47,6 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
     return () => clearInterval(timer);
   }, [timeLeft, calculateTimeLeft]);
 
-  // タイマー終了時の自動投票
   useEffect(() => {
     if (timeLeft <= 0 && !hasVoted) {
       autoVoteAction(roomId, playerId).catch(console.error);
@@ -78,45 +75,49 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
     }
   };
 
+  const isTimeLow = timeLeft <= 10 && timeLeft > 0;
+
   return (
     <div className="min-h-screen game-overlay p-4">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-md mx-auto">
         {/* ヘッダー */}
         <div className="text-center mb-8 pt-4">
-          <h1 className="text-3xl font-bold text-white mb-2">🗳️ 投票フェーズ</h1>
-          <div className="text-5xl font-bold text-white mb-4">
+          <h1 className="font-[family-name:var(--font-display)] font-bold text-3xl gold-text mb-2">
+            投票フェーズ
+          </h1>
+          <div className={`text-5xl font-bold mb-4 ${
+            isTimeLow ? "text-[var(--color-error)] animate-pulse" : "gold-text"
+          }`}>
             {formatTime(timeLeft)}
           </div>
-          <p className="text-gray-400">
+          <p className="text-[var(--color-text-secondary)]">
             処刑したいプレイヤーに投票してください
           </p>
-          <div className="mt-4 text-white">
+          <div className="mt-3 text-sm text-[var(--color-text-muted)]">
             投票済み: {votedCount} / {totalPlayers}
           </div>
         </div>
 
         {hasVoted ? (
-          /* 投票済み表示 */
           <div className="glass-card rounded-xl p-8 text-center">
-            <div className="text-6xl mb-4">✓</div>
-            <h2 className="text-2xl font-bold text-white mb-2">投票済み</h2>
-            <p className="text-gray-400">
+            <div className="text-4xl mb-4 text-[var(--color-ready)]">✓</div>
+            <h2 className="font-[family-name:var(--font-display)] text-2xl font-bold text-white mb-2">投票済み</h2>
+            <p className="text-[var(--color-text-secondary)]">
               他のプレイヤーの投票を待っています...
             </p>
             <div className="mt-6">
-              <div className="w-full bg-gray-700 rounded-full h-3">
+              <div className="w-full bg-black/30 rounded-full h-3">
                 <div
-                  className="bg-slate-500 rounded-full h-3 transition-all duration-500"
+                  className="bg-[var(--color-primary)] rounded-full h-3 transition-all duration-500"
                   style={{ width: `${(votedCount / totalPlayers) * 100}%` }}
                 />
               </div>
             </div>
           </div>
         ) : (
-          /* 投票UI */
           <>
             <div className="glass-card rounded-xl p-6 mb-6">
-              <h2 className="text-lg font-semibold text-white mb-4">
+              <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold text-white mb-4">
                 誰を処刑しますか？
               </h2>
               <div className="space-y-3">
@@ -124,10 +125,10 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
                   <button
                     key={player.id}
                     onClick={() => setSelectedTarget(player.id)}
-                    className={`w-full p-4 rounded-lg text-left transition-all ${
+                    className={`w-full p-4 rounded-xl text-left transition-all ${
                       selectedTarget === player.id
-                        ? "bg-slate-600 border-2 border-slate-400"
-                        : "bg-gray-700 hover:bg-gray-600 border-2 border-transparent"
+                        ? "glass-card card-highlight"
+                        : "glass-panel hover:border-[var(--color-text-muted)]"
                     }`}
                   >
                     <span className="text-white font-medium text-lg">
@@ -135,16 +136,15 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
                     </span>
                   </button>
                 ))}
-                {/* 投票スキップオプション */}
                 <button
                   onClick={() => setSelectedTarget(SKIP_VOTE)}
-                  className={`w-full p-4 rounded-lg text-left transition-all ${
+                  className={`w-full p-4 rounded-xl text-left transition-all ${
                     selectedTarget === SKIP_VOTE
-                      ? "bg-gray-600 border-2 border-gray-400"
-                      : "bg-gray-700 hover:bg-gray-600 border-2 border-transparent"
+                      ? "glass-card border-[var(--color-text-muted)]"
+                      : "glass-panel hover:border-[var(--color-text-muted)]"
                   }`}
                 >
-                  <span className="text-gray-300 font-medium text-lg">
+                  <span className="text-[var(--color-text-secondary)] font-medium text-lg">
                     投票しない（スキップ）
                   </span>
                 </button>
@@ -154,12 +154,12 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
             <button
               onClick={handleVote}
               disabled={!selectedTarget || isSubmitting}
-              className="w-full py-4 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg text-white font-bold text-lg transition-colors"
+              className="w-full py-4 btn-primary rounded-xl text-lg font-[family-name:var(--font-display)] tracking-wider"
             >
               {isSubmitting ? "投票中..." : "投票する"}
             </button>
 
-            <p className="text-center text-gray-400 mt-4 text-sm">
+            <p className="text-center text-[var(--color-text-muted)] mt-4 text-xs">
               ※ 投票は取り消せません
             </p>
           </>
@@ -167,24 +167,24 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
 
         {/* 投票状況 */}
         <div className="mt-8 glass-card rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">投票状況</h2>
+          <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold text-white mb-4">投票状況</h2>
           <div className="grid grid-cols-2 gap-3">
             {gameState.players.map((player: Player) => {
               const voted = gameState.votedPlayers?.includes(player.id);
               return (
                 <div
                   key={player.id}
-                  className={`p-3 rounded-lg flex items-center justify-between ${
+                  className={`p-3 rounded-xl flex items-center justify-between ${
                     player.id === currentPlayerId
-                      ? "bg-slate-700 border border-slate-500"
-                      : "bg-gray-700"
+                      ? "glass-card card-highlight"
+                      : "glass-panel"
                   }`}
                 >
-                  <span className="text-white">{player.name}</span>
+                  <span className="text-white text-sm">{player.name}</span>
                   {voted ? (
-                    <span className="text-green-400">✓</span>
+                    <span className="text-[var(--color-ready)]">✓</span>
                   ) : (
-                    <span className="text-gray-500">...</span>
+                    <span className="text-[var(--color-text-muted)]">...</span>
                   )}
                 </div>
               );

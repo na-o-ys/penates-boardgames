@@ -27,12 +27,12 @@ export function TimerSettings({
   return (
     <div className="space-y-4" data-testid="timer-settings">
       <div className="flex items-center justify-between">
-        <span className="text-gray-300">夜フェーズ時間</span>
+        <span className="text-[var(--color-text-secondary)]">夜フェーズ時間</span>
         <select
           value={nightDuration}
           onChange={(e) => onChange({ nightDuration: Number(e.target.value) })}
           disabled={disabled}
-          className="bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50"
+          className="glass-input text-white px-3 py-2 rounded-xl disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
           data-testid="night-duration-select"
         >
           {DURATION_OPTIONS.map((option) => (
@@ -43,12 +43,12 @@ export function TimerSettings({
         </select>
       </div>
       <div className="flex items-center justify-between">
-        <span className="text-gray-300">議論フェーズ時間</span>
+        <span className="text-[var(--color-text-secondary)]">議論フェーズ時間</span>
         <select
           value={dayDuration}
           onChange={(e) => onChange({ dayDuration: Number(e.target.value) })}
           disabled={disabled}
-          className="bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50"
+          className="glass-input text-white px-3 py-2 rounded-xl disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
           data-testid="day-duration-select"
         >
           {DURATION_OPTIONS.map((option) => (
@@ -59,12 +59,12 @@ export function TimerSettings({
         </select>
       </div>
       <div className="flex items-center justify-between">
-        <span className="text-gray-300">投票フェーズ時間</span>
+        <span className="text-[var(--color-text-secondary)]">投票フェーズ時間</span>
         <select
           value={votingDuration}
           onChange={(e) => onChange({ votingDuration: Number(e.target.value) })}
           disabled={disabled}
-          className="bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50"
+          className="glass-input text-white px-3 py-2 rounded-xl disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
           data-testid="voting-duration-select"
         >
           {DURATION_OPTIONS.map((option) => (

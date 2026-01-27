@@ -12,14 +12,24 @@ const ALL_ROLES: Role[] = [
   "TANNER",
 ];
 
-const ROLE_COLORS: Record<Role, string> = {
-  WEREWOLF: "bg-red-600 hover:bg-red-700",
-  SEER: "bg-purple-600 hover:bg-purple-700",
-  ROBBER: "bg-blue-600 hover:bg-blue-700",
-  TROUBLEMAKER: "bg-orange-600 hover:bg-orange-700",
-  VILLAGER: "bg-green-600 hover:bg-green-700",
-  HUNTER: "bg-emerald-600 hover:bg-emerald-700",
-  TANNER: "bg-amber-700 hover:bg-amber-800",
+const ROLE_BORDER_COLORS: Record<Role, string> = {
+  WEREWOLF: "border-[var(--color-role-werewolf)]",
+  SEER: "border-[var(--color-role-seer)]",
+  ROBBER: "border-[var(--color-role-robber)]",
+  TROUBLEMAKER: "border-[var(--color-role-troublemaker)]",
+  VILLAGER: "border-[var(--color-role-villager)]",
+  HUNTER: "border-[var(--color-role-hunter)]",
+  TANNER: "border-[var(--color-role-tanner)]",
+};
+
+const ROLE_TEXT_COLORS: Record<Role, string> = {
+  WEREWOLF: "text-[var(--color-role-werewolf)]",
+  SEER: "text-[var(--color-role-seer)]",
+  ROBBER: "text-[var(--color-role-robber)]",
+  TROUBLEMAKER: "text-[var(--color-role-troublemaker)]",
+  VILLAGER: "text-[var(--color-role-villager)]",
+  HUNTER: "text-[var(--color-role-hunter)]",
+  TANNER: "text-[var(--color-role-tanner)]",
 };
 
 interface RoleSelectorProps {
@@ -57,7 +67,6 @@ export function RoleSelector({
 
   return (
     <div className="space-y-4" data-testid="role-selector">
-      {/* 役職選択ボタン */}
       <div className="grid grid-cols-2 gap-2">
         {ALL_ROLES.map((role) => {
           const count = getRoleCount(role);
@@ -65,28 +74,28 @@ export function RoleSelector({
             <div
               key={role}
               data-testid={`role-${role}`}
-              className={`flex items-center justify-between px-3 py-2 rounded-lg ${
-                disabled ? "bg-gray-800" : ROLE_COLORS[role]
+              className={`flex items-center justify-between px-3 py-2 rounded-xl glass-panel border-l-4 ${
+                ROLE_BORDER_COLORS[role]
               } ${disabled ? "opacity-60" : ""}`}
             >
-              <span className="text-white text-sm font-medium">
+              <span className={`text-sm font-medium ${ROLE_TEXT_COLORS[role]}`}>
                 {ROLE_NAMES[role]}
               </span>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => handleRemove(role)}
                   disabled={disabled || count === 0}
-                  className="w-6 h-6 flex items-center justify-center bg-black/30 hover:bg-black/50 disabled:opacity-30 rounded text-white text-sm"
+                  className="w-7 h-7 flex items-center justify-center bg-black/40 hover:bg-black/60 disabled:opacity-30 rounded-lg text-white text-sm transition-colors"
                 >
                   -
                 </button>
-                <span data-testid="role-count" className="w-6 text-center text-white font-bold">
+                <span data-testid="role-count" className="w-6 text-center text-[var(--color-primary)] font-bold">
                   {count}
                 </span>
                 <button
                   onClick={() => handleAdd(role)}
                   disabled={disabled}
-                  className="w-6 h-6 flex items-center justify-center bg-black/30 hover:bg-black/50 disabled:opacity-30 rounded text-white text-sm"
+                  className="w-7 h-7 flex items-center justify-center bg-black/40 hover:bg-black/60 disabled:opacity-30 rounded-lg text-white text-sm transition-colors"
                 >
                   +
                 </button>
@@ -96,27 +105,25 @@ export function RoleSelector({
         })}
       </div>
 
-      {/* 選択状況 */}
-      <div className="flex items-center justify-between px-3 py-2 glass-panel rounded-lg">
-        <span className="text-gray-300">選択枚数</span>
+      <div className="flex items-center justify-between px-3 py-2 glass-panel rounded-xl">
+        <span className="text-[var(--color-text-secondary)]">選択枚数</span>
         <span
           className={`font-bold ${
             selectedRoles.length === requiredCount
-              ? "text-green-400"
-              : "text-red-400"
+              ? "text-[var(--color-ready)]"
+              : "text-[var(--color-error)]"
           }`}
         >
           {selectedRoles.length} / {requiredCount}
         </span>
       </div>
 
-      {/* 選択された役職一覧 */}
       {selectedRoles.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {selectedRoles.map((role, index) => (
             <span
               key={index}
-              className={`px-2 py-1 text-xs text-white rounded ${ROLE_COLORS[role]}`}
+              className={`px-2 py-1 text-xs rounded-lg glass-panel border-l-2 ${ROLE_BORDER_COLORS[role]} ${ROLE_TEXT_COLORS[role]}`}
             >
               {ROLE_NAMES[role]}
             </span>

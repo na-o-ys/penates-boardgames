@@ -24,7 +24,6 @@ export function NightScreen({
   const nightDuration = gameState.config.nightDuration;
   const phaseStartedAt = gameState.phaseStartedAt;
 
-  // phaseStartedAtから残り時間を計算
   const calculateTimeLeft = useCallback(() => {
     if (!phaseStartedAt) return nightDuration;
     const elapsed = Math.floor((Date.now() - phaseStartedAt) / 1000);
@@ -34,7 +33,6 @@ export function NightScreen({
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft);
 
   useEffect(() => {
-    // phaseStartedAtが変わったら再計算
     setTimeLeft(calculateTimeLeft());
   }, [calculateTimeLeft]);
 
@@ -48,11 +46,9 @@ export function NightScreen({
     return () => clearInterval(timer);
   }, [timeLeft, calculateTimeLeft]);
 
-  // タイマー終了時の自動スキップ
   const hasActed = gameState.hasActed;
   useEffect(() => {
     if (timeLeft <= 0 && !hasActed) {
-      // タイマー終了時に未行動なら自動スキップを実行
       autoSkipNightActionAction(roomId, playerId).catch(console.error);
     }
   }, [timeLeft, hasActed, roomId, playerId]);
@@ -76,7 +72,6 @@ export function NightScreen({
     if (selectedTargets.includes(targetId)) {
       setSelectedTargets(selectedTargets.filter((t) => t !== targetId));
     } else {
-      // 役職に応じて選択可能数を制限
       const maxTargets = getMaxTargets();
       if (selectedTargets.length < maxTargets) {
         setSelectedTargets([...selectedTargets, targetId]);
@@ -89,7 +84,7 @@ export function NightScreen({
   const getMaxTargets = () => {
     switch (myRole) {
       case "SEER":
-        return 2; // 中央2枚 or プレイヤー1人
+        return 2;
       case "ROBBER":
         return 1;
       case "TROUBLEMAKER":
@@ -117,24 +112,25 @@ export function NightScreen({
 
   const handleSkip = () => handleSubmitAction("SKIP");
 
+  const isTimeLow = timeLeft <= 10 && timeLeft > 0;
+
   const renderActionUI = () => {
     if (!myRole || hasActed) return null;
 
     switch (myRole) {
       case "WEREWOLF":
-        // 仲間の人狼がいる場合
         if (fellowWerewolves.length > 0) {
           const fellowNames = fellowWerewolves
             .map((id) => gameState.players.find((p) => p.id === id)?.name)
             .filter(Boolean);
           return (
             <div className="space-y-4">
-              <p className="text-gray-300">あなたの仲間の人狼:</p>
+              <p className="text-[var(--color-text-secondary)]">あなたの仲間の人狼:</p>
               <div className="flex flex-wrap justify-center gap-2">
                 {fellowNames.map((name, index) => (
                   <span
                     key={index}
-                    className="px-4 py-2 bg-red-900/50 border border-red-500 rounded-lg text-white font-semibold"
+                    className="px-4 py-2 glass-card border-l-4 border-[var(--color-role-werewolf)] rounded-xl text-white font-semibold"
                   >
                     {name}
                   </span>
@@ -143,23 +139,22 @@ export function NightScreen({
               <button
                 onClick={handleSkip}
                 disabled={isSubmitting}
-                className="w-full py-3 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 rounded-lg text-white font-semibold transition-colors"
+                className="w-full py-3 btn-primary rounded-xl"
               >
                 {isSubmitting ? "処理中..." : "確認した"}
               </button>
             </div>
           );
         }
-        // 単独人狼の場合
         return (
           <div className="space-y-4">
-            <p className="text-gray-300">
+            <p className="text-[var(--color-text-secondary)]">
               あなたは唯一の人狼です。
             </p>
             <button
               onClick={handleSkip}
               disabled={isSubmitting}
-              className="w-full py-3 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 rounded-lg text-white font-semibold transition-colors"
+              className="w-full py-3 btn-primary rounded-xl"
             >
               {isSubmitting ? "処理中..." : "確認した"}
             </button>
@@ -169,12 +164,12 @@ export function NightScreen({
       case "SEER":
         return (
           <div className="space-y-4">
-            <p className="text-gray-300">
+            <p className="text-[var(--color-text-secondary)]">
               プレイヤー1人のカード、または中央のカード2枚を確認できます
             </p>
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-gray-400 mb-2">プレイヤーを選択</p>
+                <p className="text-sm text-[var(--color-text-muted)] mb-2">プレイヤーを選択</p>
                 <div className="flex flex-wrap justify-center gap-2">
                   {otherPlayers.map((player) => (
                     <button
@@ -183,30 +178,30 @@ export function NightScreen({
                         setSelectedTargets([player.id]);
                       }}
                       disabled={isSubmitting}
-                      className={`px-4 py-2 rounded-lg border-2 transition-colors ${
+                      className={`px-4 py-2 rounded-xl transition-all ${
                         selectedTargets.includes(player.id)
-                          ? "border-slate-400 bg-slate-700"
-                          : "border-gray-600 bg-gray-800 hover:border-gray-500"
+                          ? "glass-card card-highlight"
+                          : "glass-card hover:border-[var(--color-text-muted)]"
                       }`}
                     >
-                      {player.name}
+                      <span className="text-white">{player.name}</span>
                     </button>
                   ))}
                 </div>
                 <button
                   onClick={() => handleSubmitAction("SEER_LOOK_PLAYER")}
                   disabled={selectedTargets.length !== 1 || selectedTargets[0]?.startsWith("CENTER") || isSubmitting}
-                  className="w-full mt-2 py-2 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 rounded-lg text-white font-semibold transition-colors"
+                  className="w-full mt-2 py-2 btn-primary rounded-xl"
                 >
                   プレイヤーを占う
                 </button>
               </div>
-              <div className="text-center text-gray-500">または</div>
+              <div className="text-center text-[var(--color-text-muted)]">または</div>
               <div>
                 <button
                   onClick={() => handleSubmitAction("SEER_LOOK_CENTER", ["CENTER_0", "CENTER_1"])}
                   disabled={isSubmitting}
-                  className="w-full py-3 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 rounded-lg text-white font-semibold transition-colors"
+                  className="w-full py-3 btn-secondary rounded-xl"
                 >
                   中央を占う
                 </button>
@@ -218,7 +213,7 @@ export function NightScreen({
       case "ROBBER":
         return (
           <div className="space-y-4">
-            <p className="text-gray-300">
+            <p className="text-[var(--color-text-secondary)]">
               他のプレイヤー1人とカードを交換し、新しいカードを確認します
             </p>
             <div className="flex flex-wrap justify-center gap-2">
@@ -227,20 +222,20 @@ export function NightScreen({
                   key={player.id}
                   onClick={() => handleTargetClick(player.id)}
                   disabled={isSubmitting}
-                  className={`px-4 py-2 rounded-lg border-2 transition-colors ${
+                  className={`px-4 py-2 rounded-xl transition-all ${
                     selectedTargets.includes(player.id)
-                      ? "border-slate-400 bg-slate-700"
-                      : "border-gray-600 bg-gray-800 hover:border-gray-500"
+                      ? "glass-card card-highlight"
+                      : "glass-card hover:border-[var(--color-text-muted)]"
                   }`}
                 >
-                  {player.name}
+                  <span className="text-white">{player.name}</span>
                 </button>
               ))}
             </div>
             <button
               onClick={() => handleSubmitAction("ROBBER_SWAP")}
               disabled={selectedTargets.length !== 1 || isSubmitting}
-              className="w-full py-3 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 rounded-lg text-white font-semibold transition-colors"
+              className="w-full py-3 btn-primary rounded-xl"
             >
               カードを奪う
             </button>
@@ -250,7 +245,7 @@ export function NightScreen({
       case "TROUBLEMAKER":
         return (
           <div className="space-y-4">
-            <p className="text-gray-300">
+            <p className="text-[var(--color-text-secondary)]">
               他のプレイヤー2人のカードを入れ替えます（中身は見られません）
             </p>
             <div className="flex flex-wrap justify-center gap-2">
@@ -259,20 +254,20 @@ export function NightScreen({
                   key={player.id}
                   onClick={() => handleTargetClick(player.id)}
                   disabled={isSubmitting}
-                  className={`px-4 py-2 rounded-lg border-2 transition-colors ${
+                  className={`px-4 py-2 rounded-xl transition-all ${
                     selectedTargets.includes(player.id)
-                      ? "border-slate-400 bg-slate-700"
-                      : "border-gray-600 bg-gray-800 hover:border-gray-500"
+                      ? "glass-card card-highlight"
+                      : "glass-card hover:border-[var(--color-text-muted)]"
                   }`}
                 >
-                  {player.name}
+                  <span className="text-white">{player.name}</span>
                 </button>
               ))}
             </div>
             <button
               onClick={() => handleSubmitAction("TROUBLEMAKER_SWAP")}
               disabled={selectedTargets.length !== 2 || isSubmitting}
-              className="w-full py-3 bg-slate-600 hover:bg-slate-500 disabled:bg-gray-600 rounded-lg text-white font-semibold transition-colors"
+              className="w-full py-3 btn-primary rounded-xl"
             >
               カードを入れ替える
             </button>
@@ -286,78 +281,84 @@ export function NightScreen({
 
   return (
     <div className="flex flex-col min-h-screen game-overlay p-4 md:p-8">
-      {/* ヘッダー */}
-      <div className="text-center mb-8 pt-4">
-        <h1 className="text-2xl font-bold text-white mb-2">🌙 夜フェーズ</h1>
-        <div className="text-5xl font-bold text-white mb-4">
-          {formatTime(timeLeft)}
+      <div className="max-w-md mx-auto w-full">
+        {/* ヘッダー */}
+        <div className="text-center mb-8 pt-4">
+          <h1 className="font-[family-name:var(--font-display)] font-bold text-3xl gold-text mb-2">
+            夜フェーズ
+          </h1>
+          <div className={`text-5xl font-bold mb-4 ${
+            isTimeLow ? "text-[var(--color-error)] animate-pulse" : "gold-text"
+          }`}>
+            {formatTime(timeLeft)}
+          </div>
+          <p className="text-[var(--color-text-secondary)]">目を閉じて、能力を使ってください</p>
         </div>
-        <p className="text-gray-400">目を閉じて、能力を使ってください</p>
-      </div>
 
-      {error && (
-        <div className="mb-6 px-4 py-3 bg-red-900/50 border border-red-500 rounded-lg text-red-200 text-center">
-          {error}
+        {error && (
+          <div className="mb-6 px-4 py-3 bg-[var(--color-error)]/20 border border-[var(--color-error)]/40 rounded-xl text-[var(--color-error)] text-center text-sm">
+            {error}
+          </div>
+        )}
+
+        {/* 自分の役職 */}
+        <div className="flex justify-center mb-8">
+          <RoleCard role={myRole} />
         </div>
-      )}
 
-      {/* 自分の役職 */}
-      <div className="flex justify-center mb-8">
-        <RoleCard role={myRole} />
-      </div>
-
-      <div className="flex-1 max-w-md mx-auto w-full">
-        {hasActed ? (
-          <div className="text-center">
-            <p className="text-green-400 mb-4">アクション完了</p>
-            {actionResult && actionResult.revealedRoles && actionResult.revealedRoles.length > 0 && (
-              <div className="p-4 glass-panel rounded-lg">
-                <p className="text-gray-400 mb-2">確認した役職:</p>
-                <div className="flex justify-center gap-2">
-                  {actionResult.revealedRoles.map((role, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-gray-700 rounded text-white font-semibold"
-                    >
-                      {ROLE_NAMES[role]}
-                    </span>
-                  ))}
+        <div className="flex-1">
+          {hasActed ? (
+            <div className="text-center">
+              <p className="text-[var(--color-ready)] mb-4 font-semibold">アクション完了</p>
+              {actionResult && actionResult.revealedRoles && actionResult.revealedRoles.length > 0 && (
+                <div className="p-4 glass-card rounded-xl">
+                  <p className="text-[var(--color-text-secondary)] mb-2">確認した役職:</p>
+                  <div className="flex justify-center gap-2">
+                    {actionResult.revealedRoles.map((role, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 glass-panel rounded-lg text-white font-semibold"
+                      >
+                        {ROLE_NAMES[role]}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-            <p className="mt-4 text-gray-400">
-              他のプレイヤーの行動を待っています...
-            </p>
-          </div>
-        ) : hasAction ? (
-          renderActionUI()
-        ) : (
-          <div className="text-center">
-            <p className="text-gray-400 mb-4">
-              あなたの役職には夜の行動がありません
-            </p>
-            <button
-              onClick={handleSkip}
-              disabled={isSubmitting}
-              className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-semibold transition-colors"
-            >
-              {isSubmitting ? "処理中..." : "待機する"}
-            </button>
-          </div>
-        )}
+              )}
+              <p className="mt-4 text-[var(--color-text-muted)]">
+                他のプレイヤーの行動を待っています...
+              </p>
+            </div>
+          ) : hasAction ? (
+            renderActionUI()
+          ) : (
+            <div className="text-center">
+              <p className="text-[var(--color-text-secondary)] mb-4">
+                あなたの役職には夜の行動がありません
+              </p>
+              <button
+                onClick={handleSkip}
+                disabled={isSubmitting}
+                className="px-6 py-3 btn-secondary rounded-xl"
+              >
+                {isSubmitting ? "処理中..." : "待機する"}
+              </button>
+            </div>
+          )}
 
-        {/* スキップボタン（行動ありの役職用） */}
-        {hasAction && !hasActed && (
-          <div className="mt-6 text-center">
-            <button
-              onClick={handleSkip}
-              disabled={isSubmitting}
-              className="text-gray-400 hover:text-gray-300 underline text-sm"
-            >
-              行動をスキップ
-            </button>
-          </div>
-        )}
+          {/* スキップリンク */}
+          {hasAction && !hasActed && (
+            <div className="mt-6 text-center">
+              <button
+                onClick={handleSkip}
+                disabled={isSubmitting}
+                className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] underline text-sm transition-colors"
+              >
+                行動をスキップ
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
