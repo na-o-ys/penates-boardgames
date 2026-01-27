@@ -77,6 +77,20 @@ export function DayScreen({ gameState, playerId, roomId }: DayScreenProps) {
     return ROLE_NAMES[role] ?? role;
   };
 
+  // 怪盗の交換後の役職を取得
+  const getCurrentRole = (): Role | null => {
+    const robberSwap = gameState.actionResults.find(
+      (r) => r.type === "ROBBER_SWAP"
+    );
+    if (robberSwap && robberSwap.revealedRoles?.[0]) {
+      return robberSwap.revealedRoles[0];
+    }
+    return null;
+  };
+
+  const currentRole = getCurrentRole();
+  const hasSwapped = currentRole !== null;
+
   return (
     <div className="min-h-screen game-overlay p-4">
       <div className="max-w-2xl mx-auto">
@@ -93,12 +107,28 @@ export function DayScreen({ gameState, playerId, roomId }: DayScreenProps) {
 
         {/* 自分の役職 */}
         <div className="glass-card rounded-xl p-6 mb-6">
-          <h2 className="text-lg font-semibold text-white mb-4 text-center">
-            あなたの最初の役職
-          </h2>
-          <div className="flex justify-center">
-            <RoleCard role={gameState.myRole} />
-          </div>
+          {hasSwapped ? (
+            <>
+              <h2 className="text-lg font-semibold text-white mb-4 text-center">
+                あなたの現在の役職
+              </h2>
+              <div className="flex justify-center mb-4">
+                <RoleCard role={currentRole} />
+              </div>
+              <p className="text-center text-gray-400 text-sm">
+                最初の役職: {ROLE_NAMES[gameState.myRole!]}
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-lg font-semibold text-white mb-4 text-center">
+                あなたの役職
+              </h2>
+              <div className="flex justify-center">
+                <RoleCard role={gameState.myRole} />
+              </div>
+            </>
+          )}
         </div>
 
         {/* 夜の情報 */}
