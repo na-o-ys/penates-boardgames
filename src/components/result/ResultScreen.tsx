@@ -116,7 +116,7 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
               isWinner ? "text-4xl gold-text" : "text-3xl text-[var(--color-text-secondary)]"
             }`}
           >
-            {isWinner ? "勝利！" : "敗北..."}
+            {isWinner ? "WIN!" : "LOSE..."}
           </h1>
           {winningTeam ? (
             <p className="text-sm text-[var(--color-text-secondary)]">
