@@ -35,7 +35,6 @@ export function PlayerColumn({ roomId, playerId, playerName }: PlayerColumnProps
           roomId={roomId}
           playerId={playerId}
           gameState={gameState}
-          onRefresh={refresh}
         />
       </div>
     </div>

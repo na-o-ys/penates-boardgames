@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { startGameAction, setRolesAction, updateGameConfigAction, kickPlayerAction } from "@/actions";
 import { type ClientGameState, type Role } from "@/lib/game";
 import { PlayerList } from "./PlayerList";
 import { RoleSelector } from "./RoleSelector";
@@ -13,13 +12,20 @@ interface LobbyScreenProps {
   roomId: string;
   gameState: ClientGameState;
   playerId: string;
-  onRefresh: () => void;
+  onStartGame: () => Promise<{ success: boolean; error?: string }>;
+  onSetRoles: (roles: Role[]) => Promise<{ success: boolean; error?: string }>;
+  onUpdateConfig: (settings: { nightDuration?: number; dayDuration?: number }) => Promise<{ success: boolean; error?: string }>;
+  onKickPlayer: (targetPlayerId: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 export function LobbyScreen({
   roomId,
   gameState,
   playerId,
+  onStartGame,
+  onSetRoles,
+  onUpdateConfig,
+  onKickPlayer,
 }: LobbyScreenProps) {
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +39,7 @@ export function LobbyScreen({
 
   const handleRolesChange = async (roles: Role[]) => {
     setError(null);
-    const result = await setRolesAction(roomId, playerId, roles);
+    const result = await onSetRoles(roles);
     if (!result.success) {
       setError(result.error ?? "役職の設定に失敗しました");
     }
@@ -41,7 +47,7 @@ export function LobbyScreen({
 
   const handleTimerChange = async (settings: { nightDuration?: number; dayDuration?: number }) => {
     setError(null);
-    const result = await updateGameConfigAction(roomId, playerId, settings);
+    const result = await onUpdateConfig(settings);
     if (!result.success) {
       setError(result.error ?? "タイマー設定に失敗しました");
     }
@@ -49,7 +55,7 @@ export function LobbyScreen({
 
   const handleKickPlayer = async (targetPlayerId: string) => {
     setError(null);
-    const result = await kickPlayerAction(roomId, playerId, targetPlayerId);
+    const result = await onKickPlayer(targetPlayerId);
     if (!result.success) {
       setError(result.error ?? "プレイヤーの退室に失敗しました");
     }
@@ -62,7 +68,7 @@ export function LobbyScreen({
     setError(null);
 
     try {
-      const result = await startGameAction(roomId, playerId);
+      const result = await onStartGame();
       if (!result.success) {
         setError(result.error ?? "ゲームの開始に失敗しました");
       }

@@ -3,16 +3,16 @@
 import { useState, useEffect, useCallback } from "react";
 import type { ClientGameState, Player } from "@/lib/game";
 import { SKIP_VOTE } from "@/lib/game";
-import { submitVoteAction, autoVoteAction } from "@/actions";
 
 interface VotingScreenProps {
   gameState: ClientGameState;
   playerId: string;
   roomId: string;
-  onRefresh: () => void;
+  onSubmitVote: (targetId: string) => Promise<{ success: boolean; error?: string }>;
+  onAutoVote: () => Promise<{ success: boolean; error?: string }>;
 }
 
-export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps) {
+export function VotingScreen({ gameState, playerId, roomId, onSubmitVote, onAutoVote }: VotingScreenProps) {
   const currentPlayerId = playerId;
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,9 +49,9 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
 
   useEffect(() => {
     if (timeLeft <= 0 && !hasVoted) {
-      autoVoteAction(roomId, playerId).catch(console.error);
+      onAutoVote().catch(console.error);
     }
-  }, [timeLeft, hasVoted, roomId, playerId]);
+  }, [timeLeft, hasVoted, onAutoVote]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -64,7 +64,7 @@ export function VotingScreen({ gameState, playerId, roomId }: VotingScreenProps)
 
     setIsSubmitting(true);
     try {
-      const result = await submitVoteAction(roomId, playerId, selectedTarget);
+      const result = await onSubmitVote(selectedTarget);
       if (!result.success) {
         console.error("Failed to submit vote:", result.error);
       }

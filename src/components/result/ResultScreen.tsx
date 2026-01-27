@@ -2,14 +2,13 @@
 
 import type { ClientGameState, Player, Role, Team, PlayerId, GameAction } from "@/lib/game";
 import { ROLE_NAMES, ROLE_MATERIAL_ICONS, ROLE_CARD_COLORS } from "@/lib/game";
-import { resetGameAction } from "@/actions";
 import { useState } from "react";
 
 interface ResultScreenProps {
   gameState: ClientGameState;
   playerId: string;
   roomId: string;
-  onRefresh: () => void;
+  onPlayAgain: () => Promise<{ success: boolean; error?: string }>;
 }
 
 const TEAM_NAMES: Record<Team, string> = {
@@ -77,7 +76,7 @@ function UnknownMiniCard() {
   );
 }
 
-export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps) {
+export function ResultScreen({ gameState, playerId, roomId, onPlayAgain }: ResultScreenProps) {
   const currentPlayerId = playerId;
   const [isResetting, setIsResetting] = useState(false);
 
@@ -95,9 +94,9 @@ export function ResultScreen({ gameState, playerId, roomId }: ResultScreenProps)
   const handlePlayAgain = async () => {
     setIsResetting(true);
     try {
-      const resetResult = await resetGameAction(roomId, playerId);
-      if (!resetResult.success) {
-        console.error("Failed to reset game:", resetResult.error);
+      const result = await onPlayAgain();
+      if (!result.success) {
+        console.error("Failed to reset game:", result.error);
       }
     } catch (error) {
       console.error("Error resetting game:", error);

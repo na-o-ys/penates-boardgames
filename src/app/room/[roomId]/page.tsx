@@ -81,7 +81,6 @@ export default function RoomPage({ params }: RoomPageProps) {
       roomId={roomId}
       playerId={playerId}
       gameState={gameState}
-      onRefresh={refresh}
     />
   );
 }

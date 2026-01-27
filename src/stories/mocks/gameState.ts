@@ -1,0 +1,264 @@
+import type { ClientGameState, Role } from "@/lib/game";
+
+const MOCK_PLAYERS = [
+  { id: "p1", name: "太郎", isHost: true, isConnected: true },
+  { id: "p2", name: "花子", isHost: false, isConnected: true },
+  { id: "p3", name: "次郎", isHost: false, isConnected: true },
+  { id: "p4", name: "美咲", isHost: false, isConnected: false },
+] as const;
+
+const MOCK_ROLES: Role[] = ["WEREWOLF", "SEER", "ROBBER", "VILLAGER", "TROUBLEMAKER", "HUNTER"];
+
+const MOCK_CONFIG = {
+  roles: MOCK_ROLES,
+  nightDuration: 60,
+  dayDuration: 300,
+  votingDuration: 60,
+} as const;
+
+const BASE_STATE: ClientGameState = {
+  roomId: "test-room-id",
+  phase: "LOBBY",
+  players: MOCK_PLAYERS,
+  config: MOCK_CONFIG,
+  myRole: null,
+  myActions: [],
+  actionResults: [],
+  hasActed: false,
+  allActed: false,
+  votedPlayers: [],
+  myVote: null,
+  phaseStartedAt: null,
+};
+
+// ========================================
+// LOBBY
+// ========================================
+
+export const lobbyHostState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "LOBBY",
+};
+
+export const lobbyGuestState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "LOBBY",
+};
+
+// ========================================
+// NIGHT
+// ========================================
+
+export const nightSeerState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "NIGHT",
+  myRole: "SEER",
+  hasActed: false,
+  phaseStartedAt: Date.now(),
+};
+
+export const nightWerewolfState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "NIGHT",
+  myRole: "WEREWOLF",
+  hasActed: false,
+  fellowWerewolves: [],
+  phaseStartedAt: Date.now(),
+};
+
+export const nightWerewolfWithFellowsState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "NIGHT",
+  myRole: "WEREWOLF",
+  hasActed: false,
+  fellowWerewolves: ["p2"],
+  phaseStartedAt: Date.now(),
+};
+
+export const nightRobberState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "NIGHT",
+  myRole: "ROBBER",
+  hasActed: false,
+  phaseStartedAt: Date.now(),
+};
+
+export const nightTroublemakerState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "NIGHT",
+  myRole: "TROUBLEMAKER",
+  hasActed: false,
+  phaseStartedAt: Date.now(),
+};
+
+export const nightHunterState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "NIGHT",
+  myRole: "HUNTER",
+  hasActed: false,
+  phaseStartedAt: Date.now(),
+};
+
+export const nightVillagerState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "NIGHT",
+  myRole: "VILLAGER",
+  hasActed: false,
+  phaseStartedAt: Date.now(),
+};
+
+export const nightTannerState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "NIGHT",
+  myRole: "TANNER",
+  hasActed: false,
+  phaseStartedAt: Date.now(),
+};
+
+export const nightActedState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "NIGHT",
+  myRole: "SEER",
+  hasActed: true,
+  actionResults: [
+    { type: "SEER_LOOK_PLAYER", targetIds: ["p2"], revealedRoles: ["WEREWOLF"] },
+  ],
+  phaseStartedAt: Date.now(),
+};
+
+// ========================================
+// DAY
+// ========================================
+
+export const dayNormalState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "DAY",
+  myRole: "SEER",
+  actionResults: [
+    { type: "SEER_LOOK_PLAYER", targetIds: ["p2"], revealedRoles: ["WEREWOLF"] },
+  ],
+  phaseStartedAt: Date.now(),
+};
+
+export const dayRobberSwapState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "DAY",
+  myRole: "ROBBER",
+  actionResults: [
+    { type: "ROBBER_SWAP", targetIds: ["p2"], revealedRoles: ["WEREWOLF"] },
+  ],
+  phaseStartedAt: Date.now(),
+};
+
+// ========================================
+// VOTING
+// ========================================
+
+export const votingNotVotedState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "VOTING",
+  myRole: "SEER",
+  votedPlayers: ["p3"],
+  myVote: null,
+  phaseStartedAt: Date.now(),
+};
+
+export const votingVotedState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "VOTING",
+  myRole: "SEER",
+  votedPlayers: ["p1", "p3"],
+  myVote: "p2",
+  phaseStartedAt: Date.now(),
+};
+
+// ========================================
+// RESULT
+// ========================================
+
+export const resultVillageWinState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "RESULT",
+  myRole: "SEER",
+  initialRoles: {
+    p1: "SEER",
+    p2: "WEREWOLF",
+    p3: "ROBBER",
+    p4: "VILLAGER",
+    CENTER_0: "TROUBLEMAKER",
+    CENTER_1: "HUNTER",
+  },
+  finalRoles: {
+    p1: "SEER",
+    p2: "WEREWOLF",
+    p3: "ROBBER",
+    p4: "VILLAGER",
+    CENTER_0: "TROUBLEMAKER",
+    CENTER_1: "HUNTER",
+  },
+  allActions: [
+    { actorId: "p1", type: "SEER_LOOK_PLAYER", targetIds: ["p2"], result: ["WEREWOLF"], timestamp: 0 },
+    { actorId: "p3", type: "ROBBER_SWAP", targetIds: ["p4"], result: ["VILLAGER"], timestamp: 0 },
+  ],
+  allVotes: { p1: "p2", p2: "p1", p3: "p2", p4: "p2" },
+  executedPlayerIds: ["p2"],
+  winners: ["p1", "p3", "p4"],
+  winningTeam: "VILLAGE",
+};
+
+export const resultWerewolfWinState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "RESULT",
+  myRole: "SEER",
+  initialRoles: {
+    p1: "SEER",
+    p2: "WEREWOLF",
+    p3: "ROBBER",
+    p4: "VILLAGER",
+    CENTER_0: "TROUBLEMAKER",
+    CENTER_1: "HUNTER",
+  },
+  finalRoles: {
+    p1: "SEER",
+    p2: "WEREWOLF",
+    p3: "ROBBER",
+    p4: "VILLAGER",
+    CENTER_0: "TROUBLEMAKER",
+    CENTER_1: "HUNTER",
+  },
+  allActions: [],
+  allVotes: { p1: "p3", p2: "p1", p3: "p4", p4: "p3" },
+  executedPlayerIds: ["p3"],
+  winners: ["p2"],
+  winningTeam: "WEREWOLF",
+};
+
+export const resultSwappedState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "RESULT",
+  myRole: "ROBBER",
+  initialRoles: {
+    p1: "ROBBER",
+    p2: "WEREWOLF",
+    p3: "SEER",
+    p4: "VILLAGER",
+    CENTER_0: "TROUBLEMAKER",
+    CENTER_1: "HUNTER",
+  },
+  finalRoles: {
+    p1: "WEREWOLF",
+    p2: "ROBBER",
+    p3: "SEER",
+    p4: "VILLAGER",
+    CENTER_0: "TROUBLEMAKER",
+    CENTER_1: "HUNTER",
+  },
+  allActions: [
+    { actorId: "p1", type: "ROBBER_SWAP", targetIds: ["p2"], result: ["WEREWOLF"], timestamp: 0 },
+    { actorId: "p3", type: "SEER_LOOK_PLAYER", targetIds: ["p1"], result: ["WEREWOLF"], timestamp: 0 },
+  ],
+  allVotes: { p1: "p3", p2: "p1", p3: "p1", p4: "p1" },
+  executedPlayerIds: ["p1"],
+  winners: ["p2", "p3", "p4"],
+  winningTeam: "VILLAGE",
+};

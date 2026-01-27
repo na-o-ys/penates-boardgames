@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { ClientGameState, Player, PlayerId } from "@/lib/game";
-import { submitHunterRevengeAction, autoHunterRevengeAction } from "@/actions";
 
 const HUNTER_REVENGE_DURATION = 30;
 
@@ -10,13 +9,16 @@ interface HunterRevengeScreenProps {
   gameState: ClientGameState;
   playerId: string;
   roomId: string;
-  onRefresh: () => void;
+  onSubmitRevenge: (targetId: string) => Promise<{ success: boolean; error?: string }>;
+  onAutoRevenge: () => Promise<{ success: boolean; error?: string }>;
 }
 
 export function HunterRevengeScreen({
   gameState,
   playerId,
   roomId,
+  onSubmitRevenge,
+  onAutoRevenge,
 }: HunterRevengeScreenProps) {
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,9 +58,9 @@ export function HunterRevengeScreen({
 
   useEffect(() => {
     if (timeLeft <= 0 && isExecutedHunter && !hasChosen) {
-      autoHunterRevengeAction(roomId, playerId).catch(console.error);
+      onAutoRevenge().catch(console.error);
     }
-  }, [timeLeft, isExecutedHunter, hasChosen, roomId, playerId]);
+  }, [timeLeft, isExecutedHunter, hasChosen, onAutoRevenge]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -71,11 +73,7 @@ export function HunterRevengeScreen({
 
     setIsSubmitting(true);
     try {
-      const result = await submitHunterRevengeAction(
-        roomId,
-        playerId,
-        selectedTarget
-      );
+      const result = await onSubmitRevenge(selectedTarget);
       if (!result.success) {
         console.error("Failed to submit hunter revenge:", result.error);
       }

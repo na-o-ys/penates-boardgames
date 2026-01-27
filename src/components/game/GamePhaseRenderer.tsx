@@ -1,6 +1,20 @@
 "use client";
 
 import type { ClientGameState } from "@/lib/game";
+import {
+  startGameAction,
+  setRolesAction,
+  updateGameConfigAction,
+  kickPlayerAction,
+  submitNightActionAction,
+  autoSkipNightActionAction,
+  advancePhaseAction,
+  submitVoteAction,
+  autoVoteAction,
+  submitHunterRevengeAction,
+  autoHunterRevengeAction,
+  resetGameAction,
+} from "@/actions";
 import { LobbyScreen } from "@/components/lobby/LobbyScreen";
 import { NightScreen } from "@/components/night/NightScreen";
 import { DayScreen } from "@/components/day/DayScreen";
@@ -12,30 +26,74 @@ interface GamePhaseRendererProps {
   roomId: string;
   playerId: string;
   gameState: ClientGameState;
-  onRefresh: () => void;
 }
 
 export function GamePhaseRenderer({
   roomId,
   playerId,
   gameState,
-  onRefresh,
 }: GamePhaseRendererProps) {
-  const props = { roomId, playerId, gameState, onRefresh };
-
   switch (gameState.phase) {
     case "LOBBY":
-      return <LobbyScreen {...props} />;
+      return (
+        <LobbyScreen
+          roomId={roomId}
+          playerId={playerId}
+          gameState={gameState}
+          onStartGame={() => startGameAction(roomId, playerId)}
+          onSetRoles={(roles) => setRolesAction(roomId, playerId, roles)}
+          onUpdateConfig={(settings) => updateGameConfigAction(roomId, playerId, settings)}
+          onKickPlayer={(targetId) => kickPlayerAction(roomId, playerId, targetId)}
+        />
+      );
     case "NIGHT":
-      return <NightScreen {...props} />;
+      return (
+        <NightScreen
+          roomId={roomId}
+          playerId={playerId}
+          gameState={gameState}
+          onSubmitAction={(actionType, targets) => submitNightActionAction(roomId, playerId, actionType, targets)}
+          onAutoSkip={() => autoSkipNightActionAction(roomId, playerId)}
+        />
+      );
     case "DAY":
-      return <DayScreen {...props} />;
+      return (
+        <DayScreen
+          roomId={roomId}
+          playerId={playerId}
+          gameState={gameState}
+          onAdvancePhase={() => advancePhaseAction(roomId, playerId)}
+        />
+      );
     case "VOTING":
-      return <VotingScreen {...props} />;
+      return (
+        <VotingScreen
+          roomId={roomId}
+          playerId={playerId}
+          gameState={gameState}
+          onSubmitVote={(targetId) => submitVoteAction(roomId, playerId, targetId)}
+          onAutoVote={() => autoVoteAction(roomId, playerId)}
+        />
+      );
     case "HUNTER_REVENGE":
-      return <HunterRevengeScreen {...props} />;
+      return (
+        <HunterRevengeScreen
+          roomId={roomId}
+          playerId={playerId}
+          gameState={gameState}
+          onSubmitRevenge={(targetId) => submitHunterRevengeAction(roomId, playerId, targetId)}
+          onAutoRevenge={() => autoHunterRevengeAction(roomId, playerId)}
+        />
+      );
     case "RESULT":
-      return <ResultScreen {...props} />;
+      return (
+        <ResultScreen
+          roomId={roomId}
+          playerId={playerId}
+          gameState={gameState}
+          onPlayAgain={() => resetGameAction(roomId, playerId)}
+        />
+      );
     default:
       return (
         <div className="flex min-h-screen flex-col items-center justify-center p-8">

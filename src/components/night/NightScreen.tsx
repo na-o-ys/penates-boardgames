@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { submitNightActionAction, autoSkipNightActionAction } from "@/actions";
 import { ROLE_NAMES, ROLE_HAS_ACTION, type ClientGameState, type ActionType } from "@/lib/game";
 import { RoleCard } from "./RoleCard";
 
@@ -9,13 +8,16 @@ interface NightScreenProps {
   roomId: string;
   gameState: ClientGameState;
   playerId: string;
-  onRefresh: () => void;
+  onSubmitAction: (actionType: ActionType, targets: string[]) => Promise<{ success: boolean; error?: string }>;
+  onAutoSkip: () => Promise<{ success: boolean; error?: string }>;
 }
 
 export function NightScreen({
   roomId,
   gameState,
   playerId,
+  onSubmitAction,
+  onAutoSkip,
 }: NightScreenProps) {
   const [selectedTargets, setSelectedTargets] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,9 +51,9 @@ export function NightScreen({
   const hasActed = gameState.hasActed;
   useEffect(() => {
     if (timeLeft <= 0 && !hasActed) {
-      autoSkipNightActionAction(roomId, playerId).catch(console.error);
+      onAutoSkip().catch(console.error);
     }
-  }, [timeLeft, hasActed, roomId, playerId]);
+  }, [timeLeft, hasActed, onAutoSkip]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -99,7 +101,7 @@ export function NightScreen({
     setError(null);
 
     try {
-      const result = await submitNightActionAction(roomId, playerId, actionType, targets ?? selectedTargets);
+      const result = await onSubmitAction(actionType, targets ?? selectedTargets);
       if (!result.success) {
         setError(result.error ?? "アクションの実行に失敗しました");
       }

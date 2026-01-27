@@ -3,17 +3,16 @@
 import { useState, useEffect, useCallback } from "react";
 import type { ClientGameState, Player, Role, ActionResult } from "@/lib/game";
 import { ROLE_NAMES } from "@/lib/game";
-import { advancePhaseAction } from "@/actions";
 import { RoleCard } from "../night/RoleCard";
 
 interface DayScreenProps {
   gameState: ClientGameState;
   playerId: string;
   roomId: string;
-  onRefresh: () => void;
+  onAdvancePhase: () => Promise<{ success: boolean; error?: string }>;
 }
 
-export function DayScreen({ gameState, playerId, roomId }: DayScreenProps) {
+export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DayScreenProps) {
   const currentPlayerId = playerId;
   const [isAdvancing, setIsAdvancing] = useState(false);
 
@@ -45,9 +44,9 @@ export function DayScreen({ gameState, playerId, roomId }: DayScreenProps) {
 
   useEffect(() => {
     if (timeLeft <= 0) {
-      advancePhaseAction(roomId, playerId).catch(console.error);
+      onAdvancePhase().catch(console.error);
     }
-  }, [timeLeft, roomId, playerId]);
+  }, [timeLeft, onAdvancePhase]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -58,7 +57,7 @@ export function DayScreen({ gameState, playerId, roomId }: DayScreenProps) {
   const handleAdvanceToVoting = async () => {
     setIsAdvancing(true);
     try {
-      const result = await advancePhaseAction(roomId, playerId);
+      const result = await onAdvancePhase();
       if (!result.success) {
         console.error("Failed to advance phase:", result.error);
       }
