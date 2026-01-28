@@ -289,3 +289,6 @@ export const TEAM_COLORS: Record<string, string> = {
   "村人陣営": "text-[var(--color-ready)]",
   "第三陣営": "text-[var(--color-role-tanner)]",
 };
+
+/** 無効化された役職（UIに表示しない） */
+export const DISABLED_ROLES: ReadonlySet<Role> = new Set(["TROUBLEMAKER"]);

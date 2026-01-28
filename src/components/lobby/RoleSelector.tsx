@@ -4,19 +4,20 @@ import { useState } from "react";
 import {
   ROLE_NAMES,
   ROLE_ACCENT_COLORS,
+  DISABLED_ROLES,
   type Role,
 } from "@/lib/game";
 import { RoleDetailModal } from "../common/RoleDetailModal";
 import { RoleGalleryCard, VillagerBar } from "../common/RoleGalleryCard";
 
-const SPECIAL_ROLES: Role[] = [
+const SPECIAL_ROLES = ([
   "WEREWOLF",
   "SEER",
   "ROBBER",
   "TROUBLEMAKER",
   "HUNTER",
   "TANNER",
-];
+] as const satisfies readonly Role[]).filter((r) => !DISABLED_ROLES.has(r));
 
 function CounterControl({
   count,

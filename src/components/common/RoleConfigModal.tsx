@@ -2,18 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import type { Role } from "@/lib/game";
+import { DISABLED_ROLES, type Role } from "@/lib/game";
 import { RoleDetailContent } from "./RoleDetailContent";
 import { RoleGalleryCard, VillagerBar } from "./RoleGalleryCard";
 
-const SPECIAL_ROLES: Role[] = [
+const SPECIAL_ROLES = ([
   "WEREWOLF",
   "SEER",
   "ROBBER",
   "TROUBLEMAKER",
   "HUNTER",
   "TANNER",
-];
+] as const satisfies readonly Role[]).filter((r) => !DISABLED_ROLES.has(r));
 
 interface RoleConfigModalProps {
   roles: Role[];
