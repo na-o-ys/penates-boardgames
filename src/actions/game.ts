@@ -272,6 +272,10 @@ export async function advancePhaseAction(
     const supabase = await createClient();
 
     await updateRoomWithRetry(supabase, roomId, (state) => {
+      // DAYフェーズ以外では何もしない（複数プレイヤーからの同時呼び出し対策）
+      if (state.phase !== "DAY") {
+        return state;
+      }
       return advancePhase(state);
     });
 

@@ -7,6 +7,25 @@ import { calculateExecutedPlayers } from "./judge";
 import { validateAction, validateVote, validateHunterRevenge, haveAllPlayersVoted, haveAllExecutedHuntersChosen } from "./validator";
 
 /**
+ * プレイヤー人数に応じたデフォルト役職構成を返す
+ */
+function getDefaultRoles(playerCount: number): Role[] {
+  switch (playerCount) {
+    case 3: return ["WEREWOLF", "WEREWOLF", "VILLAGER", "SEER", "ROBBER"];
+    case 4: return ["WEREWOLF", "WEREWOLF", "VILLAGER", "VILLAGER", "SEER", "ROBBER"];
+    case 5: return ["WEREWOLF", "WEREWOLF", "VILLAGER", "VILLAGER", "VILLAGER", "SEER", "ROBBER"];
+    case 6: return ["WEREWOLF", "WEREWOLF", "VILLAGER", "VILLAGER", "VILLAGER", "VILLAGER", "SEER", "ROBBER"];
+    case 7: return ["WEREWOLF", "WEREWOLF", "VILLAGER", "VILLAGER", "VILLAGER", "VILLAGER", "SEER", "SEER", "ROBBER"];
+    case 8: return ["WEREWOLF", "WEREWOLF", "MADMAN", "VILLAGER", "VILLAGER", "VILLAGER", "VILLAGER", "SEER", "SEER", "ROBBER"];
+    default: {
+      const base = getDefaultRoles(8);
+      for (let i = 8; i < playerCount; i++) base.push("VILLAGER");
+      return base;
+    }
+  }
+}
+
+/**
  * 初期ゲーム状態を作成
  */
 export function createInitialGameState(roomId: string): GameState {
@@ -15,8 +34,7 @@ export function createInitialGameState(roomId: string): GameState {
     phase: "LOBBY",
     players: [],
     config: {
-      // デフォルト役職（3人プレイ用: 3人 + 中央2枚 = 5枚）
-      roles: ["WEREWOLF", "SEER", "ROBBER", "VILLAGER", "VILLAGER"],
+      roles: getDefaultRoles(3),
       nightDuration: 30,
       dayDuration: 120,
       votingDuration: 30,
@@ -56,6 +74,7 @@ export function addPlayer(
     players: newPlayers,
     config: {
       ...state.config,
+      roles: getDefaultRoles(newPlayers.length),
       dayDuration: defaultDayDuration(newPlayers.length),
     },
   };
@@ -78,6 +97,7 @@ export function removePlayer(
     players: newPlayers,
     config: {
       ...state.config,
+      roles: getDefaultRoles(newPlayers.length),
       dayDuration: defaultDayDuration(newPlayers.length),
     },
   };

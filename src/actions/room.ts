@@ -273,15 +273,6 @@ export async function createTestRoomAction(): Promise<
       state = addPlayer(state, player);
     });
 
-    // 4人用のデフォルト役職を設定（4人 + 中央2枚 = 6役職）
-    state = {
-      ...state,
-      config: {
-        ...state.config,
-        roles: ["WEREWOLF", "SEER", "ROBBER", "HUNTER", "VILLAGER", "VILLAGER"],
-      },
-    };
-
     // DBに保存
     const roomId = await dbCreateRoom(supabase, {
       ...state,
