@@ -6,6 +6,7 @@ import { buildRevealedInfo, getSwapReason } from "@/lib/game";
 import { RoleMiniCard, UnknownMiniCard } from "../common/RoleMiniCard";
 import { PlayerCard } from "../common/PlayerCard";
 import { CemeterySection } from "../common/CemeterySection";
+import { SkipLink } from "../common/SkipLink";
 
 interface DayScreenProps {
   gameState: ClientGameState;
@@ -85,7 +86,6 @@ export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DaySc
   const renderRoleDisplay = (player: Player) => {
     const isCurrentPlayer = player.id === currentPlayerId;
 
-    // 自分が怪盗で交換した場合: ROBBER(薄) → 新役職
     if (isCurrentPlayer && hasSwapped && gameState.myRole) {
       return (
         <>
@@ -98,7 +98,6 @@ export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DaySc
       );
     }
 
-    // 怪盗の交換先プレイヤー: 元役職(薄) → ROBBER
     if (hasSwapped && player.id === robberTargetId && gameState.myRole) {
       return (
         <>
@@ -111,12 +110,10 @@ export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DaySc
       );
     }
 
-    // 自分のカード: 自分の役職を表示
     if (isCurrentPlayer && gameState.myRole) {
       return <RoleMiniCard role={gameState.myRole} size="medium" />;
     }
 
-    // 他プレイヤー: 判明済みなら表示、不明なら不明カード
     const revealedRole = revealedInfo.players[player.id];
     if (revealedRole) {
       return <RoleMiniCard role={revealedRole} size="medium" />;
@@ -126,10 +123,10 @@ export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DaySc
   };
 
   return (
-    <div className="min-h-screen game-overlay p-4">
-      <div className="max-w-md mx-auto">
-        {/* ヘッダー */}
-        <div className="text-center mb-8 pt-4">
+    <div className="flex flex-col min-h-screen game-overlay">
+      <div className="max-w-md mx-auto w-full flex flex-col flex-1">
+        {/* Header */}
+        <div className="pt-8 pb-4 px-4 text-center">
           <h1 className="font-[family-name:var(--font-display)] font-bold text-3xl gold-text mb-2">
             議論フェーズ
           </h1>
@@ -138,13 +135,13 @@ export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DaySc
           }`}>
             {formatTime(timeLeft)}
           </div>
-          <p className="text-[var(--color-text-secondary)]">
+          <p className="text-[var(--color-text-secondary)] text-sm">
             誰が人狼か話し合いましょう
           </p>
         </div>
 
-        {/* プレイヤー一覧 */}
-        <div className="space-y-3 mb-6">
+        {/* Player list + Cemetery (scrollable) */}
+        <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-24">
           {sortedPlayers.map((player: Player) => {
             const swapReason = getSwapReason(player.id, gameState.myActions, gameState.players);
             return (
@@ -169,22 +166,20 @@ export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DaySc
           <CemeterySection centerRoles={revealedInfo.centers} />
         </div>
 
-        {/* 投票へ進むボタン（ホストのみ） */}
-        {isHost && (
-          <button
-            onClick={handleAdvanceToVoting}
-            disabled={isAdvancing}
-            className="w-full py-4 btn-primary rounded-xl text-lg font-[family-name:var(--font-display)] tracking-wider"
-          >
-            {isAdvancing ? "移行中..." : "投票フェーズへ進む"}
-          </button>
-        )}
-
-        {!isHost && (
-          <p className="text-center text-[var(--color-text-muted)]">
-            ホストが投票フェーズへ進めるのを待っています...
-          </p>
-        )}
+        {/* Footer */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[var(--color-bg-deep)] via-[var(--color-bg-deep)]/95 to-transparent z-20 max-w-md mx-auto">
+          {isHost ? (
+            <SkipLink
+              label={isAdvancing ? "移行中..." : "議論フェーズをスキップ"}
+              onClick={handleAdvanceToVoting}
+              disabled={isAdvancing}
+            />
+          ) : (
+            <p className="text-center text-[var(--color-text-muted)] py-3">
+              ホストが投票フェーズへ進めるのを待っています...
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

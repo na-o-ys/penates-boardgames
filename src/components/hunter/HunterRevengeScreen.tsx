@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { ClientGameState, Player, PlayerId } from "@/lib/game";
+import type { ClientGameState, PlayerId } from "@/lib/game";
+import { UnknownMiniCard } from "../common/RoleMiniCard";
+import { PlayerCard } from "../common/PlayerCard";
+import { ConfirmModal } from "../common/ConfirmModal";
 
 const HUNTER_REVENGE_DURATION = 30;
 
@@ -20,8 +23,9 @@ export function HunterRevengeScreen({
   onSubmitRevenge,
   onAutoRevenge,
 }: HunterRevengeScreenProps) {
-  const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<{ id: string; name: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const isExecutedHunter = gameState.isExecutedHunter ?? false;
   const hasChosen = gameState.hunterRevengeChosen?.[playerId] ?? false;
@@ -69,18 +73,20 @@ export function HunterRevengeScreen({
   };
 
   const handleConfirm = async () => {
-    if (!selectedTarget) return;
+    if (!confirmTarget) return;
 
     setIsSubmitting(true);
+    setError(null);
     try {
-      const result = await onSubmitRevenge(selectedTarget);
+      const result = await onSubmitRevenge(confirmTarget.id);
       if (!result.success) {
-        console.error("Failed to submit hunter revenge:", result.error);
+        setError(result.error ?? "道連れの送信に失敗しました");
       }
-    } catch (error) {
-      console.error("Error submitting hunter revenge:", error);
+    } catch {
+      setError("エラーが発生しました");
     } finally {
       setIsSubmitting(false);
+      setConfirmTarget(null);
     }
   };
 
@@ -92,108 +98,100 @@ export function HunterRevengeScreen({
   };
 
   const isTimeLow = timeLeft <= 10 && timeLeft > 0;
+  const canSelect = isExecutedHunter && !hasChosen;
 
-  if (!isExecutedHunter || hasChosen) {
-    return (
-      <div className="min-h-screen game-overlay p-4">
-        <div className="max-w-md mx-auto">
-          <div className="text-center mb-8 pt-4">
-            <h1 className="font-[family-name:var(--font-display)] font-bold text-3xl text-[var(--color-error)] mb-2">
-              狩人の道連れ
-            </h1>
-            <div className={`text-5xl font-bold mb-4 ${
-              isTimeLow ? "text-[var(--color-error)] animate-pulse" : "text-white"
-            }`}>
-              {formatTime(timeLeft)}
-            </div>
-            <p className="text-[var(--color-text-secondary)]">
-              処刑された狩人が道連れを選択中です...
-            </p>
-          </div>
+  const sortedPlayers = [...gameState.players].sort((a, b) =>
+    a.id === playerId ? -1 : b.id === playerId ? 1 : 0
+  );
 
-          <div className="glass-card rounded-xl p-8 text-center">
-            <div className="text-4xl mb-4 text-[var(--color-text-muted)]">...</div>
-            <h2 className="font-[family-name:var(--font-display)] text-2xl font-bold text-white mb-2">
-              {hasChosen ? "選択完了" : "待機中"}
-            </h2>
-            <p className="text-[var(--color-text-secondary)]">
-              {getExecutedHunterNames()} が道連れを選んでいます
-            </p>
-            <div className="mt-6">
-              <div className="w-full bg-black/30 rounded-full h-3">
-                <div
-                  className="bg-[var(--color-error)] rounded-full h-3 transition-all duration-500"
-                  style={{
-                    width: `${(chosenCount / Math.max(totalHunters, 1)) * 100}%`,
-                  }}
-                />
-              </div>
-              <div className="text-[var(--color-text-muted)] mt-2 text-sm">
-                選択済み: {chosenCount} / {totalHunters}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const otherPlayers = gameState.players.filter((p) => p.id !== playerId);
+  const getInstructionText = (): string => {
+    if (canSelect) {
+      return "あなたは処刑されました。道連れにするプレイヤーを選択してください。";
+    }
+    return "処刑された狩人が道連れを選択中です...";
+  };
 
   return (
-    <div className="min-h-screen game-overlay p-4">
-      <div className="max-w-md mx-auto">
-        {/* ヘッダー */}
-        <div className="text-center mb-8 pt-4">
+    <div className="flex flex-col min-h-screen game-overlay">
+      <div className="max-w-md mx-auto w-full flex flex-col flex-1">
+        {/* Header */}
+        <div className="pt-8 pb-4 px-4 text-center">
           <h1 className="font-[family-name:var(--font-display)] font-bold text-3xl text-[var(--color-error)] mb-2">
-            道連れを選択
+            狩人の道連れ
           </h1>
           <div className={`text-5xl font-bold mb-4 ${
-            isTimeLow ? "text-[var(--color-error)] animate-pulse" : "text-[var(--color-error)]"
+            isTimeLow ? "text-[var(--color-error)] animate-pulse" : "text-white"
           }`}>
             {formatTime(timeLeft)}
           </div>
-          <p className="text-[var(--color-text-secondary)]">
-            あなたは処刑されました。誰かを道連れにしてください。
+          <p className="text-[var(--color-text-secondary)] text-sm">
+            {getInstructionText()}
           </p>
         </div>
 
-        {/* 道連れ選択UI */}
-        <div className="glass-card rounded-xl p-6 mb-6">
-          <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold text-white mb-4">
-            誰を道連れにしますか？
-          </h2>
-          <div className="space-y-3">
-            {otherPlayers.map((player: Player) => (
-              <button
-                key={player.id}
-                onClick={() => setSelectedTarget(player.id)}
-                className={`w-full p-4 rounded-xl text-left transition-all ${
-                  selectedTarget === player.id
-                    ? "glass-card border-2 border-[var(--color-error)] shadow-[0_0_15px_rgba(239,68,68,0.3)]"
-                    : "glass-panel hover:border-[var(--color-text-muted)]"
-                }`}
-              >
-                <span className="text-white font-medium text-lg">
-                  {player.name}
-                </span>
-              </button>
-            ))}
+        {error && (
+          <div className="mx-4 mb-4 px-4 py-3 bg-[var(--color-error)]/20 border border-[var(--color-error)]/40 rounded-xl text-[var(--color-error)] text-center text-sm">
+            {error}
           </div>
+        )}
+
+        {/* Player list (scrollable) */}
+        <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-24">
+          {sortedPlayers.map((player) => {
+            const isCurrentPlayer = player.id === playerId;
+
+            const cardOnClick = (!isCurrentPlayer && canSelect)
+              ? () => setConfirmTarget({ id: player.id, name: player.name })
+              : undefined;
+
+            return (
+              <PlayerCard
+                key={player.id}
+                playerName={player.name}
+                isCurrentPlayer={isCurrentPlayer}
+                onClick={cardOnClick}
+              >
+                <UnknownMiniCard />
+              </PlayerCard>
+            );
+          })}
         </div>
 
-        <button
-          onClick={handleConfirm}
-          disabled={!selectedTarget || isSubmitting}
-          className="w-full py-4 bg-[var(--color-error)] hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-white font-bold text-lg transition-colors"
-        >
-          {isSubmitting ? "送信中..." : "道連れにする"}
-        </button>
-
-        <p className="text-center text-[var(--color-text-muted)] mt-4 text-xs">
-          ※ 必ず誰かを選択してください（時間切れでランダム選択）
-        </p>
+        {/* Footer */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[var(--color-bg-deep)] via-[var(--color-bg-deep)]/95 to-transparent z-20 max-w-md mx-auto">
+          {canSelect ? (
+            <p className="text-center text-[var(--color-text-muted)] py-3 text-xs">
+              ※ 必ず誰かを選択してください（時間切れでランダム選択）
+            </p>
+          ) : (
+            <div className="text-center py-3">
+              <div className="w-full bg-black/30 rounded-full h-2 mb-2">
+                <div
+                  className="bg-[var(--color-error)] rounded-full h-2 transition-all duration-500"
+                  style={{ width: `${(chosenCount / Math.max(totalHunters, 1)) * 100}%` }}
+                />
+              </div>
+              <p className="text-[var(--color-text-muted)] text-sm">
+                {hasChosen ? "選択完了" : `${getExecutedHunterNames()} が道連れを選んでいます`}
+                {" "}({chosenCount} / {totalHunters})
+              </p>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Confirm Modal */}
+      {confirmTarget && (
+        <ConfirmModal
+          title={`${confirmTarget.name}を道連れにしますか？`}
+          targets={[{ name: confirmTarget.name }]}
+          confirmLabel="道連れにする"
+          onConfirm={handleConfirm}
+          onCancel={() => setConfirmTarget(null)}
+          isSubmitting={isSubmitting}
+          variant="danger"
+        />
+      )}
     </div>
   );
 }

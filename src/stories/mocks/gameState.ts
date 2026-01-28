@@ -285,3 +285,37 @@ export const resultSwappedState: ClientGameState = {
   winners: ["p2", "p3", "p4"],
   winningTeam: "VILLAGE",
 };
+
+// ========================================
+// HUNTER_REVENGE
+// ========================================
+
+export const hunterRevengeExecutedState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "HUNTER_REVENGE",
+  myRole: "HUNTER",
+  isExecutedHunter: true,
+  executedHunterIds: ["p1"],
+  hunterRevengeChosen: {},
+  phaseStartedAt: Date.now(),
+};
+
+export const hunterRevengeWaitingState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "HUNTER_REVENGE",
+  myRole: "SEER",
+  isExecutedHunter: false,
+  executedHunterIds: ["p2"],
+  hunterRevengeChosen: {},
+  phaseStartedAt: Date.now(),
+};
+
+export const hunterRevengeChosenState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "HUNTER_REVENGE",
+  myRole: "HUNTER",
+  isExecutedHunter: true,
+  executedHunterIds: ["p1"],
+  hunterRevengeChosen: { p1: true },
+  phaseStartedAt: Date.now(),
+};

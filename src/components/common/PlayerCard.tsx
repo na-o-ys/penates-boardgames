@@ -31,7 +31,7 @@ export function PlayerCard({
       }`}
     >
       {isCurrentPlayer && (
-        <div className="absolute top-0 right-0 bg-[var(--color-primary)] text-[var(--color-bg-deep)] text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">
+        <div className="absolute top-0 right-0 z-10 bg-[var(--color-primary)] text-[var(--color-bg-deep)] text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">
           あなた
         </div>
       )}

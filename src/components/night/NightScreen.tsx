@@ -16,7 +16,8 @@ import { RoleMiniCard, UnknownMiniCard } from "../common/RoleMiniCard";
 import { PlayerCard } from "../common/PlayerCard";
 import { CemeterySection } from "../common/CemeterySection";
 import { TappableUnknownCard } from "./TappableUnknownCard";
-import { ConfirmModal } from "./ConfirmModal";
+import { ConfirmModal } from "../common/ConfirmModal";
+import { SkipLink } from "../common/SkipLink";
 
 interface NightScreenProps {
   roomId: string;
@@ -365,28 +366,20 @@ export function NightScreen({
 
         {/* Footer */}
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[var(--color-bg-deep)] via-[var(--color-bg-deep)]/95 to-transparent z-20 max-w-md mx-auto">
-          {hasActed ? (
+          {hasActed || (!hasAction && myRole !== "WEREWOLF") ? (
             <p className="text-center text-[var(--color-text-muted)] py-3">
               他のプレイヤーの行動を待っています...
             </p>
-          ) : !hasAction || myRole === "WEREWOLF" ? (
+          ) : myRole === "WEREWOLF" ? (
             <button
               onClick={handleSkip}
               disabled={isSubmitting}
               className="w-full py-3 btn-primary rounded-xl"
             >
-              {isSubmitting ? "処理中..." : myRole === "WEREWOLF" ? "確認した" : "待機する"}
+              {isSubmitting ? "処理中..." : "確認した"}
             </button>
           ) : (
-            <div className="text-center">
-              <button
-                onClick={handleSkip}
-                disabled={isSubmitting}
-                className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] underline text-sm transition-colors"
-              >
-                行動をスキップ
-              </button>
-            </div>
+            <SkipLink label="行動をスキップ" onClick={handleSkip} disabled={isSubmitting} />
           )}
         </div>
       </div>
