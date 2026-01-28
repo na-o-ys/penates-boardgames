@@ -3,11 +3,11 @@
 import { useState } from "react";
 import {
   ROLE_NAMES,
-  ROLE_MATERIAL_ICONS,
-  ROLE_DESCRIPTIONS,
+  ROLE_ACCENT_COLORS,
   type Role,
 } from "@/lib/game";
 import { RoleDetailModal } from "../common/RoleDetailModal";
+import { RoleGalleryCard, VillagerBar } from "../common/RoleGalleryCard";
 
 const SPECIAL_ROLES: Role[] = [
   "WEREWOLF",
@@ -17,21 +17,6 @@ const SPECIAL_ROLES: Role[] = [
   "HUNTER",
   "TANNER",
 ];
-
-const ROLE_ACCENT_COLORS: Record<Role, {
-  border30: string;
-  gradient: string;
-  iconBorder: string;
-  iconText: string;
-}> = {
-  WEREWOLF: { border30: "border-red-500/30", gradient: "to-red-500/10", iconBorder: "border-red-500/50", iconText: "text-red-400" },
-  SEER: { border30: "border-indigo-400/30", gradient: "to-indigo-400/10", iconBorder: "border-indigo-400/50", iconText: "text-indigo-400" },
-  ROBBER: { border30: "border-gray-400/30", gradient: "to-gray-400/10", iconBorder: "border-gray-400/50", iconText: "text-gray-300" },
-  TROUBLEMAKER: { border30: "border-emerald-400/30", gradient: "to-emerald-400/10", iconBorder: "border-emerald-400/50", iconText: "text-emerald-400" },
-  VILLAGER: { border30: "border-slate-500/30", gradient: "to-slate-500/10", iconBorder: "border-slate-500/50", iconText: "text-slate-300" },
-  HUNTER: { border30: "border-green-400/30", gradient: "to-green-400/10", iconBorder: "border-green-400/50", iconText: "text-green-400" },
-  TANNER: { border30: "border-orange-400/30", gradient: "to-orange-400/10", iconBorder: "border-orange-400/50", iconText: "text-orange-400" },
-};
 
 function CounterControl({
   count,
@@ -107,90 +92,36 @@ export function RoleSelector({
   return (
     <div className="space-y-4" data-testid="role-selector">
       <div className="grid grid-cols-2 gap-3">
-        {/* 特殊役職カード */}
         {SPECIAL_ROLES.map((role) => {
           const count = getRoleCount(role);
-          const accent = ROLE_ACCENT_COLORS[role];
           return (
-            <div
+            <RoleGalleryCard
               key={role}
-              data-testid={`role-${role}`}
-              className={`bg-slate-900/80 border ${accent.border30} rounded-xl p-3 flex flex-col items-center shadow-lg relative overflow-hidden ${
-                disabled ? "opacity-60" : ""
-              }`}
+              role={role}
+              onClick={() => setDetailRole(role)}
+              disabled={disabled}
             >
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-500/10 opacity-60" />
-
-              <button
-                type="button"
-                onClick={() => setDetailRole(role)}
-                className="flex flex-col items-center relative z-10 cursor-pointer"
-              >
-                <div className={`w-12 h-12 rounded-full bg-slate-800 border ${accent.iconBorder} flex items-center justify-center mb-2 shadow-inner`}>
-                  <span className={`material-icons ${accent.iconText} text-2xl`}>
-                    {ROLE_MATERIAL_ICONS[role]}
-                  </span>
-                </div>
-                <div className="text-sm font-bold text-gray-100">
-                  {ROLE_NAMES[role]}
-                </div>
-                <div className="text-[10px] text-gray-400 mb-2 line-clamp-2 min-h-[2.5em]">
-                  {ROLE_DESCRIPTIONS[role].ability}
-                </div>
-              </button>
-
-              <div className="relative z-10 w-full">
-                <CounterControl
-                  count={count}
-                  disabled={disabled}
-                  onAdd={() => handleAdd(role)}
-                  onRemove={() => handleRemove(role)}
-                />
-              </div>
-            </div>
+              <CounterControl
+                count={count}
+                disabled={disabled}
+                onAdd={() => handleAdd(role)}
+                onRemove={() => handleRemove(role)}
+              />
+            </RoleGalleryCard>
           );
         })}
 
-        {/* 村人バー */}
-        {(() => {
-          const count = getRoleCount("VILLAGER");
-          const accent = ROLE_ACCENT_COLORS.VILLAGER;
-          return (
-            <div
-              key="VILLAGER"
-              data-testid="role-VILLAGER"
-              className={`col-span-2 bg-slate-900/80 border ${accent.border30} rounded-xl p-3 flex items-center justify-between shadow-lg relative overflow-hidden px-4 ${
-                disabled ? "opacity-60" : ""
-              }`}
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent to-slate-500/10 opacity-50" />
-
-              <button
-                type="button"
-                onClick={() => setDetailRole("VILLAGER")}
-                className="flex items-center space-x-3 relative z-10 cursor-pointer"
-              >
-                <div className={`w-10 h-10 rounded-full bg-slate-800 border ${accent.iconBorder} flex items-center justify-center shadow-inner`}>
-                  <span className={`material-icons ${accent.iconText} text-xl`}>
-                    {ROLE_MATERIAL_ICONS.VILLAGER}
-                  </span>
-                </div>
-                <div className="text-sm font-bold text-gray-100">
-                  {ROLE_NAMES.VILLAGER}
-                </div>
-              </button>
-
-              <div className="relative z-10">
-                <CounterControl
-                  count={count}
-                  disabled={disabled}
-                  onAdd={() => handleAdd("VILLAGER")}
-                  onRemove={() => handleRemove("VILLAGER")}
-                />
-              </div>
-            </div>
-          );
-        })()}
+        <VillagerBar
+          onClick={() => setDetailRole("VILLAGER")}
+          disabled={disabled}
+        >
+          <CounterControl
+            count={getRoleCount("VILLAGER")}
+            disabled={disabled}
+            onAdd={() => handleAdd("VILLAGER")}
+            onRemove={() => handleRemove("VILLAGER")}
+          />
+        </VillagerBar>
       </div>
 
       <div className="flex items-center justify-between px-3 py-2 glass-panel rounded-xl">

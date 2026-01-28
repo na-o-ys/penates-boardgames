@@ -224,6 +224,22 @@ export const ROLE_CARD_COLORS: Record<Role, {
   TANNER: { bg: "bg-orange-900", border: "border-orange-400", text: "text-orange-200" },
 };
 
+/** 役職のアクセントカラー（UIカード用） */
+export const ROLE_ACCENT_COLORS: Record<Role, {
+  border30: string;
+  gradient: string;
+  iconBorder: string;
+  iconText: string;
+}> = {
+  WEREWOLF: { border30: "border-red-500/30", gradient: "to-red-500/10", iconBorder: "border-red-500/50", iconText: "text-red-400" },
+  SEER: { border30: "border-indigo-400/30", gradient: "to-indigo-400/10", iconBorder: "border-indigo-400/50", iconText: "text-indigo-400" },
+  ROBBER: { border30: "border-gray-400/30", gradient: "to-gray-400/10", iconBorder: "border-gray-400/50", iconText: "text-gray-300" },
+  TROUBLEMAKER: { border30: "border-emerald-400/30", gradient: "to-emerald-400/10", iconBorder: "border-emerald-400/50", iconText: "text-emerald-400" },
+  VILLAGER: { border30: "border-slate-500/30", gradient: "to-slate-500/10", iconBorder: "border-slate-500/50", iconText: "text-slate-300" },
+  HUNTER: { border30: "border-green-400/30", gradient: "to-green-400/10", iconBorder: "border-green-400/50", iconText: "text-green-400" },
+  TANNER: { border30: "border-orange-400/30", gradient: "to-orange-400/10", iconBorder: "border-orange-400/50", iconText: "text-orange-400" },
+};
+
 /** 役職の説明 */
 export const ROLE_DESCRIPTIONS: Record<Role, {
   team: string;
@@ -265,4 +281,11 @@ export const ROLE_DESCRIPTIONS: Record<Role, {
     ability: "特殊能力はありません。",
     winCondition: "自分が処刑されれば単独勝利",
   },
+};
+
+/** 陣営名に対応するテキストカラー */
+export const TEAM_COLORS: Record<string, string> = {
+  "人狼陣営": "text-[var(--color-role-werewolf)]",
+  "村人陣営": "text-[var(--color-ready)]",
+  "第三陣営": "text-[var(--color-role-tanner)]",
 };

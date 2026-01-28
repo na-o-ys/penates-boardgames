@@ -7,6 +7,7 @@ import { RoleMiniCard, UnknownMiniCard } from "../common/RoleMiniCard";
 import { PlayerCard } from "../common/PlayerCard";
 import { CemeterySection } from "../common/CemeterySection";
 import { RoleDetailModal } from "../common/RoleDetailModal";
+import { RoleConfigModal } from "../common/RoleConfigModal";
 
 interface ResultScreenProps {
   gameState: ClientGameState;
@@ -25,6 +26,7 @@ export function ResultScreen({ gameState, playerId, roomId, onPlayAgain }: Resul
   const currentPlayerId = playerId;
   const [isResetting, setIsResetting] = useState(false);
   const [detailRole, setDetailRole] = useState<Role | null>(null);
+  const [showRoleConfig, setShowRoleConfig] = useState(false);
 
   const isHost = gameState.players[0]?.id === currentPlayerId;
 
@@ -64,7 +66,14 @@ export function ResultScreen({ gameState, playerId, roomId, onPlayAgain }: Resul
     <div className="flex flex-col min-h-screen game-overlay">
       <div className="max-w-md mx-auto w-full flex flex-col flex-1">
         {/* ヘッダー */}
-        <div className="pt-8 pb-4 text-center">
+        <div className="pt-8 pb-4 text-center relative">
+          <button
+            onClick={() => setShowRoleConfig(true)}
+            className="absolute top-8 right-4 w-9 h-9 rounded-full glass-panel flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
+            aria-label="役職構成"
+          >
+            <span className="material-icons text-xl">groups</span>
+          </button>
           <h1
             className={`font-[family-name:var(--font-display)] font-black tracking-wider mb-2 ${
               isWinner ? "text-4xl gold-text" : "text-3xl text-[var(--color-text-secondary)]"
@@ -172,6 +181,10 @@ export function ResultScreen({ gameState, playerId, roomId, onPlayAgain }: Resul
 
       {detailRole && (
         <RoleDetailModal role={detailRole} onClose={() => setDetailRole(null)} />
+      )}
+
+      {showRoleConfig && (
+        <RoleConfigModal roles={[...gameState.config.roles]} onClose={() => setShowRoleConfig(false)} />
       )}
     </div>
   );

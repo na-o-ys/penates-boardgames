@@ -5,6 +5,7 @@ import type { ClientGameState, PlayerId, Role } from "@/lib/game";
 import { PlayerCard } from "../common/PlayerCard";
 import { PlayerRoleDisplay } from "../common/PlayerRoleDisplay";
 import { RoleDetailModal } from "../common/RoleDetailModal";
+import { RoleConfigModal } from "../common/RoleConfigModal";
 import { ConfirmModal } from "../common/ConfirmModal";
 
 const HUNTER_REVENGE_DURATION = 30;
@@ -28,6 +29,7 @@ export function HunterRevengeScreen({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detailRole, setDetailRole] = useState<Role | null>(null);
+  const [showRoleConfig, setShowRoleConfig] = useState(false);
 
   const isExecutedHunter = gameState.isExecutedHunter ?? false;
   const hasChosen = gameState.hunterRevengeChosen?.[playerId] ?? false;
@@ -117,7 +119,14 @@ export function HunterRevengeScreen({
     <div className="flex flex-col min-h-screen game-overlay">
       <div className="max-w-md mx-auto w-full flex flex-col flex-1">
         {/* Header */}
-        <div className="pt-8 pb-4 px-4 text-center">
+        <div className="pt-8 pb-4 px-4 text-center relative">
+          <button
+            onClick={() => setShowRoleConfig(true)}
+            className="absolute top-8 right-4 w-9 h-9 rounded-full glass-panel flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
+            aria-label="役職構成"
+          >
+            <span className="material-icons text-xl">groups</span>
+          </button>
           <h1 className="font-[family-name:var(--font-display)] font-bold text-3xl text-[var(--color-error)] mb-2">
             狩人の道連れ
           </h1>
@@ -203,6 +212,10 @@ export function HunterRevengeScreen({
           isSubmitting={isSubmitting}
           variant="danger"
         />
+      )}
+
+      {showRoleConfig && (
+        <RoleConfigModal roles={[...gameState.config.roles]} onClose={() => setShowRoleConfig(false)} />
       )}
     </div>
   );
