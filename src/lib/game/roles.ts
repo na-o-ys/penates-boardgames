@@ -118,6 +118,25 @@ const robber: RoleDefinition = {
   },
 };
 
+const whiteRobber: RoleDefinition = {
+  name: "白怪盗",
+  team: "VILLAGE",
+  priority: 3,
+  hasNightAction: true,
+  isWerewolfExecution: false,
+  isWerewolfNightAlly: false,
+  revealsCenter: false,
+  voteWeight: 1,
+  materialIcon: "mail",
+  cardColors: { bg: "bg-gray-800", border: "border-white", text: "text-white" },
+  accentColors: { border30: "border-white/30", gradient: "to-white/10", iconBorder: "border-white/50", iconText: "text-white" },
+  description: {
+    team: "村人陣営",
+    ability: "夜に他プレイヤー1人と役職を交換し、新しい役職を確認できます。また、ランダムなプレイヤーに予告状を届けます（届け先は自分にもわかりません）。",
+    winCondition: "交換後の役職の陣営として勝敗判定",
+  },
+};
+
 const troublemaker: RoleDefinition = {
   name: "トラブルメーカー",
   team: "VILLAGE",
@@ -261,6 +280,7 @@ export const ROLES: Record<Role, RoleDefinition> = {
   VILLAGER: villager,
   SEER: seer,
   ROBBER: robber,
+  WHITE_ROBBER: whiteRobber,
   TROUBLEMAKER: troublemaker,
   HUNTER: hunter,
   TANNER: tanner,
@@ -287,6 +307,7 @@ export const SELECTABLE_ROLES: readonly Role[] = ([
   "CIA",
   "SEER",
   "ROBBER",
+  "WHITE_ROBBER",
   "TROUBLEMAKER",
   "HUNTER",
   "TANNER",

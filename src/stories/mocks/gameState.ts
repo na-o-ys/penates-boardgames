@@ -226,6 +226,32 @@ export const nightReceivedBreadState: ClientGameState = {
   phaseStartedAt: Date.now(),
 };
 
+// 白怪盗（夜フェーズ）
+export const nightWhiteRobberState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "NIGHT",
+  myRole: "WHITE_ROBBER",
+  hasActed: false,
+  phaseStartedAt: Date.now(),
+};
+
+// 予告状を受け取ったプレイヤー（夜フェーズ）
+export const nightReceivedNoticeState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "NIGHT",
+  myRole: "VILLAGER",
+  hasActed: true,
+  allActed: false,
+  myActions: [
+    { actorId: "p1", type: "SKIP", targetIds: [], result: [], timestamp: 0 },
+  ],
+  actionResults: [
+    { type: "SKIP", targetIds: [], revealedRoles: [] },
+  ],
+  receivedNotice: true,
+  phaseStartedAt: Date.now(),
+};
+
 // ========================================
 // DAY
 // ========================================
@@ -244,6 +270,23 @@ export const dayReceivedBreadState: ClientGameState = {
     { type: "SKIP", targetIds: [], revealedRoles: [] },
   ],
   receivedBread: true,
+  phaseStartedAt: Date.now(),
+};
+
+// 予告状を受け取ったプレイヤー（昼フェーズ）
+export const dayReceivedNoticeState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "DAY",
+  myRole: "VILLAGER",
+  hasActed: true,
+  allActed: true,
+  myActions: [
+    { actorId: "p1", type: "SKIP", targetIds: [], result: [], timestamp: 0 },
+  ],
+  actionResults: [
+    { type: "SKIP", targetIds: [], revealedRoles: [] },
+  ],
+  receivedNotice: true,
   phaseStartedAt: Date.now(),
 };
 

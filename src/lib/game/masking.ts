@@ -55,6 +55,9 @@ export function maskGameState(
   // パンを受け取ったか
   const receivedBread = state.breadRecipientId === playerId;
 
+  // 予告状を受け取ったか
+  const receivedNotice = state.noticeRecipientId === playerId;
+
   // 基本のマスク済み状態
   const baseClientState: ClientGameState = {
     roomId: state.roomId,
@@ -69,6 +72,7 @@ export function maskGameState(
     votedPlayers,
     myVote,
     receivedBread,
+    receivedNotice,
     phaseStartedAt: state.phaseStartedAt,
   };
 

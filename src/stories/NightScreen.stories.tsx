@@ -19,6 +19,8 @@ import {
   nightActedSeerCenterState,
   nightActedRobberState,
   nightReceivedBreadState,
+  nightWhiteRobberState,
+  nightReceivedNoticeState,
 } from "./mocks/gameState";
 
 const success = async () => ({ success: true as const });
@@ -188,5 +190,21 @@ export const ReceivedBread: Story = {
     roomId: "test-room-id",
     playerId: "p1",
     gameState: nightReceivedBreadState,
+  },
+};
+
+export const WhiteRobber: Story = {
+  args: {
+    roomId: "test-room-id",
+    playerId: "p1",
+    gameState: nightWhiteRobberState,
+  },
+};
+
+export const ReceivedNotice: Story = {
+  args: {
+    roomId: "test-room-id",
+    playerId: "p1",
+    gameState: nightReceivedNoticeState,
   },
 };

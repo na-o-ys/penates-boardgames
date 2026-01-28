@@ -155,6 +155,7 @@ export function NightScreen({
       case "SEER":
         return "対象のカードを選択してください（プレイヤー1人 or 墓地）";
       case "ROBBER":
+      case "WHITE_ROBBER":
         return "交換する対象のカードを選択してください";
       case "TROUBLEMAKER":
         if (selectedTargets.length === 1) {
@@ -252,6 +253,7 @@ export function NightScreen({
       case "SEER":
         return <UnknownMiniCard tappable />;
       case "ROBBER":
+      case "WHITE_ROBBER":
         return <UnknownMiniCard tappable />;
       case "TROUBLEMAKER":
         return <UnknownMiniCard tappable selected={selectedTargets.includes(playerId_)} />;
@@ -306,6 +308,7 @@ export function NightScreen({
                 case "SEER":
                   return () => setConfirmAction({ type: "SEER_LOOK_PLAYER", targets: [player.id] });
                 case "ROBBER":
+                case "WHITE_ROBBER":
                   return () => setConfirmAction({ type: "ROBBER_SWAP", targets: [player.id] });
                 case "TROUBLEMAKER":
                   return () => handleTroublemakerSelect(player.id);
@@ -347,6 +350,12 @@ export function NightScreen({
                           <div className="flex items-center gap-1 text-amber-400 text-xs mt-1">
                             <span className="material-icons text-sm">bakery_dining</span>
                             <span>パン屋からパンが届きました</span>
+                          </div>
+                        )}
+                        {gameState.receivedNotice && (
+                          <div className="flex items-center gap-1 text-white text-xs mt-1">
+                            <span className="material-icons text-sm">mail</span>
+                            <span>白怪盗から予告状が届きました</span>
                           </div>
                         )}
                       </div>

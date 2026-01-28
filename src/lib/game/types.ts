@@ -12,6 +12,7 @@ export type Role =
   | "VILLAGER"
   | "SEER"
   | "ROBBER"
+  | "WHITE_ROBBER"
   | "TROUBLEMAKER"
   | "HUNTER"
   | "TANNER"
@@ -88,6 +89,7 @@ export interface GameState {
   readonly votes: Record<PlayerId, PlayerId>;
   readonly hunterRevengeTarget: Record<PlayerId, PlayerId>; // 狩人ID → 道連れ対象ID
   readonly breadRecipientId: PlayerId | null; // パンを受け取ったプレイヤーID
+  readonly noticeRecipientId: PlayerId | null; // 予告状を受け取ったプレイヤーID
   readonly phaseStartedAt: number | null;
 }
 
@@ -126,6 +128,8 @@ export interface ClientGameState {
   readonly hunterRevengeChosen?: Record<PlayerId, boolean>; // 狩人が道連れを選択済みか
   // パン屋からパンを受け取ったか
   readonly receivedBread?: boolean;
+  // 白怪盗から予告状を受け取ったか
+  readonly receivedNotice?: boolean;
   // RESULTフェーズのみ
   readonly initialRoles?: Record<string, Role>;
   readonly finalRoles?: Record<string, Role>;

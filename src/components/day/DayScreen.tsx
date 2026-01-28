@@ -119,12 +119,18 @@ export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DaySc
                   playerName={player.name}
                   isCurrentPlayer={player.id === currentPlayerId}
                   statusBadges={
-                    (player.id === currentPlayerId && gameState.receivedBread) || swapReason ? (
+                    (player.id === currentPlayerId && (gameState.receivedBread || gameState.receivedNotice)) || swapReason ? (
                       <div className="text-xs space-y-1">
                         {player.id === currentPlayerId && gameState.receivedBread && (
                           <div className="flex items-center gap-1 text-amber-400">
                             <span className="material-icons text-sm">bakery_dining</span>
                             <span>パン屋からパンが届きました</span>
+                          </div>
+                        )}
+                        {player.id === currentPlayerId && gameState.receivedNotice && (
+                          <div className="flex items-center gap-1 text-white">
+                            <span className="material-icons text-sm">mail</span>
+                            <span>白怪盗から予告状が届きました</span>
                           </div>
                         )}
                         {swapReason && (

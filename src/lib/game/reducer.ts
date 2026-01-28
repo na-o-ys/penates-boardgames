@@ -45,6 +45,7 @@ export function createInitialGameState(roomId: string): GameState {
     votes: {},
     hunterRevengeTarget: {},
     breadRecipientId: null,
+    noticeRecipientId: null,
     phaseStartedAt: null,
   };
 }
@@ -158,11 +159,27 @@ export function startGame(state: GameState): GameState {
     }
   }
 
+  // 白怪盗がいればランダムな他プレイヤーに予告状を配達
+  const whiteRobberEntry = Object.entries(distribution).find(
+    ([id, role]) => role === "WHITE_ROBBER" && !id.startsWith("CENTER")
+  );
+  let noticeRecipientId: PlayerId | null = null;
+  if (whiteRobberEntry) {
+    const whiteRobberId = whiteRobberEntry[0];
+    const otherPlayerIds = state.players
+      .filter((p) => p.id !== whiteRobberId)
+      .map((p) => p.id);
+    if (otherPlayerIds.length > 0) {
+      noticeRecipientId = otherPlayerIds[Math.floor(Math.random() * otherPlayerIds.length)];
+    }
+  }
+
   const nightState: GameState = {
     ...state,
     phase: "NIGHT",
     initialDistribution: distribution,
     breadRecipientId,
+    noticeRecipientId,
     phaseStartedAt: Date.now(),
   };
 
@@ -204,11 +221,27 @@ export function startGameWithDistribution(
     }
   }
 
+  // 白怪盗がいればランダムな他プレイヤーに予告状を配達（テスト用固定配置）
+  const whiteRobberEntryTest = Object.entries(distribution).find(
+    ([id, role]) => role === "WHITE_ROBBER" && !id.startsWith("CENTER")
+  );
+  let noticeRecipientIdTest: PlayerId | null = null;
+  if (whiteRobberEntryTest) {
+    const whiteRobberId = whiteRobberEntryTest[0];
+    const otherPlayerIds = state.players
+      .filter((p) => p.id !== whiteRobberId)
+      .map((p) => p.id);
+    if (otherPlayerIds.length > 0) {
+      noticeRecipientIdTest = otherPlayerIds[Math.floor(Math.random() * otherPlayerIds.length)];
+    }
+  }
+
   const nightState: GameState = {
     ...state,
     phase: "NIGHT",
     initialDistribution: distribution,
     breadRecipientId: breadRecipientIdTest,
+    noticeRecipientId: noticeRecipientIdTest,
     phaseStartedAt: Date.now(),
   };
 
@@ -398,6 +431,7 @@ export function resetGame(state: GameState): GameState {
     votes: {},
     hunterRevengeTarget: {},
     breadRecipientId: null,
+    noticeRecipientId: null,
     phaseStartedAt: null,
   };
 }

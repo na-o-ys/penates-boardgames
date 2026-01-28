@@ -22,6 +22,7 @@ export function getValidActionTypes(role: Role): readonly ActionType[] {
     case "SEER":
       return ["SEER_LOOK_PLAYER", "SEER_LOOK_CENTER", "SKIP"];
     case "ROBBER":
+    case "WHITE_ROBBER":
       return ["ROBBER_SWAP", "SKIP"];
     case "TROUBLEMAKER":
       return ["TROUBLEMAKER_SWAP", "SKIP"];
