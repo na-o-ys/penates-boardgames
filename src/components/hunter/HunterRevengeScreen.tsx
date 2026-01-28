@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useCallback, Fragment } from "react";
 import type { ClientGameState, PlayerId, Role } from "@/lib/game";
+import { SKIP_VOTE } from "@/lib/game";
 import { PlayerCard } from "../common/PlayerCard";
 import { OtherPlayersDivider } from "../common/OtherPlayersDivider";
 import { PlayerRoleDisplay } from "../common/PlayerRoleDisplay";
 import { RoleDetailModal } from "../common/RoleDetailModal";
 import { RoleConfigModal } from "../common/RoleConfigModal";
 import { ConfirmModal } from "../common/ConfirmModal";
+import { VoteTargetBadge } from "../common/VoteTargetBadge";
 
 const HUNTER_REVENGE_DURATION = 30;
 
@@ -156,6 +158,11 @@ export function HunterRevengeScreen({
               ? () => setConfirmTarget({ id: player.id, name: player.name })
               : undefined;
 
+            const voteTarget = gameState.allVotes?.[player.id];
+            const voteTargetPlayer = voteTarget && voteTarget !== SKIP_VOTE
+              ? gameState.players.find(p => p.id === voteTarget)
+              : null;
+
             return (
               <Fragment key={player.id}>
                 {index === 1 && <OtherPlayersDivider />}
@@ -163,6 +170,11 @@ export function HunterRevengeScreen({
                   playerName={player.name}
                   isCurrentPlayer={isCurrentPlayer}
                   onClick={cardOnClick}
+                  statusBadges={voteTarget ? (
+                    <div className="text-xs">
+                      <VoteTargetBadge targetName={voteTargetPlayer?.name ?? null} />
+                    </div>
+                  ) : undefined}
                 >
                   <PlayerRoleDisplay
                     playerId={player.id}

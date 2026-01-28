@@ -92,6 +92,7 @@ export function maskGameState(
       executedHunterIds,
       isExecutedHunter: executedHunterIds.includes(playerId),
       hunterRevengeChosen,
+      allVotes: state.votes,
     };
   }
 

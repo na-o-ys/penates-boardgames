@@ -10,6 +10,7 @@ import { RoleConfigModal } from "../common/RoleConfigModal";
 import { OtherPlayersDivider } from "../common/OtherPlayersDivider";
 import { ConfirmModal } from "../common/ConfirmModal";
 import { SkipLink } from "../common/SkipLink";
+import { VoteTargetBadge } from "../common/VoteTargetBadge";
 
 interface VotingScreenProps {
   gameState: ClientGameState;
@@ -159,11 +160,7 @@ export function VotingScreen({ gameState, playerId, roomId, onSubmitVote, onAuto
                         {" "}投票済み
                       </span>
                       {isCurrentPlayer && gameState.myVote && (
-                        <span className="text-[var(--color-text-muted)]">
-                          <span className="material-icons text-sm align-middle">how_to_vote</span>
-                          {" "}→{" "}
-                          {myVoteTarget ? myVoteTarget.name : "スキップ"}
-                        </span>
+                        <VoteTargetBadge targetName={myVoteTarget?.name ?? null} />
                       )}
                     </div>
                   ) : undefined}

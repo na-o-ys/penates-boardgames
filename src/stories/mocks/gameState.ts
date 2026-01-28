@@ -415,6 +415,7 @@ export const hunterRevengeExecutedState: ClientGameState = {
   isExecutedHunter: true,
   executedHunterIds: ["p1"],
   hunterRevengeChosen: {},
+  allVotes: { p1: "p2", p2: "p3", p3: "p1", p4: "p1" },
   phaseStartedAt: Date.now(),
 };
 
@@ -425,6 +426,7 @@ export const hunterRevengeWaitingState: ClientGameState = {
   isExecutedHunter: false,
   executedHunterIds: ["p2"],
   hunterRevengeChosen: {},
+  allVotes: { p1: "p2", p2: "p3", p3: "p2", p4: "p2" },
   myActions: [
     { actorId: "p1", type: "SEER_LOOK_PLAYER", targetIds: ["p3"], result: ["ROBBER"], timestamp: 0 },
   ],
@@ -441,5 +443,6 @@ export const hunterRevengeChosenState: ClientGameState = {
   isExecutedHunter: true,
   executedHunterIds: ["p1"],
   hunterRevengeChosen: { p1: true },
+  allVotes: { p1: "p2", p2: "p3", p3: "p1", p4: "p1" },
   phaseStartedAt: Date.now(),
 };

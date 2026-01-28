@@ -9,6 +9,7 @@ import { CemeterySection } from "../common/CemeterySection";
 import { RoleDetailModal } from "../common/RoleDetailModal";
 import { RoleConfigModal } from "../common/RoleConfigModal";
 import { OtherPlayersDivider } from "../common/OtherPlayersDivider";
+import { VoteTargetBadge } from "../common/VoteTargetBadge";
 
 interface ResultScreenProps {
   gameState: ClientGameState;
@@ -145,11 +146,7 @@ export function ResultScreen({ gameState, playerId, roomId, onPlayAgain }: Resul
                       </span>
                     )}
                     {voteTarget && (
-                      <span className="text-[var(--color-text-muted)]">
-                        <span className="material-icons text-sm align-middle">how_to_vote</span>
-                        {" "}→{" "}
-                        {voteTargetPlayer ? voteTargetPlayer.name : "スキップ"}
-                      </span>
+                      <VoteTargetBadge targetName={voteTargetPlayer?.name ?? null} />
                     )}
                   </div>
                 }
