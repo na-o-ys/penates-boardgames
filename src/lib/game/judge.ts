@@ -1,5 +1,5 @@
 import type { PlayerId, Role, WinResult } from "./types";
-import { ROLE_TEAM } from "./types";
+import { ROLE_COUNTS_AS_WEREWOLF, ROLE_TEAM } from "./types";
 import { SKIP_VOTE } from "./validator";
 
 /**
@@ -61,7 +61,7 @@ export function determineWinner(
   }));
 
   // 人狼プレイヤーを取得
-  const werewolfPlayers = playerRoles.filter((p) => p.role === "WEREWOLF");
+  const werewolfPlayers = playerRoles.filter((p) => ROLE_COUNTS_AS_WEREWOLF[p.role]);
   const hasWerewolf = werewolfPlayers.length > 0;
 
   // 吊人が処刑されたかチェック
@@ -72,7 +72,7 @@ export function determineWinner(
 
   // 人狼が処刑されたかチェック
   const executedWerewolves = executedPlayerIds.filter(
-    (id) => finalRoles[id] === "WEREWOLF"
+    (id) => ROLE_COUNTS_AS_WEREWOLF[finalRoles[id]]
   );
   const werewolfExecuted = executedWerewolves.length > 0;
 

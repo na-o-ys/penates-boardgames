@@ -10,6 +10,9 @@ import {
   nightHunterState,
   nightVillagerState,
   nightTannerState,
+  nightMadmanState,
+  nightAlphaWolfState,
+  nightAlphaWolfWithFellowsState,
   nightActedState,
   nightActedSeerCenterState,
   nightActedRobberState,
@@ -91,6 +94,30 @@ export const Tanner: Story = {
     roomId: "test-room-id",
     playerId: "p1",
     gameState: nightTannerState,
+  },
+};
+
+export const Madman: Story = {
+  args: {
+    roomId: "test-room-id",
+    playerId: "p1",
+    gameState: nightMadmanState,
+  },
+};
+
+export const AlphaWolf: Story = {
+  args: {
+    roomId: "test-room-id",
+    playerId: "p1",
+    gameState: nightAlphaWolfState,
+  },
+};
+
+export const AlphaWolfWithFellows: Story = {
+  args: {
+    roomId: "test-room-id",
+    playerId: "p1",
+    gameState: nightAlphaWolfWithFellowsState,
   },
 };
 

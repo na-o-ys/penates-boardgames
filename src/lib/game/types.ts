@@ -8,6 +8,7 @@ export type PlayerId = string;
 /** 役職 */
 export type Role =
   | "WEREWOLF"
+  | "ALPHA_WOLF"
   | "VILLAGER"
   | "SEER"
   | "ROBBER"
@@ -113,6 +114,8 @@ export interface ClientGameState {
   readonly phaseStartedAt: number | null;
   // 人狼用: 仲間の人狼一覧
   readonly fellowWerewolves?: readonly PlayerId[];
+  // 墓地カード自動開示（大狼用）
+  readonly revealedCenterRoles?: Record<string, Role>;
   // HUNTER_REVENGEフェーズ用
   readonly executedHunterIds?: readonly PlayerId[]; // 処刑された狩人のID
   readonly isExecutedHunter?: boolean; // 自分が処刑された狩人か
@@ -159,6 +162,7 @@ export interface RoomRow {
 /** 役職の優先度（夜アクション順） */
 export const ROLE_PRIORITY: Record<Role, number> = {
   WEREWOLF: 1,
+  ALPHA_WOLF: 1,
   SEER: 2,
   ROBBER: 3,
   TROUBLEMAKER: 4,
@@ -171,6 +175,7 @@ export const ROLE_PRIORITY: Record<Role, number> = {
 /** 役職の陣営 */
 export const ROLE_TEAM: Record<Role, Team> = {
   WEREWOLF: "WEREWOLF",
+  ALPHA_WOLF: "WEREWOLF",
   VILLAGER: "VILLAGE",
   SEER: "VILLAGE",
   ROBBER: "VILLAGE",
@@ -183,6 +188,7 @@ export const ROLE_TEAM: Record<Role, Team> = {
 /** 役職の日本語名 */
 export const ROLE_NAMES: Record<Role, string> = {
   WEREWOLF: "人狼",
+  ALPHA_WOLF: "大狼",
   VILLAGER: "村人",
   SEER: "占い師",
   ROBBER: "怪盗",
@@ -195,6 +201,7 @@ export const ROLE_NAMES: Record<Role, string> = {
 /** 役職が夜アクションを持つか */
 export const ROLE_HAS_ACTION: Record<Role, boolean> = {
   WEREWOLF: true,
+  ALPHA_WOLF: true,
   SEER: true,
   ROBBER: true,
   TROUBLEMAKER: true,
@@ -207,6 +214,7 @@ export const ROLE_HAS_ACTION: Record<Role, boolean> = {
 /** 役職のMaterial Iconsアイコン名 */
 export const ROLE_MATERIAL_ICONS: Record<Role, string> = {
   WEREWOLF: "pets",
+  ALPHA_WOLF: "pets",
   SEER: "visibility",
   ROBBER: "theater_comedy",
   TROUBLEMAKER: "sync_alt",
@@ -223,6 +231,7 @@ export const ROLE_CARD_COLORS: Record<Role, {
   text: string;
 }> = {
   WEREWOLF: { bg: "bg-red-900", border: "border-red-500", text: "text-red-200" },
+  ALPHA_WOLF: { bg: "bg-purple-900", border: "border-purple-500", text: "text-purple-200" },
   SEER: { bg: "bg-indigo-900", border: "border-indigo-400", text: "text-indigo-200" },
   ROBBER: { bg: "bg-gray-800", border: "border-gray-400", text: "text-gray-200" },
   TROUBLEMAKER: { bg: "bg-emerald-900", border: "border-emerald-400", text: "text-emerald-200" },
@@ -240,6 +249,7 @@ export const ROLE_ACCENT_COLORS: Record<Role, {
   iconText: string;
 }> = {
   WEREWOLF: { border30: "border-red-500/30", gradient: "to-red-500/10", iconBorder: "border-red-500/50", iconText: "text-red-400" },
+  ALPHA_WOLF: { border30: "border-purple-500/30", gradient: "to-purple-500/10", iconBorder: "border-purple-500/50", iconText: "text-purple-400" },
   SEER: { border30: "border-indigo-400/30", gradient: "to-indigo-400/10", iconBorder: "border-indigo-400/50", iconText: "text-indigo-400" },
   ROBBER: { border30: "border-gray-400/30", gradient: "to-gray-400/10", iconBorder: "border-gray-400/50", iconText: "text-gray-300" },
   TROUBLEMAKER: { border30: "border-emerald-400/30", gradient: "to-emerald-400/10", iconBorder: "border-emerald-400/50", iconText: "text-emerald-400" },
@@ -258,6 +268,11 @@ export const ROLE_DESCRIPTIONS: Record<Role, {
   WEREWOLF: {
     team: "人狼陣営",
     ability: "夜に仲間の人狼を確認できます。単独の場合、中央カード1枚を確認できます。",
+    winCondition: "人狼が1人も処刑されなければ勝利",
+  },
+  ALPHA_WOLF: {
+    team: "人狼陣営",
+    ability: "夜に仲間の人狼を確認し、墓地のカード2枚が自動的に開示されます。",
     winCondition: "人狼が1人も処刑されなければ勝利",
   },
   VILLAGER: {
@@ -295,6 +310,45 @@ export const ROLE_DESCRIPTIONS: Record<Role, {
     ability: "特殊能力はありません。人狼の仲間として村人を欺きましょう。",
     winCondition: "人狼が1人も処刑されなければ勝利（自分が処刑されても負けにならない）",
   },
+};
+
+/** 処刑で人狼陣営の敗北になるか */
+export const ROLE_COUNTS_AS_WEREWOLF: Record<Role, boolean> = {
+  WEREWOLF: true,
+  ALPHA_WOLF: true,
+  VILLAGER: false,
+  SEER: false,
+  ROBBER: false,
+  TROUBLEMAKER: false,
+  HUNTER: false,
+  TANNER: false,
+  MADMAN: false,
+};
+
+/** 夜の人狼仲間チェックに含めるか */
+export const ROLE_IS_WEREWOLF_ALLY: Record<Role, boolean> = {
+  WEREWOLF: true,
+  ALPHA_WOLF: true,
+  VILLAGER: false,
+  SEER: false,
+  ROBBER: false,
+  TROUBLEMAKER: false,
+  HUNTER: false,
+  TANNER: false,
+  MADMAN: false,
+};
+
+/** 夜に墓地カードを自動開示するか */
+export const ROLE_REVEALS_CENTER: Record<Role, boolean> = {
+  WEREWOLF: false,
+  ALPHA_WOLF: true,
+  VILLAGER: false,
+  SEER: false,
+  ROBBER: false,
+  TROUBLEMAKER: false,
+  HUNTER: false,
+  TANNER: false,
+  MADMAN: false,
 };
 
 /** 陣営名に対応するテキストカラー */

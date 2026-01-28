@@ -53,5 +53,10 @@ export function PlayerRoleDisplay({ playerId, currentPlayerId, gameState, tappab
     return <RoleMiniCard role={revealedRole} size="medium" tappable={tappable} onClick={roleClick ? () => roleClick(revealedRole) : undefined} />;
   }
 
+  const fellowWerewolves = gameState.fellowWerewolves ?? [];
+  if (fellowWerewolves.includes(playerId)) {
+    return <RoleMiniCard role={"WEREWOLF" as Role} size="medium" tappable={tappable} onClick={roleClick ? () => roleClick("WEREWOLF" as Role) : undefined} />;
+  }
+
   return <UnknownMiniCard tappable={tappable} />;
 }

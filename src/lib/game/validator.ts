@@ -25,6 +25,7 @@ export function getValidActionTypes(role: Role): readonly ActionType[] {
       return ["ROBBER_SWAP", "SKIP"];
     case "TROUBLEMAKER":
       return ["TROUBLEMAKER_SWAP", "SKIP"];
+    case "ALPHA_WOLF":
     case "VILLAGER":
     case "HUNTER":
     case "TANNER":

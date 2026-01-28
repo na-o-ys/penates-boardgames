@@ -4,6 +4,7 @@ import type {
   GameState,
   PlayerId,
 } from "./types";
+import { ROLE_HAS_ACTION, ROLE_IS_WEREWOLF_ALLY, ROLE_REVEALS_CENTER } from "./types";
 import { resolveFinalRoles } from "./resolver";
 import { calculateExecutedPlayers, calculateGameResult } from "./judge";
 
@@ -39,7 +40,7 @@ export function maskGameState(
   // 全員がアクション済みかチェック（アクション持ち役職のみ）
   const playersWithActions = state.players.filter((player) => {
     const role = state.initialDistribution[player.id];
-    return role && ["WEREWOLF", "SEER", "ROBBER", "TROUBLEMAKER"].includes(role);
+    return role && ROLE_HAS_ACTION[role];
   });
   const allActed = playersWithActions.every((player) =>
     state.actions.some((action) => action.actorId === player.id)
@@ -126,22 +127,32 @@ export function maskGameStateForWerewolf(
 ): ClientGameState {
   const baseState = maskGameState(state, playerId);
 
-  // 自分が人狼でない場合は通常のマスキング
-  if (baseState.myRole !== "WEREWOLF") {
+  // 人狼仲間チェック対象でない場合は通常のマスキング
+  if (!baseState.myRole || !ROLE_IS_WEREWOLF_ALLY[baseState.myRole]) {
     return baseState;
   }
 
-  // 夜フェーズ以降で人狼の場合、仲間の人狼を教える
+  // 夜フェーズ以降で人狼仲間の場合、仲間情報を教える
   if (state.phase !== "LOBBY") {
     const playerIds = state.players.map((p) => p.id);
     const fellowWerewolves = playerIds.filter(
-      (id) => id !== playerId && state.initialDistribution[id] === "WEREWOLF"
+      (id) => id !== playerId && ROLE_IS_WEREWOLF_ALLY[state.initialDistribution[id]]
     );
 
-    return {
-      ...baseState,
-      fellowWerewolves,
-    };
+    const result: ClientGameState = { ...baseState, fellowWerewolves };
+
+    // 墓地カード自動開示
+    if (ROLE_REVEALS_CENTER[baseState.myRole]) {
+      return {
+        ...result,
+        revealedCenterRoles: {
+          CENTER_0: state.initialDistribution["CENTER_0"],
+          CENTER_1: state.initialDistribution["CENTER_1"],
+        },
+      };
+    }
+
+    return result;
   }
 
   return baseState;

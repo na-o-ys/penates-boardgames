@@ -1,5 +1,5 @@
 import type { GameAction, Role } from "./types";
-import { ROLE_PRIORITY } from "./types";
+import { ROLE_IS_WEREWOLF_ALLY, ROLE_PRIORITY } from "./types";
 
 /**
  * アクションを優先度順にソートする
@@ -164,7 +164,7 @@ export function hasMultipleWerewolves(
   playerIds: readonly string[]
 ): boolean {
   const werewolfCount = playerIds.filter(
-    (id) => distribution[id] === "WEREWOLF"
+    (id) => ROLE_IS_WEREWOLF_ALLY[distribution[id]]
   ).length;
   return werewolfCount >= 2;
 }
@@ -176,5 +176,5 @@ export function getWerewolfPlayerIds(
   distribution: Record<string, Role>,
   playerIds: readonly string[]
 ): readonly string[] {
-  return playerIds.filter((id) => distribution[id] === "WEREWOLF");
+  return playerIds.filter((id) => ROLE_IS_WEREWOLF_ALLY[distribution[id]]);
 }

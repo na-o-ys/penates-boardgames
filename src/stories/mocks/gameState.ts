@@ -116,6 +116,40 @@ export const nightTannerState: ClientGameState = {
   phaseStartedAt: Date.now(),
 };
 
+export const nightMadmanState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "NIGHT",
+  myRole: "MADMAN",
+  hasActed: false,
+  phaseStartedAt: Date.now(),
+};
+
+export const nightAlphaWolfState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "NIGHT",
+  myRole: "ALPHA_WOLF",
+  hasActed: false,
+  fellowWerewolves: [],
+  revealedCenterRoles: {
+    CENTER_0: "SEER",
+    CENTER_1: "VILLAGER",
+  },
+  phaseStartedAt: Date.now(),
+};
+
+export const nightAlphaWolfWithFellowsState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "NIGHT",
+  myRole: "ALPHA_WOLF",
+  hasActed: false,
+  fellowWerewolves: ["p2"],
+  revealedCenterRoles: {
+    CENTER_0: "ROBBER",
+    CENTER_1: "HUNTER",
+  },
+  phaseStartedAt: Date.now(),
+};
+
 export const nightActedState: ClientGameState = {
   ...BASE_STATE,
   phase: "NIGHT",

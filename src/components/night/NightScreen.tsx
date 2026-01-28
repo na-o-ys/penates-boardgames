@@ -173,6 +173,20 @@ export function NightScreen({
           return `仲間の人狼は ${fellowNames} です`;
         }
         return "あなたは唯一の人狼です";
+      case "ALPHA_WOLF": {
+        const parts: string[] = [];
+        if (fellowWerewolves.length > 0) {
+          const fellowNames = fellowWerewolves
+            .map((id) => gameState.players.find((p) => p.id === id)?.name)
+            .filter(Boolean)
+            .join("、");
+          parts.push(`仲間の人狼は ${fellowNames} です`);
+        } else {
+          parts.push("あなたは唯一の人狼です");
+        }
+        parts.push("墓地のカードが開示されています");
+        return parts.join("。");
+      }
       default:
         return "夜の行動はありません";
     }
@@ -252,6 +266,7 @@ export function NightScreen({
       case "TROUBLEMAKER":
         return <UnknownMiniCard tappable selected={selectedTargets.includes(playerId_)} />;
       case "WEREWOLF":
+      case "ALPHA_WOLF":
         if (fellowWerewolves.includes(playerId_)) {
           return <RoleMiniCard role={"WEREWOLF" as Role} size="medium" onClick={() => setDetailRole("WEREWOLF")} />;
         }
@@ -366,6 +381,8 @@ export function NightScreen({
               centerRoles={{}}
               onTapCenter={() => setConfirmAction({ type: "SEER_LOOK_CENTER", targets: ["CENTER_0", "CENTER_1"] })}
             />
+          ) : myRole === "ALPHA_WOLF" && gameState.revealedCenterRoles ? (
+            <CemeterySection centerRoles={gameState.revealedCenterRoles} />
           ) : (
             <CemeterySection centerRoles={{}} />
           )}
@@ -373,11 +390,11 @@ export function NightScreen({
 
         {/* Footer */}
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[var(--color-bg-deep)] via-[var(--color-bg-deep)]/95 to-transparent z-20 max-w-md mx-auto">
-          {hasActed || (!hasAction && myRole !== "WEREWOLF") ? (
+          {hasActed || (!hasAction && myRole !== "WEREWOLF" && myRole !== "ALPHA_WOLF") ? (
             <p className="text-center text-[var(--color-text-muted)] py-3">
               他のプレイヤーの行動を待っています...
             </p>
-          ) : myRole === "WEREWOLF" ? (
+          ) : (myRole === "WEREWOLF" || myRole === "ALPHA_WOLF") ? (
             <button
               onClick={handleSkip}
               disabled={isSubmitting}
