@@ -5,6 +5,7 @@ import { type ClientGameState, type GameConfig, type Role } from "@/lib/game";
 import { PlayerList } from "./PlayerList";
 import { RoleSelector } from "./RoleSelector";
 import { TimerSettings } from "./TimerSettings";
+import { PlayerStatsModal } from "../common/PlayerStatsModal";
 
 type LobbyTab = "players" | "roles" | "settings";
 
@@ -29,6 +30,7 @@ export function LobbyScreen({
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<LobbyTab>("players");
   const [localConfig, setLocalConfig] = useState<GameConfig>(gameState.config);
+  const [showStats, setShowStats] = useState(false);
 
   // サーバーの config が localConfig より新しければ同期（他タブからの更新）
   useEffect(() => {
@@ -101,7 +103,14 @@ export function LobbyScreen({
     <div className="flex flex-col min-h-screen game-overlay p-4 md:p-8">
       <div className="max-w-md mx-auto w-full flex flex-col flex-1">
         {/* ヘッダー */}
-        <div className="text-center mb-6 pt-4">
+        <div className="text-center mb-6 pt-4 relative">
+          <button
+            onClick={() => setShowStats(true)}
+            className="absolute top-4 right-0 w-9 h-9 rounded-full glass-panel flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
+            aria-label="プレイヤースタッツ"
+          >
+            <span className="material-icons text-xl">leaderboard</span>
+          </button>
           <h1 className="font-[family-name:var(--font-display)] font-black text-3xl gold-text mb-3 tracking-wider">
             ロビー
           </h1>
@@ -218,6 +227,14 @@ export function LobbyScreen({
           </div>
         )}
       </div>
+
+      {showStats && (
+        <PlayerStatsModal
+          players={gameState.players}
+          playerStats={gameState.playerStats ?? {}}
+          onClose={() => setShowStats(false)}
+        />
+      )}
     </div>
   );
 }

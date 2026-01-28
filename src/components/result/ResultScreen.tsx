@@ -7,7 +7,7 @@ import { RoleMiniCard, UnknownMiniCard } from "../common/RoleMiniCard";
 import { PlayerCard } from "../common/PlayerCard";
 import { CemeterySection } from "../common/CemeterySection";
 import { RoleDetailModal } from "../common/RoleDetailModal";
-import { RoleConfigModal } from "../common/RoleConfigModal";
+import { PlayerStatsModal } from "../common/PlayerStatsModal";
 import { OtherPlayersDivider } from "../common/OtherPlayersDivider";
 import { VoteTargetBadge } from "../common/VoteTargetBadge";
 
@@ -28,7 +28,7 @@ export function ResultScreen({ gameState, playerId, roomId, onPlayAgain }: Resul
   const currentPlayerId = playerId;
   const [isResetting, setIsResetting] = useState(false);
   const [detailRole, setDetailRole] = useState<Role | null>(null);
-  const [showRoleConfig, setShowRoleConfig] = useState(false);
+  const [showStats, setShowStats] = useState(false);
 
   const isHost = gameState.players[0]?.id === currentPlayerId;
 
@@ -70,11 +70,11 @@ export function ResultScreen({ gameState, playerId, roomId, onPlayAgain }: Resul
         {/* ヘッダー */}
         <div className="pt-8 pb-4 text-center relative">
           <button
-            onClick={() => setShowRoleConfig(true)}
+            onClick={() => setShowStats(true)}
             className="absolute top-8 right-4 w-9 h-9 rounded-full glass-panel flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
-            aria-label="役職構成"
+            aria-label="プレイヤースタッツ"
           >
-            <span className="material-icons text-xl">groups</span>
+            <span className="material-icons text-xl">leaderboard</span>
           </button>
           <h1
             className={`font-[family-name:var(--font-display)] font-black tracking-wider mb-2 ${
@@ -195,8 +195,12 @@ export function ResultScreen({ gameState, playerId, roomId, onPlayAgain }: Resul
         <RoleDetailModal role={detailRole} onClose={() => setDetailRole(null)} />
       )}
 
-      {showRoleConfig && (
-        <RoleConfigModal roles={[...gameState.config.roles]} onClose={() => setShowRoleConfig(false)} />
+      {showStats && (
+        <PlayerStatsModal
+          players={gameState.players}
+          playerStats={gameState.playerStats ?? {}}
+          onClose={() => setShowStats(false)}
+        />
       )}
     </div>
   );

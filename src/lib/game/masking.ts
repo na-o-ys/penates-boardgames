@@ -73,6 +73,7 @@ export function maskGameState(
     myVote,
     receivedBread,
     receivedNotice,
+    playerStats: state.playerStats,
     phaseStartedAt: state.phaseStartedAt,
   };
 

@@ -91,6 +91,7 @@ export interface GameState {
   readonly breadRecipientId: PlayerId | null; // パンを受け取ったプレイヤーID
   readonly noticeRecipientId: PlayerId | null; // 予告状を受け取ったプレイヤーID
   readonly phaseStartedAt: number | null;
+  readonly playerStats: Record<PlayerId, PlayerStat>; // プレイヤースタッツ
 }
 
 // ========================================
@@ -130,6 +131,8 @@ export interface ClientGameState {
   readonly receivedBread?: boolean;
   // 白怪盗から予告状を受け取ったか
   readonly receivedNotice?: boolean;
+  // プレイヤースタッツ
+  readonly playerStats?: Record<PlayerId, PlayerStat>;
   // RESULTフェーズのみ
   readonly initialRoles?: Record<string, Role>;
   readonly finalRoles?: Record<string, Role>;
@@ -139,6 +142,22 @@ export interface ClientGameState {
   readonly hunterRevengeTargets?: Record<PlayerId, PlayerId>; // 狩人の道連れ結果
   readonly winners?: readonly PlayerId[];
   readonly winningTeam?: Team | null;
+}
+
+// ========================================
+// プレイヤースタッツ型
+// ========================================
+
+/** プレイヤー個人スタッツ */
+export interface PlayerStat {
+  readonly totalGames: number;
+  readonly totalWins: number;
+  readonly villageGames: number;
+  readonly villageWins: number;
+  readonly werewolfGames: number;
+  readonly werewolfWins: number;
+  readonly minorityGames: number;
+  readonly minorityWins: number;
 }
 
 // ========================================

@@ -1,9 +1,9 @@
-import type { GameAction, GameConfig, GameState, Phase, Player, PlayerId, Role } from "./types";
+import type { GameAction, GameConfig, GameState, Phase, Player, PlayerId, PlayerStat, Role } from "./types";
 import { ROLES } from "./types";
 import { distributeRoles } from "./distribution";
 import { getActionResult } from "./resolver";
 import { resolveFinalRoles } from "./resolver";
-import { calculateExecutedPlayers } from "./judge";
+import { calculateExecutedPlayers, calculateGameResult } from "./judge";
 import { validateAction, validateVote, validateHunterRevenge, haveAllPlayersVoted, haveAllExecutedHuntersChosen } from "./validator";
 
 /**
@@ -47,6 +47,7 @@ export function createInitialGameState(roomId: string): GameState {
     breadRecipientId: null,
     noticeRecipientId: null,
     phaseStartedAt: null,
+    playerStats: {},
   };
 }
 
@@ -348,10 +349,15 @@ export function advancePhase(state: GameState): GameState {
     throw new Error("これ以上フェーズを進行できません");
   }
 
+  // RESULT フェーズに遷移する際にスタッツを更新
+  const updatedStats =
+    nextPhase === "RESULT" ? updatePlayerStats(state) : state.playerStats;
+
   return {
     ...state,
     phase: nextPhase,
     phaseStartedAt: Date.now(),
+    playerStats: updatedStats,
   };
 }
 
@@ -417,6 +423,52 @@ export function executeHunterRevenge(
   }
 
   return newState;
+}
+
+/**
+ * プレイヤースタッツを更新
+ */
+function updatePlayerStats(state: GameState): Record<PlayerId, PlayerStat> {
+  const finalRoles = resolveFinalRoles(state.initialDistribution, state.actions);
+  const result = calculateGameResult(
+    state.votes,
+    state.initialDistribution,
+    finalRoles,
+    state.players.map((p) => p.id),
+    state.hunterRevengeTarget
+  );
+
+  const newStats = { ...state.playerStats };
+
+  for (const player of state.players) {
+    const prev = newStats[player.id] ?? {
+      totalGames: 0,
+      totalWins: 0,
+      villageGames: 0,
+      villageWins: 0,
+      werewolfGames: 0,
+      werewolfWins: 0,
+      minorityGames: 0,
+      minorityWins: 0,
+    };
+
+    const finalRole = finalRoles[player.id];
+    const team = ROLES[finalRole].team;
+    const isWinner = result.winners.includes(player.id);
+
+    newStats[player.id] = {
+      totalGames: prev.totalGames + 1,
+      totalWins: prev.totalWins + (isWinner ? 1 : 0),
+      villageGames: prev.villageGames + (team === "VILLAGE" ? 1 : 0),
+      villageWins: prev.villageWins + (team === "VILLAGE" && isWinner ? 1 : 0),
+      werewolfGames: prev.werewolfGames + (team === "WEREWOLF" ? 1 : 0),
+      werewolfWins: prev.werewolfWins + (team === "WEREWOLF" && isWinner ? 1 : 0),
+      minorityGames: prev.minorityGames + (team === "MINORITY" ? 1 : 0),
+      minorityWins: prev.minorityWins + (team === "MINORITY" && isWinner ? 1 : 0),
+    };
+  }
+
+  return newStats;
 }
 
 /**

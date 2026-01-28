@@ -1,13 +1,10 @@
 -- ワンナイト人狼 Database Schema
 -- Supabase PostgreSQL
 
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 -- Rooms table
 -- ゲームの全状態をJSONBで保持するKVSライクな設計
 CREATE TABLE IF NOT EXISTS rooms (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   version INTEGER NOT NULL DEFAULT 1,
   game_state JSONB NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
