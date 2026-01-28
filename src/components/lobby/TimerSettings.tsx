@@ -4,17 +4,35 @@ interface TimerSettingsProps {
   nightDuration: number;
   dayDuration: number;
   votingDuration: number;
+  playerCount: number;
   onChange: (settings: { nightDuration?: number; dayDuration?: number; votingDuration?: number }) => void;
   disabled?: boolean;
 }
 
-const DURATION_OPTIONS = [
-  { value: 10, label: "10秒" },
-  { value: 30, label: "30秒" },
-  { value: 60, label: "1分" },
-  { value: 120, label: "2分" },
-  { value: 180, label: "3分" },
-  { value: 300, label: "5分" },
+function formatDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+function formatLabel(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`;
+  return `${seconds / 60}m`;
+}
+
+interface PhaseSliderConfig {
+  label: string;
+  key: "nightDuration" | "dayDuration" | "votingDuration";
+  min: number;
+  max: number;
+  step: number;
+  dotColor: string;
+}
+
+const PHASE_CONFIGS: PhaseSliderConfig[] = [
+  { label: "夜フェーズ", key: "nightDuration", min: 10, max: 60, step: 10, dotColor: "bg-indigo-500" },
+  { label: "議論フェーズ", key: "dayDuration", min: 10, max: 600, step: 10, dotColor: "bg-yellow-500" },
+  { label: "投票フェーズ", key: "votingDuration", min: 10, max: 60, step: 10, dotColor: "bg-emerald-500" },
 ];
 
 export function TimerSettings({
@@ -24,56 +42,45 @@ export function TimerSettings({
   onChange,
   disabled = false,
 }: TimerSettingsProps) {
+  const values: Record<string, number> = {
+    nightDuration,
+    dayDuration,
+    votingDuration,
+  };
+
   return (
-    <div className="space-y-4" data-testid="timer-settings">
-      <div className="flex items-center justify-between">
-        <span className="text-[var(--color-text-secondary)]">夜フェーズ時間</span>
-        <select
-          value={nightDuration}
-          onChange={(e) => onChange({ nightDuration: Number(e.target.value) })}
-          disabled={disabled}
-          className="glass-input text-white px-3 py-2 rounded-xl disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-          data-testid="night-duration-select"
-        >
-          {DURATION_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="flex items-center justify-between">
-        <span className="text-[var(--color-text-secondary)]">議論フェーズ時間</span>
-        <select
-          value={dayDuration}
-          onChange={(e) => onChange({ dayDuration: Number(e.target.value) })}
-          disabled={disabled}
-          className="glass-input text-white px-3 py-2 rounded-xl disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-          data-testid="day-duration-select"
-        >
-          {DURATION_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="flex items-center justify-between">
-        <span className="text-[var(--color-text-secondary)]">投票フェーズ時間</span>
-        <select
-          value={votingDuration}
-          onChange={(e) => onChange({ votingDuration: Number(e.target.value) })}
-          disabled={disabled}
-          className="glass-input text-white px-3 py-2 rounded-xl disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-          data-testid="voting-duration-select"
-        >
-          {DURATION_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
+    <div data-testid="timer-settings" className="space-y-6">
+      {PHASE_CONFIGS.map((config) => {
+        const value = values[config.key];
+        return (
+          <div key={config.key}>
+            <div className="flex justify-between items-end mb-2">
+              <div className="flex items-center">
+                <span className={`w-2 h-2 rounded-full ${config.dotColor} mr-2`} />
+                <span className="text-sm font-bold text-gray-200">{config.label}</span>
+              </div>
+              <div className="font-[family-name:var(--font-display)] text-[var(--color-primary)] text-xl font-bold bg-black/40 px-2 rounded border border-white/5">
+                {formatDuration(value)}
+              </div>
+            </div>
+            <input
+              type="range"
+              min={config.min}
+              max={config.max}
+              step={config.step}
+              value={value}
+              onChange={(e) => onChange({ [config.key]: Number(e.target.value) })}
+              disabled={disabled}
+              className="w-full"
+              data-testid={`${config.key}-slider`}
+            />
+            <div className="flex justify-between text-[10px] text-gray-500 mt-1 font-mono">
+              <span>{formatLabel(config.min)}</span>
+              <span>{formatLabel(config.max)}</span>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

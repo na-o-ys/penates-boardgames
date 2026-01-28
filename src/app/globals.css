@@ -127,3 +127,30 @@ body {
   border: 2px solid var(--color-border-gold) !important;
   box-shadow: var(--shadow-glow);
 }
+
+/* タイマースライダー */
+input[type=range] {
+  -webkit-appearance: none;
+  background: transparent;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  cursor: pointer;
+  margin-top: -8px;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+  border: 2px solid var(--color-primary-light);
+}
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: #4B5563;
+  border-radius: 2px;
+}
+input[type=range]:disabled {
+  opacity: 0.5;
+}

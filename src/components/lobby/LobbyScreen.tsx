@@ -14,7 +14,7 @@ interface LobbyScreenProps {
   playerId: string;
   onStartGame: () => Promise<{ success: boolean; error?: string }>;
   onSetRoles: (roles: Role[]) => Promise<{ success: boolean; error?: string }>;
-  onUpdateConfig: (settings: { nightDuration?: number; dayDuration?: number }) => Promise<{ success: boolean; error?: string }>;
+  onUpdateConfig: (settings: { nightDuration?: number; dayDuration?: number; votingDuration?: number }) => Promise<{ success: boolean; error?: string }>;
   onKickPlayer: (targetPlayerId: string) => Promise<{ success: boolean; error?: string }>;
 }
 
@@ -45,7 +45,7 @@ export function LobbyScreen({
     }
   };
 
-  const handleTimerChange = async (settings: { nightDuration?: number; dayDuration?: number }) => {
+  const handleTimerChange = async (settings: { nightDuration?: number; dayDuration?: number; votingDuration?: number }) => {
     setError(null);
     const result = await onUpdateConfig(settings);
     if (!result.success) {
@@ -175,6 +175,7 @@ export function LobbyScreen({
                 nightDuration={gameState.config.nightDuration}
                 dayDuration={gameState.config.dayDuration}
                 votingDuration={gameState.config.votingDuration}
+                playerCount={playerCount}
                 onChange={handleTimerChange}
                 disabled={!isHost}
               />
