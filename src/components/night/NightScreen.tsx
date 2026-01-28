@@ -14,6 +14,7 @@ import {
 } from "@/lib/game";
 import { RoleMiniCard, UnknownMiniCard } from "../common/RoleMiniCard";
 import { PlayerCard } from "../common/PlayerCard";
+import { PlayerRoleDisplay } from "../common/PlayerRoleDisplay";
 import { CemeterySection } from "../common/CemeterySection";
 import { TappableUnknownCard } from "./TappableUnknownCard";
 import { ConfirmModal } from "../common/ConfirmModal";
@@ -214,27 +215,18 @@ export function NightScreen({
 
   // Render card for each player in the list
   const renderPlayerCard = (playerId_: string, isCurrentPlayer: boolean) => {
-    // Self: always show own role
-    if (isCurrentPlayer) {
-      return gameState.myRole ? (
-        <RoleMiniCard role={gameState.myRole} size="medium" />
-      ) : (
-        <UnknownMiniCard />
+    // Self or after acting: use shared component
+    if (isCurrentPlayer || hasActed) {
+      return (
+        <PlayerRoleDisplay
+          playerId={playerId_}
+          currentPlayerId={playerId}
+          gameState={gameState}
+        />
       );
     }
 
-    // After acting: show revealed or unknown
-    if (hasActed) {
-      const swapReason = getSwapReason(playerId_, gameState.myActions, gameState.players);
-      // Already handled in PlayerCard statusBadges
-      return revealedInfo.players[playerId_] ? (
-        <RoleMiniCard role={revealedInfo.players[playerId_]} size="medium" />
-      ) : (
-        <UnknownMiniCard />
-      );
-    }
-
-    // Before acting
+    // Before acting: role-specific interactive UI
     if (!myRole) return <UnknownMiniCard />;
 
     switch (myRole) {

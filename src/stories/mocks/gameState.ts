@@ -181,6 +181,12 @@ export const votingNotVotedState: ClientGameState = {
   ...BASE_STATE,
   phase: "VOTING",
   myRole: "SEER",
+  myActions: [
+    { actorId: "p1", type: "SEER_LOOK_PLAYER", targetIds: ["p2"], result: ["WEREWOLF"], timestamp: 0 },
+  ],
+  actionResults: [
+    { type: "SEER_LOOK_PLAYER", targetIds: ["p2"], revealedRoles: ["WEREWOLF"] },
+  ],
   votedPlayers: ["p3"],
   myVote: null,
   phaseStartedAt: Date.now(),
@@ -190,6 +196,12 @@ export const votingVotedState: ClientGameState = {
   ...BASE_STATE,
   phase: "VOTING",
   myRole: "SEER",
+  myActions: [
+    { actorId: "p1", type: "SEER_LOOK_PLAYER", targetIds: ["p2"], result: ["WEREWOLF"], timestamp: 0 },
+  ],
+  actionResults: [
+    { type: "SEER_LOOK_PLAYER", targetIds: ["p2"], revealedRoles: ["WEREWOLF"] },
+  ],
   votedPlayers: ["p1", "p3"],
   myVote: "p2",
   phaseStartedAt: Date.now(),
@@ -307,6 +319,12 @@ export const hunterRevengeWaitingState: ClientGameState = {
   isExecutedHunter: false,
   executedHunterIds: ["p2"],
   hunterRevengeChosen: {},
+  myActions: [
+    { actorId: "p1", type: "SEER_LOOK_PLAYER", targetIds: ["p3"], result: ["ROBBER"], timestamp: 0 },
+  ],
+  actionResults: [
+    { type: "SEER_LOOK_PLAYER", targetIds: ["p3"], revealedRoles: ["ROBBER"] },
+  ],
   phaseStartedAt: Date.now(),
 };
 

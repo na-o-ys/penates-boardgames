@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { ClientGameState, PlayerId } from "@/lib/game";
-import { UnknownMiniCard } from "../common/RoleMiniCard";
 import { PlayerCard } from "../common/PlayerCard";
+import { PlayerRoleDisplay } from "../common/PlayerRoleDisplay";
 import { ConfirmModal } from "../common/ConfirmModal";
 
 const HUNTER_REVENGE_DURATION = 30;
@@ -151,7 +151,11 @@ export function HunterRevengeScreen({
                 isCurrentPlayer={isCurrentPlayer}
                 onClick={cardOnClick}
               >
-                <UnknownMiniCard />
+                <PlayerRoleDisplay
+                  playerId={player.id}
+                  currentPlayerId={playerId}
+                  gameState={gameState}
+                />
               </PlayerCard>
             );
           })}

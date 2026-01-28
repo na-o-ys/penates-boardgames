@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import type { ClientGameState, Player } from "@/lib/game";
 import { buildRevealedInfo, getSwapReason } from "@/lib/game";
-import { RoleMiniCard, UnknownMiniCard } from "../common/RoleMiniCard";
 import { PlayerCard } from "../common/PlayerCard";
+import { PlayerRoleDisplay } from "../common/PlayerRoleDisplay";
 import { CemeterySection } from "../common/CemeterySection";
 import { SkipLink } from "../common/SkipLink";
 
@@ -78,50 +78,6 @@ export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DaySc
     a.id === currentPlayerId ? -1 : b.id === currentPlayerId ? 1 : 0
   );
 
-  const robberSwap = gameState.actionResults.find((r) => r.type === "ROBBER_SWAP");
-  const hasSwapped = robberSwap && robberSwap.revealedRoles?.[0];
-
-  const robberTargetId = robberSwap?.targetIds[0];
-
-  const renderRoleDisplay = (player: Player) => {
-    const isCurrentPlayer = player.id === currentPlayerId;
-
-    if (isCurrentPlayer && hasSwapped && gameState.myRole) {
-      return (
-        <>
-          <div className="opacity-50 grayscale scale-90">
-            <RoleMiniCard role={gameState.myRole} size="small" />
-          </div>
-          <span className="material-icons text-gray-500 text-sm">arrow_forward</span>
-          <RoleMiniCard role={robberSwap.revealedRoles![0]} size="medium" />
-        </>
-      );
-    }
-
-    if (hasSwapped && player.id === robberTargetId && gameState.myRole) {
-      return (
-        <>
-          <div className="opacity-50 grayscale scale-90">
-            <RoleMiniCard role={robberSwap.revealedRoles![0]} size="small" />
-          </div>
-          <span className="material-icons text-gray-500 text-sm">arrow_forward</span>
-          <RoleMiniCard role={gameState.myRole} size="medium" />
-        </>
-      );
-    }
-
-    if (isCurrentPlayer && gameState.myRole) {
-      return <RoleMiniCard role={gameState.myRole} size="medium" />;
-    }
-
-    const revealedRole = revealedInfo.players[player.id];
-    if (revealedRole) {
-      return <RoleMiniCard role={revealedRole} size="medium" />;
-    }
-
-    return <UnknownMiniCard />;
-  };
-
   return (
     <div className="flex flex-col min-h-screen game-overlay">
       <div className="max-w-md mx-auto w-full flex flex-col flex-1">
@@ -158,7 +114,11 @@ export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DaySc
                   </div>
                 ) : undefined}
               >
-                {renderRoleDisplay(player)}
+                <PlayerRoleDisplay
+                  playerId={player.id}
+                  currentPlayerId={currentPlayerId}
+                  gameState={gameState}
+                />
               </PlayerCard>
             );
           })}

@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import type { ClientGameState } from "@/lib/game";
 import { SKIP_VOTE } from "@/lib/game";
-import { UnknownMiniCard } from "../common/RoleMiniCard";
 import { PlayerCard } from "../common/PlayerCard";
+import { PlayerRoleDisplay } from "../common/PlayerRoleDisplay";
 import { ConfirmModal } from "../common/ConfirmModal";
 import { SkipLink } from "../common/SkipLink";
 
@@ -140,7 +140,11 @@ export function VotingScreen({ gameState, playerId, roomId, onSubmitVote, onAuto
                   </div>
                 ) : undefined}
               >
-                <UnknownMiniCard />
+                <PlayerRoleDisplay
+                  playerId={player.id}
+                  currentPlayerId={playerId}
+                  gameState={gameState}
+                />
               </PlayerCard>
             );
           })}
