@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Fragment } from "react";
 import {
   ROLE_HAS_ACTION,
   ROLE_NAMES,
@@ -21,6 +21,7 @@ import { NightResultModal } from "../common/NightResultModal";
 import { RoleDetailModal } from "../common/RoleDetailModal";
 import { RoleConfigModal } from "../common/RoleConfigModal";
 import { SkipLink } from "../common/SkipLink";
+import { OtherPlayersDivider } from "../common/OtherPlayersDivider";
 
 interface NightScreenProps {
   roomId: string;
@@ -317,7 +318,7 @@ export function NightScreen({
 
         {/* Player list + Cemetery (scrollable) */}
         <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-24">
-          {sortedPlayers.map((player) => {
+          {sortedPlayers.map((player, index) => {
             const isCurrentPlayer = player.id === playerId;
             const swapReason = hasActed
               ? getSwapReason(player.id, gameState.myActions, gameState.players)
@@ -338,22 +339,24 @@ export function NightScreen({
             })();
 
             return (
-              <PlayerCard
-                key={player.id}
-                playerName={player.name}
-                isCurrentPlayer={isCurrentPlayer}
-                onClick={cardOnClick}
-                statusBadges={swapReason ? (
-                  <div className="text-xs">
-                    <span className="text-yellow-500">
-                      <span className="material-icons text-sm align-middle animate-pulse">sync_alt</span>
-                      {" "}{swapReason}
-                    </span>
-                  </div>
-                ) : undefined}
-              >
-                {renderPlayerCard(player.id, isCurrentPlayer)}
-              </PlayerCard>
+              <Fragment key={player.id}>
+                {index === 1 && <OtherPlayersDivider />}
+                <PlayerCard
+                  playerName={player.name}
+                  isCurrentPlayer={isCurrentPlayer}
+                  onClick={cardOnClick}
+                  statusBadges={swapReason ? (
+                    <div className="text-xs">
+                      <span className="text-yellow-500">
+                        <span className="material-icons text-sm align-middle animate-pulse">sync_alt</span>
+                        {" "}{swapReason}
+                      </span>
+                    </div>
+                  ) : undefined}
+                >
+                  {renderPlayerCard(player.id, isCurrentPlayer)}
+                </PlayerCard>
+              </Fragment>
             );
           })}
 

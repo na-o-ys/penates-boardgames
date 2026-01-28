@@ -25,9 +25,11 @@ export function PlayerCard({
       className={`rounded-xl p-3 relative overflow-hidden ${
         onClick ? "cursor-pointer group/player" : ""
       } ${
+        isCurrentPlayer ? "bg-gray-800/90" : "bg-white/15 backdrop-blur-md"
+      } ${
         highlight
-          ? "bg-gray-800/90 border-2 border-[var(--color-primary)] shadow-[0_0_15px_rgba(212,175,55,0.5)]"
-          : "bg-white/15 backdrop-blur-md border border-white/10"
+          ? "border-2 border-[var(--color-primary)] shadow-[0_0_15px_rgba(212,175,55,0.5)]"
+          : "border border-white/10"
       }`}
     >
       {isCurrentPlayer && (

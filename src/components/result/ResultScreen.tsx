@@ -2,12 +2,13 @@
 
 import type { ClientGameState, Player, Role, Team } from "@/lib/game";
 import { ROLE_NAMES, getSwapReason } from "@/lib/game";
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { RoleMiniCard, UnknownMiniCard } from "../common/RoleMiniCard";
 import { PlayerCard } from "../common/PlayerCard";
 import { CemeterySection } from "../common/CemeterySection";
 import { RoleDetailModal } from "../common/RoleDetailModal";
 import { RoleConfigModal } from "../common/RoleConfigModal";
+import { OtherPlayersDivider } from "../common/OtherPlayersDivider";
 
 interface ResultScreenProps {
   gameState: ClientGameState;
@@ -94,7 +95,7 @@ export function ResultScreen({ gameState, playerId, roomId, onPlayAgain }: Resul
 
         {/* プレイヤーカード (scrollable) */}
         <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-24">
-          {sortedPlayers.map((player: Player) => {
+          {sortedPlayers.map((player: Player, index: number) => {
             const isCurrentPlayer = player.id === currentPlayerId;
             const isPlayerWinner = winners.includes(player.id);
             const isExecuted = executedPlayerIds.includes(player.id);
@@ -110,12 +111,13 @@ export function ResultScreen({ gameState, playerId, roomId, onPlayAgain }: Resul
               : null;
 
             return (
-              <PlayerCard
-                key={player.id}
-                playerName={player.name}
-                isCurrentPlayer={isCurrentPlayer}
-                highlight={isPlayerWinner}
-                leftIndicator={
+              <Fragment key={player.id}>
+                {index === 1 && <OtherPlayersDivider />}
+                <PlayerCard
+                  playerName={player.name}
+                  isCurrentPlayer={isCurrentPlayer}
+                  highlight={isPlayerWinner}
+                  leftIndicator={
                   isExecuted ? (
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-[var(--color-error)] rounded-l-xl" />
                   ) : undefined
@@ -154,6 +156,7 @@ export function ResultScreen({ gameState, playerId, roomId, onPlayAgain }: Resul
                   <UnknownMiniCard />
                 )}
               </PlayerCard>
+              </Fragment>
             );
           })}
 

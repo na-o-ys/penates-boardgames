@@ -10,9 +10,9 @@ export function CemeterySection({ centerRoles, onTapCenter }: CemeterySectionPro
   const isTappable = !!onTapCenter;
 
   return (
-    <div className="mt-6 border-t border-white/20 pt-4">
+    <div className="mt-3 pt-2">
       <h3 className="text-center text-[var(--color-text-muted)] text-xs uppercase tracking-widest mb-3 font-[family-name:var(--font-display)]">
-        墓地（中央カード）
+        GRAVEYARD
       </h3>
       <div
         className={`flex justify-center space-x-4 ${isTappable ? "cursor-pointer group" : ""}`}

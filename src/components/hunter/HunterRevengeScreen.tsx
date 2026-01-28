@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Fragment } from "react";
 import type { ClientGameState, PlayerId, Role } from "@/lib/game";
 import { PlayerCard } from "../common/PlayerCard";
+import { OtherPlayersDivider } from "../common/OtherPlayersDivider";
 import { PlayerRoleDisplay } from "../common/PlayerRoleDisplay";
 import { RoleDetailModal } from "../common/RoleDetailModal";
 import { RoleConfigModal } from "../common/RoleConfigModal";
@@ -148,7 +149,7 @@ export function HunterRevengeScreen({
 
         {/* Player list (scrollable) */}
         <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-24">
-          {sortedPlayers.map((player) => {
+          {sortedPlayers.map((player, index) => {
             const isCurrentPlayer = player.id === playerId;
 
             const cardOnClick = (!isCurrentPlayer && canSelect)
@@ -156,20 +157,22 @@ export function HunterRevengeScreen({
               : undefined;
 
             return (
-              <PlayerCard
-                key={player.id}
-                playerName={player.name}
-                isCurrentPlayer={isCurrentPlayer}
-                onClick={cardOnClick}
-              >
-                <PlayerRoleDisplay
-                  playerId={player.id}
-                  currentPlayerId={playerId}
-                  gameState={gameState}
-                  tappable={canSelect && !isCurrentPlayer}
-                  onRoleClick={setDetailRole}
-                />
-              </PlayerCard>
+              <Fragment key={player.id}>
+                {index === 1 && <OtherPlayersDivider />}
+                <PlayerCard
+                  playerName={player.name}
+                  isCurrentPlayer={isCurrentPlayer}
+                  onClick={cardOnClick}
+                >
+                  <PlayerRoleDisplay
+                    playerId={player.id}
+                    currentPlayerId={playerId}
+                    gameState={gameState}
+                    tappable={canSelect && !isCurrentPlayer}
+                    onRoleClick={setDetailRole}
+                  />
+                </PlayerCard>
+              </Fragment>
             );
           })}
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Fragment } from "react";
 import type { ClientGameState, Player, Role } from "@/lib/game";
 import { buildRevealedInfo, getSwapReason } from "@/lib/game";
 import { PlayerCard } from "../common/PlayerCard";
@@ -8,6 +8,7 @@ import { PlayerRoleDisplay } from "../common/PlayerRoleDisplay";
 import { CemeterySection } from "../common/CemeterySection";
 import { RoleDetailModal } from "../common/RoleDetailModal";
 import { RoleConfigModal } from "../common/RoleConfigModal";
+import { OtherPlayersDivider } from "../common/OtherPlayersDivider";
 import { SkipLink } from "../common/SkipLink";
 
 interface DayScreenProps {
@@ -109,29 +110,31 @@ export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DaySc
 
         {/* Player list + Cemetery (scrollable) */}
         <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-24">
-          {sortedPlayers.map((player: Player) => {
+          {sortedPlayers.map((player: Player, index: number) => {
             const swapReason = getSwapReason(player.id, gameState.myActions, gameState.players);
             return (
-              <PlayerCard
-                key={player.id}
-                playerName={player.name}
-                isCurrentPlayer={player.id === currentPlayerId}
-                statusBadges={swapReason ? (
-                  <div className="text-xs">
-                    <span className="text-yellow-500">
-                      <span className="material-icons text-sm align-middle animate-pulse">sync_alt</span>
-                      {" "}{swapReason}
-                    </span>
-                  </div>
-                ) : undefined}
-              >
-                <PlayerRoleDisplay
-                  playerId={player.id}
-                  currentPlayerId={currentPlayerId}
-                  gameState={gameState}
-                  onRoleClick={setDetailRole}
-                />
-              </PlayerCard>
+              <Fragment key={player.id}>
+                {index === 1 && <OtherPlayersDivider />}
+                <PlayerCard
+                  playerName={player.name}
+                  isCurrentPlayer={player.id === currentPlayerId}
+                  statusBadges={swapReason ? (
+                    <div className="text-xs">
+                      <span className="text-yellow-500">
+                        <span className="material-icons text-sm align-middle animate-pulse">sync_alt</span>
+                        {" "}{swapReason}
+                      </span>
+                    </div>
+                  ) : undefined}
+                >
+                  <PlayerRoleDisplay
+                    playerId={player.id}
+                    currentPlayerId={currentPlayerId}
+                    gameState={gameState}
+                    onRoleClick={setDetailRole}
+                  />
+                </PlayerCard>
+              </Fragment>
             );
           })}
 

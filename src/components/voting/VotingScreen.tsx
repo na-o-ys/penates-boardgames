@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Fragment } from "react";
 import type { ClientGameState, Role } from "@/lib/game";
 import { SKIP_VOTE } from "@/lib/game";
 import { PlayerCard } from "../common/PlayerCard";
 import { PlayerRoleDisplay } from "../common/PlayerRoleDisplay";
 import { RoleDetailModal } from "../common/RoleDetailModal";
 import { RoleConfigModal } from "../common/RoleConfigModal";
+import { OtherPlayersDivider } from "../common/OtherPlayersDivider";
 import { ConfirmModal } from "../common/ConfirmModal";
 import { SkipLink } from "../common/SkipLink";
 
@@ -128,7 +129,7 @@ export function VotingScreen({ gameState, playerId, roomId, onSubmitVote, onAuto
 
         {/* Player list (scrollable) */}
         <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-24">
-          {sortedPlayers.map((player) => {
+          {sortedPlayers.map((player, index) => {
             const isCurrentPlayer = player.id === playerId;
             const playerHasVoted = gameState.votedPlayers?.includes(player.id) ?? false;
 
@@ -137,28 +138,30 @@ export function VotingScreen({ gameState, playerId, roomId, onSubmitVote, onAuto
               : undefined;
 
             return (
-              <PlayerCard
-                key={player.id}
-                playerName={player.name}
-                isCurrentPlayer={isCurrentPlayer}
-                onClick={cardOnClick}
-                statusBadges={playerHasVoted ? (
-                  <div className="text-xs">
-                    <span className="text-[var(--color-ready)] font-bold">
-                      <span className="material-icons text-sm align-middle">check</span>
-                      {" "}投票済み
-                    </span>
-                  </div>
-                ) : undefined}
-              >
-                <PlayerRoleDisplay
-                  playerId={player.id}
-                  currentPlayerId={playerId}
-                  gameState={gameState}
-                  tappable={!isCurrentPlayer && !hasVoted}
-                  onRoleClick={setDetailRole}
-                />
-              </PlayerCard>
+              <Fragment key={player.id}>
+                {index === 1 && <OtherPlayersDivider />}
+                <PlayerCard
+                  playerName={player.name}
+                  isCurrentPlayer={isCurrentPlayer}
+                  onClick={cardOnClick}
+                  statusBadges={playerHasVoted ? (
+                    <div className="text-xs">
+                      <span className="text-[var(--color-ready)] font-bold">
+                        <span className="material-icons text-sm align-middle">check</span>
+                        {" "}投票済み
+                      </span>
+                    </div>
+                  ) : undefined}
+                >
+                  <PlayerRoleDisplay
+                    playerId={player.id}
+                    currentPlayerId={playerId}
+                    gameState={gameState}
+                    tappable={!isCurrentPlayer && !hasVoted}
+                    onRoleClick={setDetailRole}
+                  />
+                </PlayerCard>
+              </Fragment>
             );
           })}
         </div>
