@@ -48,15 +48,15 @@ body {
   color: var(--color-text-primary);
 }
 
-/* レスポンシブ背景画像（縦長=bg_v、横長=bg_h） */
+/* レスポンシブ背景画像 */
 @utility bg-game {
-  background-image: url('/images/bg_v.jpeg');
+  background-image: url('/images/bg.jpeg');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
 
   @media (min-aspect-ratio: 1/1) {
-    background-image: url('/images/bg_h.jpeg');
+    background-image: url('/images/bg.jpeg');
   }
 }
 

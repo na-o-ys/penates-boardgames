@@ -15,7 +15,7 @@ export function CemeterySection({ centerRoles, onTapCenter }: CemeterySectionPro
         GRAVEYARD
       </h3>
       <div
-        className={`flex justify-center space-x-4 ${isTappable ? "cursor-pointer group" : ""}`}
+        className={`flex justify-center space-x-4 ${isTappable ? "cursor-pointer group/player" : ""}`}
         onClick={isTappable ? onTapCenter : undefined}
         role={isTappable ? "button" : undefined}
       >
