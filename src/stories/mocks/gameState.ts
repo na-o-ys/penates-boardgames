@@ -130,6 +130,20 @@ export const nightActedState: ClientGameState = {
   phaseStartedAt: Date.now(),
 };
 
+export const nightActedSeerCenterState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "NIGHT",
+  myRole: "SEER",
+  hasActed: true,
+  myActions: [
+    { actorId: "p1", type: "SEER_LOOK_CENTER", targetIds: ["CENTER_0", "CENTER_1"], result: ["SEER", "VILLAGER"], timestamp: 0 },
+  ],
+  actionResults: [
+    { type: "SEER_LOOK_CENTER", targetIds: ["CENTER_0", "CENTER_1"], revealedRoles: ["SEER", "VILLAGER"] },
+  ],
+  phaseStartedAt: Date.now(),
+};
+
 export const nightActedRobberState: ClientGameState = {
   ...BASE_STATE,
   phase: "NIGHT",

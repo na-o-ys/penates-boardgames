@@ -11,6 +11,7 @@ import {
   nightVillagerState,
   nightTannerState,
   nightActedState,
+  nightActedSeerCenterState,
   nightActedRobberState,
 } from "./mocks/gameState";
 
@@ -106,5 +107,32 @@ export const ActedRobber: Story = {
     roomId: "test-room-id",
     playerId: "p1",
     gameState: nightActedRobberState,
+  },
+};
+
+export const ResultSeerPlayer: Story = {
+  args: {
+    roomId: "test-room-id",
+    playerId: "p1",
+    gameState: nightActedState,
+    initialPendingResult: { type: "SEER_LOOK_PLAYER", targets: ["p2"] },
+  },
+};
+
+export const ResultSeerCenter: Story = {
+  args: {
+    roomId: "test-room-id",
+    playerId: "p1",
+    gameState: nightActedSeerCenterState,
+    initialPendingResult: { type: "SEER_LOOK_CENTER", targets: ["CENTER_0", "CENTER_1"] },
+  },
+};
+
+export const ResultRobber: Story = {
+  args: {
+    roomId: "test-room-id",
+    playerId: "p1",
+    gameState: nightActedRobberState,
+    initialPendingResult: { type: "ROBBER_SWAP", targets: ["p2"] },
   },
 };

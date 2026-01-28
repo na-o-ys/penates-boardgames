@@ -5,7 +5,7 @@ import {
   ROLE_HAS_ACTION,
   ROLE_NAMES,
   ROLE_MATERIAL_ICONS,
-  ROLE_CARD_COLORS,
+  ROLE_ACCENT_COLORS,
   buildRevealedInfo,
   getSwapReason,
   type ClientGameState,
@@ -17,6 +17,7 @@ import { PlayerCard } from "../common/PlayerCard";
 import { PlayerRoleDisplay } from "../common/PlayerRoleDisplay";
 import { CemeterySection } from "../common/CemeterySection";
 import { ConfirmModal } from "../common/ConfirmModal";
+import { NightResultModal } from "../common/NightResultModal";
 import { RoleDetailModal } from "../common/RoleDetailModal";
 import { RoleConfigModal } from "../common/RoleConfigModal";
 import { SkipLink } from "../common/SkipLink";
@@ -27,6 +28,8 @@ interface NightScreenProps {
   playerId: string;
   onSubmitAction: (actionType: ActionType, targets: string[]) => Promise<{ success: boolean; error?: string }>;
   onAutoSkip: () => Promise<{ success: boolean; error?: string }>;
+  /** Storybook 用: 結果モーダルの初期表示状態 */
+  initialPendingResult?: { type: ActionType; targets: string[] } | null;
 }
 
 export function NightScreen({
@@ -35,6 +38,7 @@ export function NightScreen({
   playerId,
   onSubmitAction,
   onAutoSkip,
+  initialPendingResult = null,
 }: NightScreenProps) {
   const [selectedTargets, setSelectedTargets] = useState<string[]>([]);
   const [confirmAction, setConfirmAction] = useState<{ type: ActionType; targets: string[] } | null>(null);
@@ -42,6 +46,7 @@ export function NightScreen({
   const [error, setError] = useState<string | null>(null);
   const [detailRole, setDetailRole] = useState<Role | null>(null);
   const [showRoleConfig, setShowRoleConfig] = useState(false);
+  const [pendingResult, setPendingResult] = useState<{ type: ActionType; targets: string[] } | null>(initialPendingResult);
 
   const nightDuration = gameState.config.nightDuration;
   const phaseStartedAt = gameState.phaseStartedAt;
@@ -98,6 +103,11 @@ export function NightScreen({
       const result = await onSubmitAction(actionType, targets);
       if (!result.success) {
         setError(result.error ?? "アクションの実行に失敗しました");
+      } else {
+        const showsResult = ["SEER_LOOK_PLAYER", "SEER_LOOK_CENTER", "ROBBER_SWAP"].includes(actionType);
+        if (showsResult) {
+          setPendingResult({ type: actionType, targets });
+        }
       }
     } catch {
       setError("エラーが発生しました");
@@ -272,24 +282,30 @@ export function NightScreen({
           </div>
 
           {/* Role notification + instruction */}
-          {myRole && !hasActed && (
+          {myRole && (
             <div className="space-y-1">
-              <div className="flex items-center justify-center gap-2">
-                <span className={`material-icons ${ROLE_CARD_COLORS[myRole].text}`}>
+              <p className="text-xs text-[var(--color-text-muted)]">あなたの役職</p>
+              <button
+                type="button"
+                onClick={() => setDetailRole(myRole)}
+                className="flex items-center justify-center gap-1.5 cursor-pointer mx-auto"
+              >
+                <span className={`material-icons ${ROLE_ACCENT_COLORS[myRole].iconText}`}>
                   {ROLE_MATERIAL_ICONS[myRole]}
                 </span>
-                <span className={`font-bold ${ROLE_CARD_COLORS[myRole].text}`}>
+                <span className={`font-bold ${ROLE_ACCENT_COLORS[myRole].iconText}`}>
                   {ROLE_NAMES[myRole]}
                 </span>
-              </div>
-              <p className="text-[var(--color-text-secondary)] text-sm">
-                {getInstructionText()}
-              </p>
+                <span className="material-icons text-sm text-[var(--color-text-muted)]">chevron_right</span>
+              </button>
+              {!hasActed ? (
+                <p className="text-[var(--color-text-secondary)] text-sm">
+                  {getInstructionText()}
+                </p>
+              ) : (
+                <p className="text-[var(--color-ready)] font-semibold">アクション完了</p>
+              )}
             </div>
-          )}
-
-          {hasActed && (
-            <p className="text-[var(--color-ready)] font-semibold">アクション完了</p>
           )}
         </div>
 
@@ -377,6 +393,47 @@ export function NightScreen({
       {detailRole && (
         <RoleDetailModal role={detailRole} onClose={() => setDetailRole(null)} />
       )}
+
+      {/* Night Result Modal */}
+      {pendingResult && hasActed && (() => {
+        const actionResult = gameState.actionResults.find(r => r.type === pendingResult.type);
+        if (!actionResult?.revealedRoles) return null;
+
+        let resultTitle: string;
+        let resultTargets: { name: string; role: Role }[];
+
+        switch (pendingResult.type) {
+          case "SEER_LOOK_PLAYER": {
+            const player = gameState.players.find(p => p.id === pendingResult.targets[0]);
+            resultTitle = `${player?.name}の役職`;
+            resultTargets = [{ name: player?.name ?? "", role: actionResult.revealedRoles[0] }];
+            break;
+          }
+          case "SEER_LOOK_CENTER":
+            resultTitle = "墓地のカード";
+            resultTargets = actionResult.revealedRoles.map((role, i) => ({
+              name: `中央カード${i + 1}`,
+              role,
+            }));
+            break;
+          case "ROBBER_SWAP": {
+            const player = gameState.players.find(p => p.id === pendingResult.targets[0]);
+            resultTitle = `${player?.name}から${ROLE_NAMES[actionResult.revealedRoles[0]]}を奪った`;
+            resultTargets = [{ name: player?.name ?? "", role: actionResult.revealedRoles[0] }];
+            break;
+          }
+          default:
+            return null;
+        }
+
+        return (
+          <NightResultModal
+            title={resultTitle}
+            targets={resultTargets}
+            onConfirm={() => setPendingResult(null)}
+          />
+        );
+      })()}
 
       {/* Confirm Modal */}
       {confirmAction && (
