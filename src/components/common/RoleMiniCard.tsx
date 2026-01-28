@@ -1,10 +1,11 @@
 import type { Role } from "@/lib/game";
 import { ROLE_NAMES, ROLE_MATERIAL_ICONS, ROLE_CARD_COLORS } from "@/lib/game";
 
-export function RoleMiniCard({ role, size = "medium", tappable = false }: {
+export function RoleMiniCard({ role, size = "medium", tappable = false, onClick }: {
   role: Role;
   size?: "small" | "medium";
   tappable?: boolean;
+  onClick?: () => void;
 }) {
   const colors = ROLE_CARD_COLORS[role];
   const sizeClass = size === "small" ? "w-9 h-12" : "w-10 h-14";
@@ -16,7 +17,7 @@ export function RoleMiniCard({ role, size = "medium", tappable = false }: {
     ? "border-amber-400/50 shadow-[0_0_12px_rgba(212,175,55,0.3)] group-hover/player:border-amber-400 group-hover/player:shadow-[0_0_18px_rgba(212,175,55,0.5)]"
     : `${colors.border} ${size === "medium" ? "shadow-[0_0_15px_rgba(212,175,55,0.2)]" : ""}`;
 
-  return (
+  const card = (
     <div className="flex flex-col items-center">
       <div className={`${sizeClass} ${colors.bg} rounded border flex items-center justify-center transition-all ${borderShadow}`}>
         <span className={`material-icons ${colors.text} ${iconSize}`}>
@@ -28,6 +29,16 @@ export function RoleMiniCard({ role, size = "medium", tappable = false }: {
       </span>
     </div>
   );
+
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className="cursor-pointer">
+        {card}
+      </button>
+    );
+  }
+
+  return card;
 }
 
 export function UnknownMiniCard({ tappable = false, selected = false }: {

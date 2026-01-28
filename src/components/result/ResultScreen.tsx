@@ -6,6 +6,7 @@ import { useState } from "react";
 import { RoleMiniCard, UnknownMiniCard } from "../common/RoleMiniCard";
 import { PlayerCard } from "../common/PlayerCard";
 import { CemeterySection } from "../common/CemeterySection";
+import { RoleDetailModal } from "../common/RoleDetailModal";
 
 interface ResultScreenProps {
   gameState: ClientGameState;
@@ -23,6 +24,7 @@ const TEAM_NAMES: Record<Team, string> = {
 export function ResultScreen({ gameState, playerId, roomId, onPlayAgain }: ResultScreenProps) {
   const currentPlayerId = playerId;
   const [isResetting, setIsResetting] = useState(false);
+  const [detailRole, setDetailRole] = useState<Role | null>(null);
 
   const isHost = gameState.players[0]?.id === currentPlayerId;
 
@@ -132,13 +134,13 @@ export function ResultScreen({ gameState, playerId, roomId, onPlayAgain }: Resul
                 {roleChanged && initRole ? (
                   <>
                     <div className="opacity-50 grayscale scale-90">
-                      <RoleMiniCard role={initRole} size="small" />
+                      <RoleMiniCard role={initRole} size="small" onClick={() => setDetailRole(initRole)} />
                     </div>
                     <span className="material-icons text-gray-500 text-sm">arrow_forward</span>
                   </>
                 ) : null}
                 {finalRole ? (
-                  <RoleMiniCard role={finalRole} size="medium" />
+                  <RoleMiniCard role={finalRole} size="medium" onClick={() => setDetailRole(finalRole)} />
                 ) : (
                   <UnknownMiniCard />
                 )}
@@ -167,6 +169,10 @@ export function ResultScreen({ gameState, playerId, roomId, onPlayAgain }: Resul
           )}
         </div>
       </div>
+
+      {detailRole && (
+        <RoleDetailModal role={detailRole} onClose={() => setDetailRole(null)} />
+      )}
     </div>
   );
 }

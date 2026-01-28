@@ -17,6 +17,7 @@ import { PlayerCard } from "../common/PlayerCard";
 import { PlayerRoleDisplay } from "../common/PlayerRoleDisplay";
 import { CemeterySection } from "../common/CemeterySection";
 import { ConfirmModal } from "../common/ConfirmModal";
+import { RoleDetailModal } from "../common/RoleDetailModal";
 import { SkipLink } from "../common/SkipLink";
 
 interface NightScreenProps {
@@ -38,6 +39,7 @@ export function NightScreen({
   const [confirmAction, setConfirmAction] = useState<{ type: ActionType; targets: string[] } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [detailRole, setDetailRole] = useState<Role | null>(null);
 
   const nightDuration = gameState.config.nightDuration;
   const phaseStartedAt = gameState.phaseStartedAt;
@@ -221,6 +223,7 @@ export function NightScreen({
           playerId={playerId_}
           currentPlayerId={playerId}
           gameState={gameState}
+          onRoleClick={setDetailRole}
         />
       );
     }
@@ -237,7 +240,7 @@ export function NightScreen({
         return <UnknownMiniCard tappable selected={selectedTargets.includes(playerId_)} />;
       case "WEREWOLF":
         if (fellowWerewolves.includes(playerId_)) {
-          return <RoleMiniCard role={"WEREWOLF" as Role} size="medium" />;
+          return <RoleMiniCard role={"WEREWOLF" as Role} size="medium" onClick={() => setDetailRole("WEREWOLF")} />;
         }
         return <UnknownMiniCard />;
       default:
@@ -361,6 +364,10 @@ export function NightScreen({
           )}
         </div>
       </div>
+
+      {detailRole && (
+        <RoleDetailModal role={detailRole} onClose={() => setDetailRole(null)} />
+      )}
 
       {/* Confirm Modal */}
       {confirmAction && (

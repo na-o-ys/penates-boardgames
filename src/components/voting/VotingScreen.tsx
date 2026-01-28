@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { ClientGameState } from "@/lib/game";
+import type { ClientGameState, Role } from "@/lib/game";
 import { SKIP_VOTE } from "@/lib/game";
 import { PlayerCard } from "../common/PlayerCard";
 import { PlayerRoleDisplay } from "../common/PlayerRoleDisplay";
+import { RoleDetailModal } from "../common/RoleDetailModal";
 import { ConfirmModal } from "../common/ConfirmModal";
 import { SkipLink } from "../common/SkipLink";
 
@@ -20,6 +21,7 @@ export function VotingScreen({ gameState, playerId, roomId, onSubmitVote, onAuto
   const [confirmTarget, setConfirmTarget] = useState<{ id: string; name: string } | "skip" | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [detailRole, setDetailRole] = useState<Role | null>(null);
 
   const votedCount = gameState.votedPlayers?.length ?? 0;
   const totalPlayers = gameState.players.length;
@@ -145,6 +147,7 @@ export function VotingScreen({ gameState, playerId, roomId, onSubmitVote, onAuto
                   currentPlayerId={playerId}
                   gameState={gameState}
                   tappable={!isCurrentPlayer && !hasVoted}
+                  onRoleClick={setDetailRole}
                 />
               </PlayerCard>
             );
@@ -170,6 +173,10 @@ export function VotingScreen({ gameState, playerId, roomId, onSubmitVote, onAuto
           )}
         </div>
       </div>
+
+      {detailRole && (
+        <RoleDetailModal role={detailRole} onClose={() => setDetailRole(null)} />
+      )}
 
       {/* Confirm Modal */}
       {confirmTarget && (

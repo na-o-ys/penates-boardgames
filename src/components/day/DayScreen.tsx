@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { ClientGameState, Player } from "@/lib/game";
+import type { ClientGameState, Player, Role } from "@/lib/game";
 import { buildRevealedInfo, getSwapReason } from "@/lib/game";
 import { PlayerCard } from "../common/PlayerCard";
 import { PlayerRoleDisplay } from "../common/PlayerRoleDisplay";
 import { CemeterySection } from "../common/CemeterySection";
+import { RoleDetailModal } from "../common/RoleDetailModal";
 import { SkipLink } from "../common/SkipLink";
 
 interface DayScreenProps {
@@ -18,6 +19,7 @@ interface DayScreenProps {
 export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DayScreenProps) {
   const currentPlayerId = playerId;
   const [isAdvancing, setIsAdvancing] = useState(false);
+  const [detailRole, setDetailRole] = useState<Role | null>(null);
 
   const isHost = gameState.players[0]?.id === currentPlayerId;
   const dayDuration = gameState.config.dayDuration;
@@ -118,6 +120,7 @@ export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DaySc
                   playerId={player.id}
                   currentPlayerId={currentPlayerId}
                   gameState={gameState}
+                  onRoleClick={setDetailRole}
                 />
               </PlayerCard>
             );
@@ -141,6 +144,10 @@ export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DaySc
           )}
         </div>
       </div>
+
+      {detailRole && (
+        <RoleDetailModal role={detailRole} onClose={() => setDetailRole(null)} />
+      )}
     </div>
   );
 }

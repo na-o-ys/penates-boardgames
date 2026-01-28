@@ -1,4 +1,4 @@
-import type { ClientGameState } from "@/lib/game";
+import type { ClientGameState, Role } from "@/lib/game";
 import { buildRevealedInfo } from "@/lib/game";
 import { RoleMiniCard, UnknownMiniCard } from "./RoleMiniCard";
 
@@ -7,9 +7,10 @@ interface PlayerRoleDisplayProps {
   currentPlayerId: string;
   gameState: ClientGameState;
   tappable?: boolean;
+  onRoleClick?: (role: Role) => void;
 }
 
-export function PlayerRoleDisplay({ playerId, currentPlayerId, gameState, tappable = false }: PlayerRoleDisplayProps) {
+export function PlayerRoleDisplay({ playerId, currentPlayerId, gameState, tappable = false, onRoleClick }: PlayerRoleDisplayProps) {
   const isCurrentPlayer = playerId === currentPlayerId;
   const revealedInfo = buildRevealedInfo(gameState.actionResults);
 
@@ -17,14 +18,16 @@ export function PlayerRoleDisplay({ playerId, currentPlayerId, gameState, tappab
   const hasSwapped = robberSwap && robberSwap.revealedRoles?.[0];
   const robberTargetId = robberSwap?.targetIds[0];
 
+  const roleClick = !tappable && onRoleClick ? onRoleClick : undefined;
+
   if (isCurrentPlayer && hasSwapped && gameState.myRole) {
     return (
       <>
         <div className="opacity-50 grayscale scale-90">
-          <RoleMiniCard role={gameState.myRole} size="small" />
+          <RoleMiniCard role={gameState.myRole} size="small" onClick={roleClick ? () => roleClick(gameState.myRole!) : undefined} />
         </div>
         <span className="material-icons text-gray-500 text-sm">arrow_forward</span>
-        <RoleMiniCard role={robberSwap.revealedRoles![0]} size="medium" tappable={tappable} />
+        <RoleMiniCard role={robberSwap.revealedRoles![0]} size="medium" tappable={tappable} onClick={roleClick ? () => roleClick(robberSwap.revealedRoles![0]) : undefined} />
       </>
     );
   }
@@ -33,21 +36,21 @@ export function PlayerRoleDisplay({ playerId, currentPlayerId, gameState, tappab
     return (
       <>
         <div className="opacity-50 grayscale scale-90">
-          <RoleMiniCard role={robberSwap.revealedRoles![0]} size="small" />
+          <RoleMiniCard role={robberSwap.revealedRoles![0]} size="small" onClick={roleClick ? () => roleClick(robberSwap.revealedRoles![0]) : undefined} />
         </div>
         <span className="material-icons text-gray-500 text-sm">arrow_forward</span>
-        <RoleMiniCard role={gameState.myRole} size="medium" tappable={tappable} />
+        <RoleMiniCard role={gameState.myRole} size="medium" tappable={tappable} onClick={roleClick ? () => roleClick(gameState.myRole!) : undefined} />
       </>
     );
   }
 
   if (isCurrentPlayer && gameState.myRole) {
-    return <RoleMiniCard role={gameState.myRole} size="medium" tappable={tappable} />;
+    return <RoleMiniCard role={gameState.myRole} size="medium" tappable={tappable} onClick={roleClick ? () => roleClick(gameState.myRole!) : undefined} />;
   }
 
   const revealedRole = revealedInfo.players[playerId];
   if (revealedRole) {
-    return <RoleMiniCard role={revealedRole} size="medium" tappable={tappable} />;
+    return <RoleMiniCard role={revealedRole} size="medium" tappable={tappable} onClick={roleClick ? () => roleClick(revealedRole) : undefined} />;
   }
 
   return <UnknownMiniCard tappable={tappable} />;

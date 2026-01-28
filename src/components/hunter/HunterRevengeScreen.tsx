@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { ClientGameState, PlayerId } from "@/lib/game";
+import type { ClientGameState, PlayerId, Role } from "@/lib/game";
 import { PlayerCard } from "../common/PlayerCard";
 import { PlayerRoleDisplay } from "../common/PlayerRoleDisplay";
+import { RoleDetailModal } from "../common/RoleDetailModal";
 import { ConfirmModal } from "../common/ConfirmModal";
 
 const HUNTER_REVENGE_DURATION = 30;
@@ -26,6 +27,7 @@ export function HunterRevengeScreen({
   const [confirmTarget, setConfirmTarget] = useState<{ id: string; name: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [detailRole, setDetailRole] = useState<Role | null>(null);
 
   const isExecutedHunter = gameState.isExecutedHunter ?? false;
   const hasChosen = gameState.hunterRevengeChosen?.[playerId] ?? false;
@@ -156,6 +158,7 @@ export function HunterRevengeScreen({
                   currentPlayerId={playerId}
                   gameState={gameState}
                   tappable={canSelect && !isCurrentPlayer}
+                  onRoleClick={setDetailRole}
                 />
               </PlayerCard>
             );
@@ -184,6 +187,10 @@ export function HunterRevengeScreen({
           )}
         </div>
       </div>
+
+      {detailRole && (
+        <RoleDetailModal role={detailRole} onClose={() => setDetailRole(null)} />
+      )}
 
       {/* Confirm Modal */}
       {confirmTarget && (
