@@ -120,8 +120,25 @@ export const nightActedState: ClientGameState = {
   phase: "NIGHT",
   myRole: "SEER",
   hasActed: true,
+  myActions: [
+    { actorId: "p1", type: "SEER_LOOK_PLAYER", targetIds: ["p2"], result: ["WEREWOLF"], timestamp: 0 },
+  ],
   actionResults: [
     { type: "SEER_LOOK_PLAYER", targetIds: ["p2"], revealedRoles: ["WEREWOLF"] },
+  ],
+  phaseStartedAt: Date.now(),
+};
+
+export const nightActedRobberState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "NIGHT",
+  myRole: "ROBBER",
+  hasActed: true,
+  myActions: [
+    { actorId: "p1", type: "ROBBER_SWAP", targetIds: ["p2"], result: ["WEREWOLF"], timestamp: 0 },
+  ],
+  actionResults: [
+    { type: "ROBBER_SWAP", targetIds: ["p2"], revealedRoles: ["WEREWOLF"] },
   ],
   phaseStartedAt: Date.now(),
 };
@@ -134,6 +151,9 @@ export const dayNormalState: ClientGameState = {
   ...BASE_STATE,
   phase: "DAY",
   myRole: "SEER",
+  myActions: [
+    { actorId: "p1", type: "SEER_LOOK_PLAYER", targetIds: ["p2"], result: ["WEREWOLF"], timestamp: 0 },
+  ],
   actionResults: [
     { type: "SEER_LOOK_PLAYER", targetIds: ["p2"], revealedRoles: ["WEREWOLF"] },
   ],
@@ -144,6 +164,9 @@ export const dayRobberSwapState: ClientGameState = {
   ...BASE_STATE,
   phase: "DAY",
   myRole: "ROBBER",
+  myActions: [
+    { actorId: "p1", type: "ROBBER_SWAP", targetIds: ["p2"], result: ["WEREWOLF"], timestamp: 0 },
+  ],
   actionResults: [
     { type: "ROBBER_SWAP", targetIds: ["p2"], revealedRoles: ["WEREWOLF"] },
   ],

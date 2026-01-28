@@ -1,0 +1,47 @@
+import type { ReactNode } from "react";
+
+interface PlayerCardProps {
+  playerName: string;
+  isCurrentPlayer: boolean;
+  highlight?: boolean;
+  leftIndicator?: ReactNode;
+  statusBadges?: ReactNode;
+  children: ReactNode;
+}
+
+export function PlayerCard({
+  playerName,
+  isCurrentPlayer,
+  highlight = false,
+  leftIndicator,
+  statusBadges,
+  children,
+}: PlayerCardProps) {
+  return (
+    <div
+      className={`rounded-xl p-3 relative overflow-hidden ${
+        highlight
+          ? "bg-gray-800/90 border-2 border-[var(--color-primary)] shadow-[0_0_15px_rgba(212,175,55,0.5)]"
+          : "bg-white/10 backdrop-blur-md border border-white/10"
+      }`}
+    >
+      {isCurrentPlayer && (
+        <div className="absolute top-0 right-0 bg-[var(--color-primary)] text-[var(--color-bg-deep)] text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">
+          あなた
+        </div>
+      )}
+
+      {leftIndicator}
+
+      <div className="flex items-center justify-between">
+        <div className={`flex-1 ${leftIndicator ? "pl-2" : ""}`}>
+          <div className="font-bold text-white text-lg">{playerName}</div>
+          {statusBadges}
+        </div>
+        <div className="flex items-center space-x-1">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}

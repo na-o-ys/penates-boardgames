@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { ClientGameState, Player, Role, ActionResult } from "@/lib/game";
-import { ROLE_NAMES } from "@/lib/game";
-import { RoleCard } from "../night/RoleCard";
+import type { ClientGameState, Player } from "@/lib/game";
+import { buildRevealedInfo, getSwapReason } from "@/lib/game";
+import { RoleMiniCard, UnknownMiniCard } from "../common/RoleMiniCard";
+import { PlayerCard } from "../common/PlayerCard";
+import { CemeterySection } from "../common/CemeterySection";
 
 interface DayScreenProps {
   gameState: ClientGameState;
@@ -68,23 +70,60 @@ export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DaySc
     }
   };
 
-  const getRoleName = (role: Role): string => {
-    return ROLE_NAMES[role] ?? role;
-  };
-
-  const getCurrentRole = (): Role | null => {
-    const robberSwap = gameState.actionResults.find(
-      (r) => r.type === "ROBBER_SWAP"
-    );
-    if (robberSwap && robberSwap.revealedRoles?.[0]) {
-      return robberSwap.revealedRoles[0];
-    }
-    return null;
-  };
-
-  const currentRole = getCurrentRole();
-  const hasSwapped = currentRole !== null;
   const isTimeLow = timeLeft <= 10 && timeLeft > 0;
+  const revealedInfo = buildRevealedInfo(gameState.actionResults);
+
+  const sortedPlayers = [...gameState.players].sort((a, b) =>
+    a.id === currentPlayerId ? -1 : b.id === currentPlayerId ? 1 : 0
+  );
+
+  const robberSwap = gameState.actionResults.find((r) => r.type === "ROBBER_SWAP");
+  const hasSwapped = robberSwap && robberSwap.revealedRoles?.[0];
+
+  const robberTargetId = robberSwap?.targetIds[0];
+
+  const renderRoleDisplay = (player: Player) => {
+    const isCurrentPlayer = player.id === currentPlayerId;
+
+    // 自分が怪盗で交換した場合: ROBBER(薄) → 新役職
+    if (isCurrentPlayer && hasSwapped && gameState.myRole) {
+      return (
+        <>
+          <div className="opacity-50 grayscale scale-90">
+            <RoleMiniCard role={gameState.myRole} size="small" />
+          </div>
+          <span className="material-icons text-gray-500 text-sm">arrow_forward</span>
+          <RoleMiniCard role={robberSwap.revealedRoles![0]} size="medium" />
+        </>
+      );
+    }
+
+    // 怪盗の交換先プレイヤー: 元役職(薄) → ROBBER
+    if (hasSwapped && player.id === robberTargetId && gameState.myRole) {
+      return (
+        <>
+          <div className="opacity-50 grayscale scale-90">
+            <RoleMiniCard role={robberSwap.revealedRoles![0]} size="small" />
+          </div>
+          <span className="material-icons text-gray-500 text-sm">arrow_forward</span>
+          <RoleMiniCard role={gameState.myRole} size="medium" />
+        </>
+      );
+    }
+
+    // 自分のカード: 自分の役職を表示
+    if (isCurrentPlayer && gameState.myRole) {
+      return <RoleMiniCard role={gameState.myRole} size="medium" />;
+    }
+
+    // 他プレイヤー: 判明済みなら表示、不明なら不明カード
+    const revealedRole = revealedInfo.players[player.id];
+    if (revealedRole) {
+      return <RoleMiniCard role={revealedRole} size="medium" />;
+    }
+
+    return <UnknownMiniCard />;
+  };
 
   return (
     <div className="min-h-screen game-overlay p-4">
@@ -104,107 +143,30 @@ export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DaySc
           </p>
         </div>
 
-        {/* 自分の役職 */}
-        <div className="glass-card rounded-xl p-6 mb-6">
-          {hasSwapped ? (
-            <>
-              <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold text-white mb-4 text-center">
-                あなたの現在の役職
-              </h2>
-              <div className="flex justify-center mb-4">
-                <RoleCard role={currentRole} size="large" />
-              </div>
-              <p className="text-center text-[var(--color-text-muted)] text-sm">
-                最初の役職: {ROLE_NAMES[gameState.myRole!]}
-              </p>
-            </>
-          ) : (
-            <>
-              <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold text-white mb-4 text-center">
-                あなたの役職
-              </h2>
-              <div className="flex justify-center">
-                <RoleCard role={gameState.myRole} size="large" />
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* 夜の情報 */}
-        {gameState.actionResults && gameState.actionResults.length > 0 && (
-          <div className="glass-card rounded-xl p-6 mb-6">
-            <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold text-white mb-4">
-              夜に得た情報
-            </h2>
-            <div className="space-y-2">
-              {gameState.actionResults.map((result: ActionResult, idx: number) => (
-                <div key={idx} className="text-white text-sm">
-                  {result.type === "SEER_LOOK_PLAYER" && result.revealedRoles && (
-                    <span>
-                      <span className="text-[var(--color-text-secondary)]">見た役職: </span>
-                      {gameState.players.find(p => p.id === result.targetIds[0])?.name}は
-                      {getRoleName(result.revealedRoles[0])}
-                    </span>
-                  )}
-                  {result.type === "SEER_LOOK_CENTER" && result.revealedRoles && (
-                    <span>
-                      <span className="text-[var(--color-text-secondary)]">中央カード: </span>
-                      {result.targetIds.map((targetId, i) => (
-                        <span key={targetId}>
-                          {i > 0 && ", "}
-                          中央{parseInt(targetId.split("_")[1]) + 1}は{getRoleName(result.revealedRoles![i])}
-                        </span>
-                      ))}
-                    </span>
-                  )}
-                  {result.type === "WEREWOLF_LOOK" && result.revealedRoles && (
-                    <span>
-                      <span className="text-[var(--color-text-secondary)]">見た中央カード: </span>
-                      中央{parseInt(result.targetIds[0].split("_")[1]) + 1}は
-                      {getRoleName(result.revealedRoles[0])}
-                    </span>
-                  )}
-                  {result.type === "ROBBER_SWAP" && result.revealedRoles && (
-                    <span>
-                      <span className="text-[var(--color-text-secondary)]">交換後の役職: </span>
-                      {gameState.players.find(p => p.id === result.targetIds[0])?.name}から
-                      {getRoleName(result.revealedRoles[0])}を奪いました
-                    </span>
-                  )}
-                  {result.type === "TROUBLEMAKER_SWAP" && (
-                    <span>
-                      <span className="text-[var(--color-text-secondary)]">交換: </span>
-                      {gameState.players.find(p => p.id === result.targetIds[0])?.name}と
-                      {gameState.players.find(p => p.id === result.targetIds[1])?.name}の
-                      カードを交換しました
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* プレイヤー一覧 */}
-        <div className="glass-card rounded-xl p-6 mb-6">
-          <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold text-white mb-4">プレイヤー</h2>
-          <div className="grid grid-cols-2 gap-3">
-            {gameState.players.map((player: Player) => (
-              <div
+        <div className="space-y-3 mb-6">
+          {sortedPlayers.map((player: Player) => {
+            const swapReason = getSwapReason(player.id, gameState.myActions, gameState.players);
+            return (
+              <PlayerCard
                 key={player.id}
-                className={`p-3 rounded-xl ${
-                  player.id === currentPlayerId
-                    ? "glass-card card-highlight"
-                    : "glass-panel"
-                }`}
+                playerName={player.name}
+                isCurrentPlayer={player.id === currentPlayerId}
+                statusBadges={swapReason ? (
+                  <div className="text-xs">
+                    <span className="text-yellow-500">
+                      <span className="material-icons text-sm align-middle animate-pulse">sync_alt</span>
+                      {" "}{swapReason}
+                    </span>
+                  </div>
+                ) : undefined}
               >
-                <span className="text-white font-medium">{player.name}</span>
-                {player.id === currentPlayerId && (
-                  <span className="text-[var(--color-text-muted)] text-sm ml-2">(あなた)</span>
-                )}
-              </div>
-            ))}
-          </div>
+                {renderRoleDisplay(player)}
+              </PlayerCard>
+            );
+          })}
+
+          <CemeterySection centerRoles={revealedInfo.centers} />
         </div>
 
         {/* 投票へ進むボタン（ホストのみ） */}

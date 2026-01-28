@@ -11,6 +11,7 @@ import {
   nightVillagerState,
   nightTannerState,
   nightActedState,
+  nightActedRobberState,
 } from "./mocks/gameState";
 
 const success = async () => ({ success: true as const });
@@ -97,5 +98,13 @@ export const Acted: Story = {
     roomId: "test-room-id",
     playerId: "p1",
     gameState: nightActedState,
+  },
+};
+
+export const ActedRobber: Story = {
+  args: {
+    roomId: "test-room-id",
+    playerId: "p1",
+    gameState: nightActedRobberState,
   },
 };

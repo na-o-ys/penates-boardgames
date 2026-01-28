@@ -51,3 +51,6 @@ export {
 
 // Masking
 export { maskGameState, maskGameStateForWerewolf } from "./masking";
+
+// Revealed Roles
+export { buildRevealedInfo, getSwapReason, type RevealedInfo } from "./revealedRoles";

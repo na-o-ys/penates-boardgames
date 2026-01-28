@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { ROLE_NAMES, ROLE_HAS_ACTION, type ClientGameState, type ActionType } from "@/lib/game";
-import { RoleCard } from "./RoleCard";
+import { ROLE_HAS_ACTION, buildRevealedInfo, getSwapReason, type ClientGameState, type ActionType } from "@/lib/game";
+import { RoleMiniCard, UnknownMiniCard } from "../common/RoleMiniCard";
+import { PlayerCard } from "../common/PlayerCard";
+import { CemeterySection } from "../common/CemeterySection";
 
 interface NightScreenProps {
   roomId: string;
@@ -67,6 +69,10 @@ export function NightScreen({
   const fellowWerewolves = gameState.fellowWerewolves ?? [];
 
   const otherPlayers = gameState.players.filter((p) => p.id !== playerId);
+  const sortedPlayers = [...gameState.players].sort((a, b) =>
+    a.id === playerId ? -1 : b.id === playerId ? 1 : 0
+  );
+  const revealedInfo = buildRevealedInfo(gameState.actionResults);
 
   const handleTargetClick = (targetId: string) => {
     if (hasActed || isSubmitting) return;
@@ -122,20 +128,21 @@ export function NightScreen({
     switch (myRole) {
       case "WEREWOLF":
         if (fellowWerewolves.length > 0) {
-          const fellowNames = fellowWerewolves
-            .map((id) => gameState.players.find((p) => p.id === id)?.name)
+          const fellowPlayers = fellowWerewolves
+            .map((id) => gameState.players.find((p) => p.id === id))
             .filter(Boolean);
           return (
             <div className="space-y-4">
               <p className="text-[var(--color-text-secondary)]">あなたの仲間の人狼:</p>
-              <div className="flex flex-wrap justify-center gap-2">
-                {fellowNames.map((name, index) => (
-                  <span
-                    key={index}
-                    className="px-4 py-2 glass-card border-l-4 border-[var(--color-role-werewolf)] rounded-xl text-white font-semibold"
+              <div className="space-y-2">
+                {fellowPlayers.map((player) => (
+                  <div
+                    key={player!.id}
+                    className="flex items-center justify-between p-3 rounded-xl glass-card border-l-4 border-[var(--color-role-werewolf)]"
                   >
-                    {name}
-                  </span>
+                    <span className="text-white font-semibold">{player!.name}</span>
+                    <UnknownMiniCard />
+                  </div>
                 ))}
               </div>
               <button
@@ -172,7 +179,7 @@ export function NightScreen({
             <div className="space-y-4">
               <div>
                 <p className="text-sm text-[var(--color-text-muted)] mb-2">プレイヤーを選択</p>
-                <div className="flex flex-wrap justify-center gap-2">
+                <div className="space-y-2">
                   {otherPlayers.map((player) => (
                     <button
                       key={player.id}
@@ -180,13 +187,14 @@ export function NightScreen({
                         setSelectedTargets([player.id]);
                       }}
                       disabled={isSubmitting}
-                      className={`px-4 py-2 rounded-xl transition-all ${
+                      className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${
                         selectedTargets.includes(player.id)
                           ? "glass-card card-highlight"
                           : "glass-card hover:border-[var(--color-text-muted)]"
                       }`}
                     >
-                      <span className="text-white">{player.name}</span>
+                      <span className="text-white font-medium">{player.name}</span>
+                      <UnknownMiniCard />
                     </button>
                   ))}
                 </div>
@@ -218,19 +226,20 @@ export function NightScreen({
             <p className="text-[var(--color-text-secondary)]">
               他のプレイヤー1人とカードを交換し、新しいカードを確認します
             </p>
-            <div className="flex flex-wrap justify-center gap-2">
+            <div className="space-y-2">
               {otherPlayers.map((player) => (
                 <button
                   key={player.id}
                   onClick={() => handleTargetClick(player.id)}
                   disabled={isSubmitting}
-                  className={`px-4 py-2 rounded-xl transition-all ${
+                  className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${
                     selectedTargets.includes(player.id)
                       ? "glass-card card-highlight"
                       : "glass-card hover:border-[var(--color-text-muted)]"
                   }`}
                 >
-                  <span className="text-white">{player.name}</span>
+                  <span className="text-white font-medium">{player.name}</span>
+                  <UnknownMiniCard />
                 </button>
               ))}
             </div>
@@ -250,19 +259,20 @@ export function NightScreen({
             <p className="text-[var(--color-text-secondary)]">
               他のプレイヤー2人のカードを入れ替えます（中身は見られません）
             </p>
-            <div className="flex flex-wrap justify-center gap-2">
+            <div className="space-y-2">
               {otherPlayers.map((player) => (
                 <button
                   key={player.id}
                   onClick={() => handleTargetClick(player.id)}
                   disabled={isSubmitting}
-                  className={`px-4 py-2 rounded-xl transition-all ${
+                  className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${
                     selectedTargets.includes(player.id)
                       ? "glass-card card-highlight"
                       : "glass-card hover:border-[var(--color-text-muted)]"
                   }`}
                 >
-                  <span className="text-white">{player.name}</span>
+                  <span className="text-white font-medium">{player.name}</span>
+                  <UnknownMiniCard />
                 </button>
               ))}
             </div>
@@ -303,48 +313,72 @@ export function NightScreen({
           </div>
         )}
 
-        {/* 自分の役職 */}
-        <div className="flex justify-center mb-8">
-          <RoleCard role={myRole} size="large" />
-        </div>
-
         <div className="flex-1">
           {hasActed ? (
-            <div className="text-center">
-              <p className="text-[var(--color-ready)] mb-4 font-semibold">アクション完了</p>
-              {actionResult && actionResult.revealedRoles && actionResult.revealedRoles.length > 0 && (
-                <div className="p-4 glass-card rounded-xl">
-                  <p className="text-[var(--color-text-secondary)] mb-2">確認した役職:</p>
-                  <div className="flex justify-center gap-2">
-                    {actionResult.revealedRoles.map((role, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 glass-panel rounded-lg text-white font-semibold"
-                      >
-                        {ROLE_NAMES[role]}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <p className="mt-4 text-[var(--color-text-muted)]">
+            <div className="space-y-3">
+              <p className="text-[var(--color-ready)] text-center font-semibold mb-2">アクション完了</p>
+              {sortedPlayers.map((player) => {
+                const isCurrentPlayer = player.id === playerId;
+                const swapReason = getSwapReason(player.id, gameState.myActions, gameState.players);
+                return (
+                  <PlayerCard
+                    key={player.id}
+                    playerName={player.name}
+                    isCurrentPlayer={isCurrentPlayer}
+                    statusBadges={swapReason ? (
+                      <div className="text-xs">
+                        <span className="text-yellow-500">
+                          <span className="material-icons text-sm align-middle animate-pulse">sync_alt</span>
+                          {" "}{swapReason}
+                        </span>
+                      </div>
+                    ) : undefined}
+                  >
+                    {isCurrentPlayer && gameState.myRole ? (
+                      <RoleMiniCard role={gameState.myRole} size="medium" />
+                    ) : revealedInfo.players[player.id] ? (
+                      <RoleMiniCard role={revealedInfo.players[player.id]} size="medium" />
+                    ) : (
+                      <UnknownMiniCard />
+                    )}
+                  </PlayerCard>
+                );
+              })}
+              <CemeterySection centerRoles={revealedInfo.centers} />
+              <p className="text-center text-[var(--color-text-muted)]">
                 他のプレイヤーの行動を待っています...
               </p>
             </div>
-          ) : hasAction ? (
-            renderActionUI()
           ) : (
-            <div className="text-center">
-              <p className="text-[var(--color-text-secondary)] mb-4">
-                あなたの役職には夜の行動がありません
-              </p>
-              <button
-                onClick={handleSkip}
-                disabled={isSubmitting}
-                className="px-6 py-3 btn-secondary rounded-xl"
+            <div className="space-y-4">
+              {/* 自分の役職をプレイヤーカードで表示 */}
+              <PlayerCard
+                playerName={gameState.players.find((p) => p.id === playerId)?.name ?? ""}
+                isCurrentPlayer={true}
               >
-                {isSubmitting ? "処理中..." : "待機する"}
-              </button>
+                {gameState.myRole ? (
+                  <RoleMiniCard role={gameState.myRole} size="medium" />
+                ) : (
+                  <UnknownMiniCard />
+                )}
+              </PlayerCard>
+
+              {hasAction ? (
+                renderActionUI()
+              ) : (
+                <div className="text-center">
+                  <p className="text-[var(--color-text-secondary)] mb-4">
+                    あなたの役職には夜の行動がありません
+                  </p>
+                  <button
+                    onClick={handleSkip}
+                    disabled={isSubmitting}
+                    className="px-6 py-3 btn-secondary rounded-xl"
+                  >
+                    {isSubmitting ? "処理中..." : "待機する"}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
