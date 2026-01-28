@@ -16,7 +16,8 @@ export type Role =
   | "HUNTER"
   | "TANNER"
   | "MADMAN"
-  | "BAKER";
+  | "BAKER"
+  | "MAYOR";
 
 /** ゲームフェーズ */
 export type Phase = "LOBBY" | "NIGHT" | "DAY" | "VOTING" | "HUNTER_REVENGE" | "RESULT";

@@ -117,7 +117,7 @@ describe("ゲームシナリオテスト", () => {
       // 最終結果を計算
       const playerIds = players.map((p) => p.id);
       const finalRoles = resolveFinalRoles(distribution, gameState.actions);
-      const result = calculateGameResult(gameState.votes, finalRoles, playerIds);
+      const result = calculateGameResult(gameState.votes, distribution, finalRoles, playerIds);
 
       // 人狼（player-2）が処刑される
       expect(result.executedPlayerIds).toContain("player-2");
@@ -176,7 +176,7 @@ describe("ゲームシナリオテスト", () => {
 
       const playerIds = players.map((p) => p.id);
       const finalRoles = resolveFinalRoles(distribution, gameState.actions);
-      const result = calculateGameResult(gameState.votes, finalRoles, playerIds);
+      const result = calculateGameResult(gameState.votes, distribution, finalRoles, playerIds);
 
       // player-2（村人）が処刑される
       expect(result.executedPlayerIds).toContain("player-2");
@@ -227,7 +227,7 @@ describe("ゲームシナリオテスト", () => {
 
       const playerIds = players.map((p) => p.id);
       const finalRoles = resolveFinalRoles(distribution, gameState.actions);
-      const result = calculateGameResult(gameState.votes, finalRoles, playerIds);
+      const result = calculateGameResult(gameState.votes, distribution, finalRoles, playerIds);
 
       // 吊人（player-1）が処刑される
       expect(result.executedPlayerIds).toContain("player-1");
@@ -272,7 +272,7 @@ describe("ゲームシナリオテスト", () => {
 
       const playerIds = players.map((p) => p.id);
       const finalRoles = resolveFinalRoles(distribution, gameState.actions);
-      const result = calculateGameResult(gameState.votes, finalRoles, playerIds);
+      const result = calculateGameResult(gameState.votes, distribution, finalRoles, playerIds);
 
       // 誰も処刑されない
       expect(result.executedPlayerIds).toEqual([]);
@@ -337,7 +337,7 @@ describe("ゲームシナリオテスト", () => {
       expect(finalRoles["player-1"]).toBe("WEREWOLF");
       expect(finalRoles["player-2"]).toBe("ROBBER");
 
-      const result = calculateGameResult(gameState.votes, finalRoles, playerIds);
+      const result = calculateGameResult(gameState.votes, distribution, finalRoles, playerIds);
 
       // player-2（今は怪盗）が処刑される
       expect(result.executedPlayerIds).toContain("player-2");
@@ -394,7 +394,7 @@ describe("ゲームシナリオテスト", () => {
       expect(finalRoles["player-3"]).toBe("ROBBER");
       expect(finalRoles["player-2"]).toBe("WEREWOLF");
 
-      const result = calculateGameResult(gameState.votes, finalRoles, playerIds);
+      const result = calculateGameResult(gameState.votes, distribution, finalRoles, playerIds);
 
       // player-2（人狼）が処刑される
       expect(result.executedPlayerIds).toContain("player-2");
@@ -464,7 +464,7 @@ describe("ゲームシナリオテスト", () => {
       expect(finalRoles["player-2"]).toBe("VILLAGER");
       expect(finalRoles["player-3"]).toBe("WEREWOLF");
 
-      const result = calculateGameResult(gameState.votes, finalRoles, playerIds);
+      const result = calculateGameResult(gameState.votes, distribution, finalRoles, playerIds);
 
       // player-2（今は村人）が処刑される
       expect(result.executedPlayerIds).toContain("player-2");
@@ -517,7 +517,7 @@ describe("ゲームシナリオテスト", () => {
 
       const playerIds = players.map((p) => p.id);
       const finalRoles = resolveFinalRoles(distribution, gameState.actions);
-      const result = calculateGameResult(gameState.votes, finalRoles, playerIds);
+      const result = calculateGameResult(gameState.votes, distribution, finalRoles, playerIds);
 
       // player-1（人狼）が処刑される
       expect(result.executedPlayerIds).toContain("player-1");
@@ -599,7 +599,7 @@ describe("ゲームシナリオテスト", () => {
 
       const playerIds = players.map((p) => p.id);
       const finalRoles = resolveFinalRoles(distribution, gameState.actions);
-      const result = calculateGameResult(gameState.votes, finalRoles, playerIds);
+      const result = calculateGameResult(gameState.votes, distribution, finalRoles, playerIds);
 
       // player-1（村人）が処刑される
       expect(result.executedPlayerIds).toContain("player-1");
@@ -652,7 +652,7 @@ describe("ゲームシナリオテスト", () => {
 
       const playerIds = players.map((p) => p.id);
       const finalRoles = resolveFinalRoles(distribution, gameState.actions);
-      const result = calculateGameResult(gameState.votes, finalRoles, playerIds);
+      const result = calculateGameResult(gameState.votes, distribution, finalRoles, playerIds);
 
       // player-1（村人）とplayer-3（吊人）の両方が処刑される
       expect(result.executedPlayerIds).toContain("player-1");
@@ -705,7 +705,7 @@ describe("ゲームシナリオテスト", () => {
 
       const playerIds = players.map((p) => p.id);
       const finalRoles = resolveFinalRoles(distribution, gameState.actions);
-      const result = calculateGameResult(gameState.votes, finalRoles, playerIds);
+      const result = calculateGameResult(gameState.votes, distribution, finalRoles, playerIds);
 
       // player-1（村人）とplayer-4（人狼）の両方が処刑される
       expect(result.executedPlayerIds).toContain("player-1");

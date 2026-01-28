@@ -138,6 +138,13 @@ export function VotingScreen({ gameState, playerId, roomId, onSubmitVote, onAuto
               ? () => setConfirmTarget({ id: player.id, name: player.name, role: revealedInfo.players[player.id] })
               : undefined;
 
+            // 自分の投票先を表示（自分のカードのみ）
+            const myVoteTarget = isCurrentPlayer && gameState.myVote
+              ? (gameState.myVote !== SKIP_VOTE
+                  ? gameState.players.find(p => p.id === gameState.myVote)
+                  : null)
+              : undefined;
+
             return (
               <Fragment key={player.id}>
                 {index === 1 && <OtherPlayersDivider />}
@@ -146,11 +153,18 @@ export function VotingScreen({ gameState, playerId, roomId, onSubmitVote, onAuto
                   isCurrentPlayer={isCurrentPlayer}
                   onClick={cardOnClick}
                   statusBadges={playerHasVoted ? (
-                    <div className="text-xs">
+                    <div className="text-xs space-x-2">
                       <span className="text-[var(--color-ready)] font-bold">
                         <span className="material-icons text-sm align-middle">check</span>
                         {" "}投票済み
                       </span>
+                      {isCurrentPlayer && gameState.myVote && (
+                        <span className="text-[var(--color-text-muted)]">
+                          <span className="material-icons text-sm align-middle">how_to_vote</span>
+                          {" "}→{" "}
+                          {myVoteTarget ? myVoteTarget.name : "スキップ"}
+                        </span>
+                      )}
                     </div>
                   ) : undefined}
                 >

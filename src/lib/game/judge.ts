@@ -6,17 +6,21 @@ import { SKIP_VOTE } from "./validator";
  * 投票結果から処刑されるプレイヤーを計算
  *
  * @param votes - 投票結果 (voterId -> targetId)
+ * @param initialDistribution - 初期役職配置（重み付き投票用）
  * @returns 最多得票者のID配列（同票の場合は複数）
  */
 export function calculateExecutedPlayers(
-  votes: Record<PlayerId, PlayerId>
+  votes: Record<PlayerId, PlayerId>,
+  initialDistribution: Record<string, Role>
 ): readonly PlayerId[] {
-  // 得票数をカウント（SKIP_VOTEは無視）
+  // 得票数をカウント（SKIP_VOTEは無視、役職の重みを考慮）
   const voteCount: Record<PlayerId, number> = {};
 
-  for (const targetId of Object.values(votes)) {
+  for (const [voterId, targetId] of Object.entries(votes)) {
     if (targetId === SKIP_VOTE) continue; // スキップ投票は無視
-    voteCount[targetId] = (voteCount[targetId] || 0) + 1;
+    const voterRole = initialDistribution[voterId];
+    const weight = ROLES[voterRole].voteWeight;
+    voteCount[targetId] = (voteCount[targetId] || 0) + weight;
   }
 
   // 最多得票数を取得
@@ -138,18 +142,20 @@ export function determineWinner(
  * ゲーム終了時の完全な結果を計算
  *
  * @param votes - 投票結果
+ * @param initialDistribution - 初期役職配置（重み付き投票用）
  * @param finalRoles - 最終的な役職配置
  * @param allPlayerIds - 全プレイヤーのID
  * @param hunterRevengeTarget - 狩人の道連れ対象（狩人ID → 対象ID）
  */
 export function calculateGameResult(
   votes: Record<PlayerId, PlayerId>,
+  initialDistribution: Record<string, Role>,
   finalRoles: Record<string, Role>,
   allPlayerIds: readonly PlayerId[],
   hunterRevengeTarget?: Record<PlayerId, PlayerId>
 ): WinResult {
   // 投票による処刑者
-  const votedExecutedIds = calculateExecutedPlayers(votes);
+  const votedExecutedIds = calculateExecutedPlayers(votes, initialDistribution);
   const executedPlayerIds: PlayerId[] = [...votedExecutedIds];
 
   // 狩人の道連れを追加

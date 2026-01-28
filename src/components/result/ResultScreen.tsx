@@ -1,7 +1,7 @@
 "use client";
 
 import type { ClientGameState, Player, Role, Team } from "@/lib/game";
-import { getSwapReason } from "@/lib/game";
+import { getSwapReason, SKIP_VOTE } from "@/lib/game";
 import { useState, Fragment } from "react";
 import { RoleMiniCard, UnknownMiniCard } from "../common/RoleMiniCard";
 import { PlayerCard } from "../common/PlayerCard";
@@ -110,6 +110,11 @@ export function ResultScreen({ gameState, playerId, roomId, onPlayAgain }: Resul
               ? getSwapReason(player.id, allActions, gameState.players)
               : null;
 
+            const voteTarget = gameState.allVotes?.[player.id];
+            const voteTargetPlayer = voteTarget && voteTarget !== SKIP_VOTE
+              ? gameState.players.find(p => p.id === voteTarget)
+              : null;
+
             return (
               <Fragment key={player.id}>
                 {index === 1 && <OtherPlayersDivider />}
@@ -137,6 +142,13 @@ export function ResultScreen({ gameState, playerId, roomId, onPlayAgain }: Resul
                       <span className="text-yellow-500">
                         <span className="material-icons text-sm align-middle animate-pulse">sync_alt</span>
                         {" "}{swapReason}
+                      </span>
+                    )}
+                    {voteTarget && (
+                      <span className="text-[var(--color-text-muted)]">
+                        <span className="material-icons text-sm align-middle">how_to_vote</span>
+                        {" "}→{" "}
+                        {voteTargetPlayer ? voteTargetPlayer.name : "スキップ"}
                       </span>
                     )}
                   </div>

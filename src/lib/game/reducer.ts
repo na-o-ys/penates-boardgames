@@ -336,7 +336,7 @@ function getNextPhase(currentPhase: Phase, state?: GameState): Phase | null {
     case "VOTING":
       // 投票完了時に狩人が処刑されるかチェック
       if (state) {
-        const executedIds = calculateExecutedPlayers(state.votes);
+        const executedIds = calculateExecutedPlayers(state.votes, state.initialDistribution);
         const finalRoles = resolveFinalRoles(state.initialDistribution, state.actions);
         const hasExecutedHunter = executedIds.some((id) => finalRoles[id] === "HUNTER");
         if (hasExecutedHunter) {
@@ -366,7 +366,7 @@ export function executeHunterRevenge(
   }
 
   // 処刑された狩人のIDリストを取得
-  const executedIds = calculateExecutedPlayers(state.votes);
+  const executedIds = calculateExecutedPlayers(state.votes, state.initialDistribution);
   const finalRoles = resolveFinalRoles(state.initialDistribution, state.actions);
   const executedHunterIds = executedIds.filter((id) => finalRoles[id] === "HUNTER");
 

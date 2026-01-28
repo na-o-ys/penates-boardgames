@@ -12,6 +12,7 @@ export interface RoleDefinition {
   isWerewolfExecution: boolean;    // 処刑時に人狼扱い（人狼陣営の敗北条件）
   isWerewolfNightAlly: boolean;    // 夜の仲間チェック対象
   revealsCenter: boolean;
+  voteWeight: number;              // 投票の重み（通常1、村長は2）
   materialIcon: string;
   cardColors: { bg: string; border: string; text: string };
   accentColors: { border30: string; gradient: string; iconBorder: string; iconText: string };
@@ -30,6 +31,7 @@ const werewolf: RoleDefinition = {
   isWerewolfExecution: true,
   isWerewolfNightAlly: true,
   revealsCenter: false,
+  voteWeight: 1,
   materialIcon: "pets",
   cardColors: { bg: "bg-red-900", border: "border-red-500", text: "text-red-200" },
   accentColors: { border30: "border-red-500/30", gradient: "to-red-500/10", iconBorder: "border-red-500/50", iconText: "text-red-400" },
@@ -48,6 +50,7 @@ const alphaWolf: RoleDefinition = {
   isWerewolfExecution: true,
   isWerewolfNightAlly: true,
   revealsCenter: true,
+  voteWeight: 1,
   materialIcon: "pets",
   cardColors: { bg: "bg-purple-900", border: "border-purple-500", text: "text-purple-200" },
   accentColors: { border30: "border-purple-500/30", gradient: "to-purple-500/10", iconBorder: "border-purple-500/50", iconText: "text-purple-400" },
@@ -66,6 +69,7 @@ const villager: RoleDefinition = {
   isWerewolfExecution: false,
   isWerewolfNightAlly: false,
   revealsCenter: false,
+  voteWeight: 1,
   materialIcon: "accessibility_new",
   cardColors: { bg: "bg-slate-700", border: "border-slate-500", text: "text-slate-300" },
   accentColors: { border30: "border-slate-500/30", gradient: "to-slate-500/10", iconBorder: "border-slate-500/50", iconText: "text-slate-300" },
@@ -84,6 +88,7 @@ const seer: RoleDefinition = {
   isWerewolfExecution: false,
   isWerewolfNightAlly: false,
   revealsCenter: false,
+  voteWeight: 1,
   materialIcon: "visibility",
   cardColors: { bg: "bg-indigo-900", border: "border-indigo-400", text: "text-indigo-200" },
   accentColors: { border30: "border-indigo-400/30", gradient: "to-indigo-400/10", iconBorder: "border-indigo-400/50", iconText: "text-indigo-400" },
@@ -102,6 +107,7 @@ const robber: RoleDefinition = {
   isWerewolfExecution: false,
   isWerewolfNightAlly: false,
   revealsCenter: false,
+  voteWeight: 1,
   materialIcon: "theater_comedy",
   cardColors: { bg: "bg-gray-800", border: "border-gray-400", text: "text-gray-200" },
   accentColors: { border30: "border-gray-400/30", gradient: "to-gray-400/10", iconBorder: "border-gray-400/50", iconText: "text-gray-300" },
@@ -120,6 +126,7 @@ const troublemaker: RoleDefinition = {
   isWerewolfExecution: false,
   isWerewolfNightAlly: false,
   revealsCenter: false,
+  voteWeight: 1,
   materialIcon: "sync_alt",
   cardColors: { bg: "bg-emerald-900", border: "border-emerald-400", text: "text-emerald-200" },
   accentColors: { border30: "border-emerald-400/30", gradient: "to-emerald-400/10", iconBorder: "border-emerald-400/50", iconText: "text-emerald-400" },
@@ -138,6 +145,7 @@ const hunter: RoleDefinition = {
   isWerewolfExecution: false,
   isWerewolfNightAlly: false,
   revealsCenter: false,
+  voteWeight: 1,
   materialIcon: "gps_fixed",
   cardColors: { bg: "bg-green-900", border: "border-green-400", text: "text-green-200" },
   accentColors: { border30: "border-green-400/30", gradient: "to-green-400/10", iconBorder: "border-green-400/50", iconText: "text-green-400" },
@@ -156,6 +164,7 @@ const tanner: RoleDefinition = {
   isWerewolfExecution: false,
   isWerewolfNightAlly: false,
   revealsCenter: false,
+  voteWeight: 1,
   materialIcon: "sentiment_very_dissatisfied",
   cardColors: { bg: "bg-orange-900", border: "border-orange-400", text: "text-orange-200" },
   accentColors: { border30: "border-orange-400/30", gradient: "to-orange-400/10", iconBorder: "border-orange-400/50", iconText: "text-orange-400" },
@@ -174,6 +183,7 @@ const madman: RoleDefinition = {
   isWerewolfExecution: false,
   isWerewolfNightAlly: false,
   revealsCenter: false,
+  voteWeight: 1,
   materialIcon: "pets",
   cardColors: { bg: "bg-gray-700", border: "border-gray-400", text: "text-gray-300" },
   accentColors: { border30: "border-gray-400/30", gradient: "to-gray-400/10", iconBorder: "border-gray-400/50", iconText: "text-gray-400" },
@@ -192,12 +202,32 @@ const baker: RoleDefinition = {
   isWerewolfExecution: false,
   isWerewolfNightAlly: false,
   revealsCenter: false,
+  voteWeight: 1,
   materialIcon: "bakery_dining",
   cardColors: { bg: "bg-amber-900", border: "border-amber-400", text: "text-amber-200" },
   accentColors: { border30: "border-amber-400/30", gradient: "to-amber-400/10", iconBorder: "border-amber-400/50", iconText: "text-amber-400" },
   description: {
     team: "村人陣営",
     ability: "夜時間にランダムなプレイヤーにパンを届けます。届け先は自分にもわかりません。",
+    winCondition: "人狼を1人以上処刑すれば勝利",
+  },
+};
+
+const mayor: RoleDefinition = {
+  name: "村長",
+  team: "VILLAGE",
+  priority: 99,
+  hasNightAction: false,
+  isWerewolfExecution: false,
+  isWerewolfNightAlly: false,
+  revealsCenter: false,
+  voteWeight: 2,
+  materialIcon: "account_balance",
+  cardColors: { bg: "bg-blue-900", border: "border-blue-400", text: "text-blue-200" },
+  accentColors: { border30: "border-blue-400/30", gradient: "to-blue-400/10", iconBorder: "border-blue-400/50", iconText: "text-blue-400" },
+  description: {
+    team: "村人陣営",
+    ability: "投票が2票分としてカウントされます。",
     winCondition: "人狼を1人以上処刑すれば勝利",
   },
 };
@@ -217,6 +247,7 @@ export const ROLES: Record<Role, RoleDefinition> = {
   TANNER: tanner,
   MADMAN: madman,
   BAKER: baker,
+  MAYOR: mayor,
 };
 
 // ========================================
@@ -239,4 +270,5 @@ export const SELECTABLE_ROLES: readonly Role[] = ([
   "HUNTER",
   "TANNER",
   "BAKER",
+  "MAYOR",
 ] as const).filter((r) => !DISABLED_ROLES.has(r));

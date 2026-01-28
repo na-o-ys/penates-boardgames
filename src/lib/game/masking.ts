@@ -74,7 +74,7 @@ export function maskGameState(
 
   // HUNTER_REVENGEフェーズの場合
   if (state.phase === "HUNTER_REVENGE") {
-    const executedIds = calculateExecutedPlayers(state.votes);
+    const executedIds = calculateExecutedPlayers(state.votes, state.initialDistribution);
     const finalRoles = resolveFinalRoles(state.initialDistribution, state.actions);
     const executedHunterIds = executedIds.filter(
       (id) => finalRoles[id] === "HUNTER"
@@ -101,6 +101,7 @@ export function maskGameState(
     const finalRoles = resolveFinalRoles(state.initialDistribution, state.actions);
     const gameResult = calculateGameResult(
       state.votes,
+      state.initialDistribution,
       finalRoles,
       playerIds,
       state.hunterRevengeTarget
