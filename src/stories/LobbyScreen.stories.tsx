@@ -11,8 +11,7 @@ const meta = {
   parameters: { layout: "fullscreen" },
   args: {
     onStartGame: fn(success),
-    onSetRoles: fn(success),
-    onUpdateConfig: fn(success),
+    onSaveConfig: fn(success),
     onKickPlayer: fn(success),
   },
 } satisfies Meta<typeof LobbyScreen>;

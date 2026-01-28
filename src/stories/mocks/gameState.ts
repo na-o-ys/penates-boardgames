@@ -14,6 +14,7 @@ const MOCK_CONFIG = {
   nightDuration: 60,
   dayDuration: 300,
   votingDuration: 60,
+  updatedAt: 0,
 } as const;
 
 const BASE_STATE: ClientGameState = {

@@ -37,7 +37,7 @@ function setupGame(
     state = addPlayer(state, player);
   }
 
-  state = updateConfig(state, { roles });
+  state = updateConfig(state, { ...state.config, roles });
 
   return { state, players };
 }

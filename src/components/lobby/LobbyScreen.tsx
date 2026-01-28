@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { type ClientGameState, type Role } from "@/lib/game";
+import { useState, useEffect } from "react";
+import { type ClientGameState, type GameConfig, type Role } from "@/lib/game";
 import { PlayerList } from "./PlayerList";
 import { RoleSelector } from "./RoleSelector";
 import { TimerSettings } from "./TimerSettings";
@@ -13,8 +13,7 @@ interface LobbyScreenProps {
   gameState: ClientGameState;
   playerId: string;
   onStartGame: () => Promise<{ success: boolean; error?: string }>;
-  onSetRoles: (roles: Role[]) => Promise<{ success: boolean; error?: string }>;
-  onUpdateConfig: (settings: { nightDuration?: number; dayDuration?: number; votingDuration?: number }) => Promise<{ success: boolean; error?: string }>;
+  onSaveConfig: (config: GameConfig) => Promise<{ success: boolean; error?: string }>;
   onKickPlayer: (targetPlayerId: string) => Promise<{ success: boolean; error?: string }>;
 }
 
@@ -23,34 +22,42 @@ export function LobbyScreen({
   gameState,
   playerId,
   onStartGame,
-  onSetRoles,
-  onUpdateConfig,
+  onSaveConfig,
   onKickPlayer,
 }: LobbyScreenProps) {
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<LobbyTab>("players");
+  const [localConfig, setLocalConfig] = useState<GameConfig>(gameState.config);
+
+  // サーバーの config が localConfig より新しければ同期（他タブからの更新）
+  useEffect(() => {
+    if (gameState.config.updatedAt > localConfig.updatedAt) {
+      setLocalConfig(gameState.config);
+    }
+  }, [gameState.config, localConfig.updatedAt]);
 
   const isHost = gameState.players.find((p) => p.id === playerId)?.isHost ?? false;
   const playerCount = gameState.players.length;
   const requiredRoles = playerCount + 2;
-  const hasValidRoles = gameState.config.roles.length === requiredRoles;
+  const hasValidRoles = localConfig.roles.length === requiredRoles;
   const canStart = isHost && playerCount >= 3 && hasValidRoles;
 
-  const handleRolesChange = async (roles: Role[]) => {
-    setError(null);
-    const result = await onSetRoles(roles);
-    if (!result.success) {
-      setError(result.error ?? "役職の設定に失敗しました");
-    }
+  const saveConfig = (newConfig: GameConfig) => {
+    setLocalConfig(newConfig);
+    onSaveConfig(newConfig).then((result) => {
+      if (!result.success) {
+        setError(result.error ?? "設定の保存に失敗しました");
+      }
+    });
   };
 
-  const handleTimerChange = async (settings: { nightDuration?: number; dayDuration?: number; votingDuration?: number }) => {
-    setError(null);
-    const result = await onUpdateConfig(settings);
-    if (!result.success) {
-      setError(result.error ?? "タイマー設定に失敗しました");
-    }
+  const handleRolesChange = (roles: Role[]) => {
+    saveConfig({ ...localConfig, roles, updatedAt: Date.now() });
+  };
+
+  const handleTimerChange = (settings: { nightDuration?: number; dayDuration?: number; votingDuration?: number }) => {
+    saveConfig({ ...localConfig, ...settings, updatedAt: Date.now() });
   };
 
   const handleKickPlayer = async (targetPlayerId: string) => {
@@ -156,7 +163,7 @@ export function LobbyScreen({
               )}
               <RoleSelector
                 playerCount={playerCount}
-                selectedRoles={gameState.config.roles as Role[]}
+                selectedRoles={localConfig.roles as Role[]}
                 onChange={handleRolesChange}
                 disabled={!isHost}
               />
@@ -172,9 +179,9 @@ export function LobbyScreen({
                 <p className="text-xs text-[var(--color-text-muted)] mb-3">ホストが設定</p>
               )}
               <TimerSettings
-                nightDuration={gameState.config.nightDuration}
-                dayDuration={gameState.config.dayDuration}
-                votingDuration={gameState.config.votingDuration}
+                nightDuration={localConfig.nightDuration}
+                dayDuration={localConfig.dayDuration}
+                votingDuration={localConfig.votingDuration}
                 playerCount={playerCount}
                 onChange={handleTimerChange}
                 disabled={!isHost}

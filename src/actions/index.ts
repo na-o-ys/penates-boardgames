@@ -5,7 +5,6 @@ export {
   leaveRoomAction,
   kickPlayerAction,
   updateGameConfigAction,
-  setRolesAction,
   checkRoomExistsAction,
   createTestRoomAction,
   type ActionResult,

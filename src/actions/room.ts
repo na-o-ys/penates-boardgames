@@ -12,10 +12,8 @@ import {
   createInitialGameState,
   addPlayer,
   removePlayer,
-  updateConfig,
   type Player,
   type GameConfig,
-  type Role,
 } from "@/lib/game";
 import { getOrCreatePlayerId, setPlayerName } from "@/lib/session";
 import { authorizePlayer } from "@/lib/auth";
@@ -194,7 +192,7 @@ export async function kickPlayerAction(
 export async function updateGameConfigAction(
   roomId: string,
   playerId: string,
-  config: Partial<GameConfig>
+  config: GameConfig
 ): Promise<ActionResult> {
   try {
     await authorizePlayer(playerId);
@@ -207,7 +205,7 @@ export async function updateGameConfigAction(
         throw new Error("ホストのみがゲーム設定を変更できます");
       }
 
-      return updateConfig(state, config);
+      return { ...state, config };
     });
 
     return { success: true };
@@ -218,17 +216,6 @@ export async function updateGameConfigAction(
       error: error instanceof Error ? error.message : "ゲーム設定の更新に失敗しました",
     };
   }
-}
-
-/**
- * 役職構成を設定（ホストのみ）
- */
-export async function setRolesAction(
-  roomId: string,
-  playerId: string,
-  roles: Role[]
-): Promise<ActionResult> {
-  return updateGameConfigAction(roomId, playerId, { roles });
 }
 
 /**
@@ -287,9 +274,13 @@ export async function createTestRoomAction(): Promise<
     });
 
     // 4人用のデフォルト役職を設定（4人 + 中央2枚 = 6役職）
-    state = updateConfig(state, {
-      roles: ["WEREWOLF", "SEER", "ROBBER", "HUNTER", "VILLAGER", "VILLAGER"],
-    });
+    state = {
+      ...state,
+      config: {
+        ...state.config,
+        roles: ["WEREWOLF", "SEER", "ROBBER", "HUNTER", "VILLAGER", "VILLAGER"],
+      },
+    };
 
     // DBに保存
     const roomId = await dbCreateRoom(supabase, {

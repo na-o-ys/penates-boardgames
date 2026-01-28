@@ -65,6 +65,7 @@ export interface GameConfig {
   readonly nightDuration: number; // 夜フェーズ秒数
   readonly dayDuration: number; // 昼フェーズ秒数
   readonly votingDuration: number; // 投票フェーズ秒数
+  readonly updatedAt: number; // 設定更新タイムスタンプ
 }
 
 // ========================================

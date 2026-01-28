@@ -3,7 +3,6 @@
 import type { ClientGameState } from "@/lib/game";
 import {
   startGameAction,
-  setRolesAction,
   updateGameConfigAction,
   kickPlayerAction,
   submitNightActionAction,
@@ -41,8 +40,7 @@ export function GamePhaseRenderer({
           playerId={playerId}
           gameState={gameState}
           onStartGame={() => startGameAction(roomId, playerId)}
-          onSetRoles={(roles) => setRolesAction(roomId, playerId, roles)}
-          onUpdateConfig={(settings) => updateGameConfigAction(roomId, playerId, settings)}
+          onSaveConfig={(config) => updateGameConfigAction(roomId, playerId, config)}
           onKickPlayer={(targetId) => kickPlayerAction(roomId, playerId, targetId)}
         />
       );

@@ -20,6 +20,7 @@ export function createInitialGameState(roomId: string): GameState {
       nightDuration: 30,
       dayDuration: 120,
       votingDuration: 30,
+      updatedAt: 0,
     },
     initialDistribution: {},
     actions: [],
@@ -27,6 +28,11 @@ export function createInitialGameState(roomId: string): GameState {
     hunterRevengeTarget: {},
     phaseStartedAt: null,
   };
+}
+
+/** 議論フェーズのデフォルト時間を算出（(人数-1)分、最低1分） */
+function defaultDayDuration(playerCount: number): number {
+  return Math.max(60, (playerCount - 1) * 60);
 }
 
 /**
@@ -44,9 +50,14 @@ export function addPlayer(
     throw new Error("既に参加済みのプレイヤーです");
   }
 
+  const newPlayers = [...state.players, player];
   return {
     ...state,
-    players: [...state.players, player],
+    players: newPlayers,
+    config: {
+      ...state.config,
+      dayDuration: defaultDayDuration(newPlayers.length),
+    },
   };
 }
 
@@ -61,9 +72,14 @@ export function removePlayer(
     throw new Error("ロビーフェーズでのみプレイヤーを削除できます");
   }
 
+  const newPlayers = state.players.filter((p) => p.id !== playerId);
   return {
     ...state,
-    players: state.players.filter((p) => p.id !== playerId),
+    players: newPlayers,
+    config: {
+      ...state.config,
+      dayDuration: defaultDayDuration(newPlayers.length),
+    },
   };
 }
 
@@ -72,7 +88,7 @@ export function removePlayer(
  */
 export function updateConfig(
   state: GameState,
-  config: Partial<GameConfig>
+  config: GameConfig
 ): GameState {
   if (state.phase !== "LOBBY") {
     throw new Error("ロビーフェーズでのみ設定を変更できます");
@@ -80,10 +96,7 @@ export function updateConfig(
 
   return {
     ...state,
-    config: {
-      ...state.config,
-      ...config,
-    },
+    config,
   };
 }
 
@@ -341,7 +354,7 @@ export function resetGame(state: GameState): GameState {
 export type GameActionType =
   | { type: "ADD_PLAYER"; player: Player }
   | { type: "REMOVE_PLAYER"; playerId: PlayerId }
-  | { type: "UPDATE_CONFIG"; config: Partial<GameConfig> }
+  | { type: "UPDATE_CONFIG"; config: GameConfig }
   | { type: "START_GAME" }
   | { type: "START_GAME_WITH_DISTRIBUTION"; distribution: Record<string, Role> }
   | { type: "EXECUTE_NIGHT_ACTION"; action: GameAction }

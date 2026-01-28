@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import {
-  ROLE_NAMES,
-  ROLE_ACCENT_COLORS,
   DISABLED_ROLES,
   type Role,
 } from "@/lib/game";
@@ -137,19 +135,6 @@ export function RoleSelector({
           {selectedRoles.length} / {requiredCount}
         </span>
       </div>
-
-      {selectedRoles.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {selectedRoles.map((role, index) => (
-            <span
-              key={index}
-              className={`px-2 py-1 text-xs rounded-lg glass-panel border-l-2 ${ROLE_ACCENT_COLORS[role].border30} ${ROLE_ACCENT_COLORS[role].iconText}`}
-            >
-              {ROLE_NAMES[role]}
-            </span>
-          ))}
-        </div>
-      )}
 
       {detailRole && (
         <RoleDetailModal role={detailRole} onClose={() => setDetailRole(null)} />
