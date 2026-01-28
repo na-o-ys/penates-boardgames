@@ -11,6 +11,10 @@ import { validateAction, validateVote, validateHunterRevenge, haveAllPlayersVote
  */
 function getDefaultRoles(playerCount: number): Role[] {
   switch (playerCount) {
+    case 0:
+    case 1:
+    case 2:
+      return [];
     case 3: return ["WEREWOLF", "WEREWOLF", "VILLAGER", "SEER", "ROBBER"];
     case 4: return ["WEREWOLF", "WEREWOLF", "VILLAGER", "VILLAGER", "SEER", "ROBBER"];
     case 5: return ["WEREWOLF", "WEREWOLF", "VILLAGER", "VILLAGER", "VILLAGER", "SEER", "ROBBER"];
@@ -48,6 +52,7 @@ export function createInitialGameState(roomId: string): GameState {
     noticeRecipientId: null,
     phaseStartedAt: null,
     playerStats: {},
+    readyForNextGame: {},
   };
 }
 
@@ -79,6 +84,7 @@ export function addPlayer(
       ...state.config,
       roles: getDefaultRoles(newPlayers.length),
       dayDuration: defaultDayDuration(newPlayers.length),
+      updatedAt: Date.now(),
     },
   };
 }
@@ -102,6 +108,7 @@ export function removePlayer(
       ...state.config,
       roles: getDefaultRoles(newPlayers.length),
       dayDuration: defaultDayDuration(newPlayers.length),
+      updatedAt: Date.now(),
     },
   };
 }
@@ -124,11 +131,19 @@ export function updateConfig(
 }
 
 /**
- * ゲームを開始（ロビー → 夜フェーズ）
+ * ゲームを開始（ロビー/終了 → 夜フェーズ）
  */
 export function startGame(state: GameState): GameState {
-  if (state.phase !== "LOBBY") {
-    throw new Error("ロビーフェーズからのみゲームを開始できます");
+  if (state.phase !== "LOBBY" && state.phase !== "FINISHED") {
+    throw new Error("ロビーまたは終了フェーズからのみゲームを開始できます");
+  }
+
+  // FINISHED からの開始時は全員 ready が必要
+  if (state.phase === "FINISHED") {
+    const allReady = state.players.every((p) => state.readyForNextGame[p.id]);
+    if (!allReady) {
+      throw new Error("全員がロビーに戻るまで開始できません");
+    }
   }
 
   if (state.players.length < 3) {
@@ -179,9 +194,13 @@ export function startGame(state: GameState): GameState {
     ...state,
     phase: "NIGHT",
     initialDistribution: distribution,
+    actions: [],
+    votes: {},
+    hunterRevengeTarget: {},
     breadRecipientId,
     noticeRecipientId,
     phaseStartedAt: Date.now(),
+    readyForNextGame: {},
   };
 
   // 夜アクションを持つプレイヤーがいない場合は即座に昼フェーズへ
@@ -199,8 +218,8 @@ export function startGameWithDistribution(
   state: GameState,
   distribution: Record<string, Role>
 ): GameState {
-  if (state.phase !== "LOBBY") {
-    throw new Error("ロビーフェーズからのみゲームを開始できます");
+  if (state.phase !== "LOBBY" && state.phase !== "FINISHED") {
+    throw new Error("ロビーまたは終了フェーズからのみゲームを開始できます");
   }
 
   if (state.players.length < 3) {
@@ -241,9 +260,13 @@ export function startGameWithDistribution(
     ...state,
     phase: "NIGHT",
     initialDistribution: distribution,
+    actions: [],
+    votes: {},
+    hunterRevengeTarget: {},
     breadRecipientId: breadRecipientIdTest,
     noticeRecipientId: noticeRecipientIdTest,
     phaseStartedAt: Date.now(),
+    readyForNextGame: {},
   };
 
   // 夜アクションを持つプレイヤーがいない場合は即座に昼フェーズへ
@@ -349,9 +372,9 @@ export function advancePhase(state: GameState): GameState {
     throw new Error("これ以上フェーズを進行できません");
   }
 
-  // RESULT フェーズに遷移する際にスタッツを更新
+  // FINISHED フェーズに遷移する際にスタッツを更新
   const updatedStats =
-    nextPhase === "RESULT" ? updatePlayerStats(state) : state.playerStats;
+    nextPhase === "FINISHED" ? updatePlayerStats(state) : state.playerStats;
 
   return {
     ...state,
@@ -382,10 +405,10 @@ function getNextPhase(currentPhase: Phase, state?: GameState): Phase | null {
           return "HUNTER_REVENGE";
         }
       }
-      return "RESULT";
+      return "FINISHED";
     case "HUNTER_REVENGE":
-      return "RESULT";
-    case "RESULT":
+      return "FINISHED";
+    case "FINISHED":
       return null;
   }
 }
@@ -472,6 +495,25 @@ function updatePlayerStats(state: GameState): Record<PlayerId, PlayerStat> {
 }
 
 /**
+ * プレイヤーを次ゲーム準備完了としてマーク
+ */
+export function markReadyForNextGame(
+  state: GameState,
+  playerId: PlayerId
+): GameState {
+  if (state.phase !== "FINISHED") {
+    throw new Error("終了フェーズでのみ次のゲームの準備ができます");
+  }
+  return {
+    ...state,
+    readyForNextGame: {
+      ...state.readyForNextGame,
+      [playerId]: true,
+    },
+  };
+}
+
+/**
  * ゲームをリセット（結果 → ロビー）
  */
 export function resetGame(state: GameState): GameState {
@@ -485,6 +527,7 @@ export function resetGame(state: GameState): GameState {
     breadRecipientId: null,
     noticeRecipientId: null,
     phaseStartedAt: null,
+    readyForNextGame: {},
   };
 }
 

@@ -101,8 +101,8 @@ export function maskGameState(
     };
   }
 
-  // RESULTフェーズの場合は全情報を開示
-  if (state.phase === "RESULT") {
+  // FINISHEDフェーズの場合は全情報を開示
+  if (state.phase === "FINISHED") {
     const playerIds = state.players.map((p) => p.id);
     const finalRoles = resolveFinalRoles(state.initialDistribution, state.actions);
     const gameResult = calculateGameResult(
@@ -123,6 +123,10 @@ export function maskGameState(
       hunterRevengeTargets: state.hunterRevengeTarget,
       winners: gameResult.winners,
       winningTeam: gameResult.winningTeam,
+      // 次ゲーム準備状態
+      readyForNextGame: state.readyForNextGame,
+      isReadyForNextGame: state.readyForNextGame[playerId] ?? false,
+      allPlayersReady: state.players.every((p) => state.readyForNextGame[p.id]),
     };
   }
 

@@ -114,18 +114,20 @@ export function RoleSelector({
         </VillagerBar>
       </div>
 
-      <div className="flex items-center justify-between px-3 py-2 glass-panel rounded-xl">
-        <span className="text-[var(--color-text-secondary)]">選択枚数</span>
-        <span
-          className={`font-bold ${
-            selectedRoles.length === requiredCount
-              ? "text-[var(--color-ready)]"
-              : "text-[var(--color-error)]"
-          }`}
-        >
-          {selectedRoles.length} / {requiredCount}
-        </span>
-      </div>
+      {playerCount >= 3 && (
+        <div className="flex items-center justify-between px-3 py-2 glass-panel rounded-xl">
+          <span className="text-[var(--color-text-secondary)]">選択枚数</span>
+          <span
+            className={`font-bold ${
+              selectedRoles.length === requiredCount
+                ? "text-[var(--color-ready)]"
+                : "text-[var(--color-error)]"
+            }`}
+          >
+            {selectedRoles.length} / {requiredCount}
+          </span>
+        </div>
+      )}
 
       {detailRole && (
         <RoleDetailModal role={detailRole} onClose={() => setDetailRole(null)} />

@@ -96,7 +96,7 @@ export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DaySc
             <span className="material-icons text-xl">groups</span>
           </button>
           <h1 className="font-[family-name:var(--font-display)] font-bold text-3xl gold-text mb-2">
-            議論フェーズ
+            DISCUSSION PHASE
           </h1>
           <div className={`text-5xl font-bold mb-4 ${
             isTimeLow ? "text-[var(--color-error)] animate-pulse" : "gold-text"

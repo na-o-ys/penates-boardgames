@@ -1,6 +1,12 @@
 @import "tailwindcss";
 
 :root {
+  /* フォント（ゴシック体 - システムフォント） */
+  --font-body: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', 'Yu Gothic', sans-serif;
+
+  /* フォント（明朝体ディスプレイ用） */
+  --font-display: var(--font-cinzel), var(--font-mincho), 'Hiragino Mincho ProN', serif;
+
   /* プライマリカラー（ゴールド） */
   --color-primary: #D4AF37;
   --color-primary-light: #FCD34D;
@@ -79,8 +85,9 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-/* ゴールドグラデーションテキスト */
+/* ゴールドグラデーションテキスト（明朝体） */
 @utility gold-text {
+  font-family: var(--font-cinzel), var(--font-mincho), 'Hiragino Mincho ProN', serif;
   background: linear-gradient(to bottom, var(--color-primary-light), var(--color-primary-dark));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

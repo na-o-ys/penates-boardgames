@@ -43,7 +43,8 @@ export function LobbyScreen({
   const playerCount = gameState.players.length;
   const requiredRoles = playerCount + 2;
   const hasValidRoles = localConfig.roles.length === requiredRoles;
-  const canStart = isHost && playerCount >= 3 && hasValidRoles;
+  const allPlayersReady = gameState.allPlayersReady ?? true;
+  const canStart = isHost && playerCount >= 3 && hasValidRoles && allPlayersReady;
 
   const saveConfig = (newConfig: GameConfig) => {
     setLocalConfig(newConfig);
@@ -112,7 +113,7 @@ export function LobbyScreen({
             <span className="material-icons text-xl">leaderboard</span>
           </button>
           <h1 className="font-[family-name:var(--font-display)] font-black text-3xl gold-text mb-3 tracking-wider">
-            ロビー
+            LOBBY
           </h1>
           <div className="flex items-center justify-center gap-2">
             <span className="text-[var(--color-text-muted)] text-xs uppercase tracking-widest">部屋ID</span>
@@ -162,6 +163,7 @@ export function LobbyScreen({
               currentPlayerId={playerId}
               isHost={isHost}
               onKickPlayer={handleKickPlayer}
+              readyForNextGame={gameState.phase === "FINISHED" ? gameState.readyForNextGame : undefined}
             />
           )}
 
@@ -176,9 +178,11 @@ export function LobbyScreen({
                 onChange={handleRolesChange}
                 disabled={!isHost}
               />
-              <p className="mt-2 text-xs text-[var(--color-text-muted)]">
-                必要枚数: {requiredRoles}枚（{playerCount}人 + 中央2枚）
-              </p>
+              {playerCount >= 3 && (
+                <p className="mt-2 text-xs text-[var(--color-text-muted)]">
+                  必要枚数: {requiredRoles}枚（{playerCount}人 + 中央2枚）
+                </p>
+              )}
             </div>
           )}
 
@@ -215,6 +219,8 @@ export function LobbyScreen({
                   ? "3人以上でプレイできます"
                   : !hasValidRoles
                   ? "役職を設定してください"
+                  : !allPlayersReady
+                  ? "全員がロビーに戻るのを待っています..."
                   : ""}
               </p>
             )}
@@ -223,7 +229,9 @@ export function LobbyScreen({
 
         {!isHost && (
           <div className="text-center pb-4 text-[var(--color-text-muted)] text-sm">
-            ホストがゲームを開始するのを待っています...
+            {!allPlayersReady
+              ? "全員がロビーに戻るのを待っています..."
+              : "ホストがゲームを開始するのを待っています..."}
           </div>
         )}
       </div>
