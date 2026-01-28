@@ -10,6 +10,7 @@ import { RoleGalleryCard, VillagerBar } from "../common/RoleGalleryCard";
 
 const SPECIAL_ROLES = ([
   "WEREWOLF",
+  "MADMAN",
   "SEER",
   "ROBBER",
   "TROUBLEMAKER",

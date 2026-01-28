@@ -28,6 +28,7 @@ export function getValidActionTypes(role: Role): readonly ActionType[] {
     case "VILLAGER":
     case "HUNTER":
     case "TANNER":
+    case "MADMAN":
       return ["SKIP"];
   }
 }

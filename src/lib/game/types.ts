@@ -13,7 +13,8 @@ export type Role =
   | "ROBBER"
   | "TROUBLEMAKER"
   | "HUNTER"
-  | "TANNER";
+  | "TANNER"
+  | "MADMAN";
 
 /** ゲームフェーズ */
 export type Phase = "LOBBY" | "NIGHT" | "DAY" | "VOTING" | "HUNTER_REVENGE" | "RESULT";
@@ -164,6 +165,7 @@ export const ROLE_PRIORITY: Record<Role, number> = {
   VILLAGER: 99,
   HUNTER: 99,
   TANNER: 99,
+  MADMAN: 99,
 };
 
 /** 役職の陣営 */
@@ -175,6 +177,7 @@ export const ROLE_TEAM: Record<Role, Team> = {
   TROUBLEMAKER: "VILLAGE",
   HUNTER: "VILLAGE",
   TANNER: "MINORITY",
+  MADMAN: "WEREWOLF",
 };
 
 /** 役職の日本語名 */
@@ -186,6 +189,7 @@ export const ROLE_NAMES: Record<Role, string> = {
   TROUBLEMAKER: "トラブルメーカー",
   HUNTER: "狩人",
   TANNER: "吊人",
+  MADMAN: "狂人",
 };
 
 /** 役職が夜アクションを持つか */
@@ -197,6 +201,7 @@ export const ROLE_HAS_ACTION: Record<Role, boolean> = {
   VILLAGER: false,
   HUNTER: false,
   TANNER: false,
+  MADMAN: false,
 };
 
 /** 役職のMaterial Iconsアイコン名 */
@@ -208,6 +213,7 @@ export const ROLE_MATERIAL_ICONS: Record<Role, string> = {
   VILLAGER: "accessibility_new",
   HUNTER: "gps_fixed",
   TANNER: "sentiment_very_dissatisfied",
+  MADMAN: "pets",
 };
 
 /** 役職カードの配色 */
@@ -223,6 +229,7 @@ export const ROLE_CARD_COLORS: Record<Role, {
   VILLAGER: { bg: "bg-slate-700", border: "border-slate-500", text: "text-slate-300" },
   HUNTER: { bg: "bg-green-900", border: "border-green-400", text: "text-green-200" },
   TANNER: { bg: "bg-orange-900", border: "border-orange-400", text: "text-orange-200" },
+  MADMAN: { bg: "bg-gray-700", border: "border-gray-400", text: "text-gray-300" },
 };
 
 /** 役職のアクセントカラー（UIカード用） */
@@ -239,6 +246,7 @@ export const ROLE_ACCENT_COLORS: Record<Role, {
   VILLAGER: { border30: "border-slate-500/30", gradient: "to-slate-500/10", iconBorder: "border-slate-500/50", iconText: "text-slate-300" },
   HUNTER: { border30: "border-green-400/30", gradient: "to-green-400/10", iconBorder: "border-green-400/50", iconText: "text-green-400" },
   TANNER: { border30: "border-orange-400/30", gradient: "to-orange-400/10", iconBorder: "border-orange-400/50", iconText: "text-orange-400" },
+  MADMAN: { border30: "border-gray-400/30", gradient: "to-gray-400/10", iconBorder: "border-gray-400/50", iconText: "text-gray-400" },
 };
 
 /** 役職の説明 */
@@ -281,6 +289,11 @@ export const ROLE_DESCRIPTIONS: Record<Role, {
     team: "第三陣営",
     ability: "特殊能力はありません。",
     winCondition: "自分が処刑されれば単独勝利",
+  },
+  MADMAN: {
+    team: "人狼陣営",
+    ability: "特殊能力はありません。人狼の仲間として村人を欺きましょう。",
+    winCondition: "人狼が1人も処刑されなければ勝利（自分が処刑されても負けにならない）",
   },
 };
 
