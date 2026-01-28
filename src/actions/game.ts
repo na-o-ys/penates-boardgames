@@ -12,6 +12,7 @@ import {
   executeVote,
   executeHunterRevenge,
   advancePhase,
+  markReadyForNextGame,
   resetGame,
   maskGameState,
   maskGameStateForWerewolf,
@@ -316,6 +317,39 @@ export async function resetGameAction(
     return {
       success: false,
       error: error instanceof Error ? error.message : "ゲームリセットに失敗しました",
+    };
+  }
+}
+
+/**
+ * 次ゲームへの準備完了をマーク
+ */
+export async function markReadyForNextGameAction(
+  roomId: string,
+  playerId: string
+): Promise<ActionResult> {
+  try {
+    await authorizePlayer(playerId);
+    const supabase = await createClient();
+
+    await updateRoomWithRetry(supabase, roomId, (state) => {
+      // FINISHEDフェーズ以外では何もしない
+      if (state.phase !== "FINISHED") {
+        return state;
+      }
+      // 既に準備完了なら何もしない
+      if (state.readyForNextGame[playerId]) {
+        return state;
+      }
+      return markReadyForNextGame(state, playerId);
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("準備完了マークに失敗:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "準備完了に失敗しました",
     };
   }
 }

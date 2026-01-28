@@ -44,6 +44,7 @@ export {
   executeVote,
   executeHunterRevenge,
   advancePhase,
+  markReadyForNextGame,
   resetGame,
   gameReducer,
   type GameActionType,

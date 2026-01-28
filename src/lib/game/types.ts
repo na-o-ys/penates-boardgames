@@ -22,7 +22,7 @@ export type Role =
   | "CIA";
 
 /** ゲームフェーズ */
-export type Phase = "LOBBY" | "NIGHT" | "DAY" | "VOTING" | "HUNTER_REVENGE" | "RESULT";
+export type Phase = "LOBBY" | "NIGHT" | "DAY" | "VOTING" | "HUNTER_REVENGE" | "FINISHED";
 
 /** 陣営 */
 export type Team = "VILLAGE" | "WEREWOLF" | "MINORITY";
@@ -92,6 +92,7 @@ export interface GameState {
   readonly noticeRecipientId: PlayerId | null; // 予告状を受け取ったプレイヤーID
   readonly phaseStartedAt: number | null;
   readonly playerStats: Record<PlayerId, PlayerStat>; // プレイヤースタッツ
+  readonly readyForNextGame: Record<PlayerId, boolean>; // 次ゲームへの準備完了状態
 }
 
 // ========================================
@@ -133,7 +134,7 @@ export interface ClientGameState {
   readonly receivedNotice?: boolean;
   // プレイヤースタッツ
   readonly playerStats?: Record<PlayerId, PlayerStat>;
-  // RESULTフェーズのみ
+  // FINISHEDフェーズのみ
   readonly initialRoles?: Record<string, Role>;
   readonly finalRoles?: Record<string, Role>;
   readonly allActions?: readonly GameAction[];
@@ -142,6 +143,10 @@ export interface ClientGameState {
   readonly hunterRevengeTargets?: Record<PlayerId, PlayerId>; // 狩人の道連れ結果
   readonly winners?: readonly PlayerId[];
   readonly winningTeam?: Team | null;
+  // 次ゲーム準備状態
+  readonly readyForNextGame?: Record<PlayerId, boolean>;
+  readonly isReadyForNextGame?: boolean; // 自分が準備完了か
+  readonly allPlayersReady?: boolean; // 全員準備完了か
 }
 
 // ========================================

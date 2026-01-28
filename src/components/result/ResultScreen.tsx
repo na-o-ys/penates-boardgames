@@ -15,7 +15,7 @@ interface ResultScreenProps {
   gameState: ClientGameState;
   playerId: string;
   roomId: string;
-  onPlayAgain: () => Promise<{ success: boolean; error?: string }>;
+  onMarkReady: () => Promise<{ success: boolean; error?: string }>;
 }
 
 const TEAM_NAMES: Record<Team, string> = {
@@ -24,13 +24,11 @@ const TEAM_NAMES: Record<Team, string> = {
   MINORITY: "吊人",
 };
 
-export function ResultScreen({ gameState, playerId, roomId, onPlayAgain }: ResultScreenProps) {
+export function ResultScreen({ gameState, playerId, roomId, onMarkReady }: ResultScreenProps) {
   const currentPlayerId = playerId;
-  const [isResetting, setIsResetting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [detailRole, setDetailRole] = useState<Role | null>(null);
   const [showStats, setShowStats] = useState(false);
-
-  const isHost = gameState.players[0]?.id === currentPlayerId;
 
   const winningTeam = gameState.winningTeam;
   const winners = gameState.winners ?? [];
@@ -50,17 +48,17 @@ export function ResultScreen({ gameState, playerId, roomId, onPlayAgain }: Resul
     CENTER_1: finalRoles["CENTER_1"] as Role | undefined,
   };
 
-  const handlePlayAgain = async () => {
-    setIsResetting(true);
+  const handleMarkReady = async () => {
+    setIsSubmitting(true);
     try {
-      const result = await onPlayAgain();
+      const result = await onMarkReady();
       if (!result.success) {
-        console.error("Failed to reset game:", result.error);
+        console.error("Failed to mark ready:", result.error);
       }
     } catch (error) {
-      console.error("Error resetting game:", error);
+      console.error("Error marking ready:", error);
     } finally {
-      setIsResetting(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -174,20 +172,14 @@ export function ResultScreen({ gameState, playerId, roomId, onPlayAgain }: Resul
 
         {/* 固定フッター */}
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[var(--color-bg-deep)] via-[var(--color-bg-deep)]/95 to-transparent z-20 max-w-md mx-auto">
-          {isHost ? (
-            <button
-              onClick={handlePlayAgain}
-              disabled={isResetting}
-              className="w-full py-3 btn-primary rounded-lg text-lg font-[family-name:var(--font-display)] tracking-wider flex items-center justify-center gap-1"
-            >
-              <span className="material-icons text-sm">replay</span>
-              {isResetting ? "準備中..." : "もう一度遊ぶ"}
-            </button>
-          ) : (
-            <p className="text-center text-[var(--color-text-muted)] py-3">
-              ホストが次のゲームを開始するのを待っています...
-            </p>
-          )}
+          <button
+            onClick={handleMarkReady}
+            disabled={isSubmitting}
+            className="w-full py-3 btn-primary rounded-lg text-lg font-[family-name:var(--font-display)] tracking-wider flex items-center justify-center gap-1"
+          >
+            <span className="material-icons text-sm">meeting_room</span>
+            {isSubmitting ? "移動中..." : "ロビーへ戻る"}
+          </button>
         </div>
       </div>
 

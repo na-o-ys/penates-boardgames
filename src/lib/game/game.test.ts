@@ -112,7 +112,7 @@ describe("ゲームシナリオテスト", () => {
       gameState = executeVote(gameState, "player-3", "player-2");
 
       // 全員投票完了で結果フェーズへ自動遷移
-      expect(gameState.phase).toBe("RESULT");
+      expect(gameState.phase).toBe("FINISHED");
 
       // 最終結果を計算
       const playerIds = players.map((p) => p.id);
@@ -172,7 +172,7 @@ describe("ゲームシナリオテスト", () => {
       gameState = executeVote(gameState, "player-2", "player-3");
       gameState = executeVote(gameState, "player-3", "player-2");
 
-      expect(gameState.phase).toBe("RESULT");
+      expect(gameState.phase).toBe("FINISHED");
 
       const playerIds = players.map((p) => p.id);
       const finalRoles = resolveFinalRoles(distribution, gameState.actions);
@@ -223,7 +223,7 @@ describe("ゲームシナリオテスト", () => {
       gameState = executeVote(gameState, "player-2", "player-1");
       gameState = executeVote(gameState, "player-3", "player-1");
 
-      expect(gameState.phase).toBe("RESULT");
+      expect(gameState.phase).toBe("FINISHED");
 
       const playerIds = players.map((p) => p.id);
       const finalRoles = resolveFinalRoles(distribution, gameState.actions);
@@ -268,7 +268,7 @@ describe("ゲームシナリオテスト", () => {
       gameState = executeVote(gameState, "player-2", "player-3");
       gameState = executeVote(gameState, "player-3", "player-1");
 
-      expect(gameState.phase).toBe("RESULT");
+      expect(gameState.phase).toBe("FINISHED");
 
       const playerIds = players.map((p) => p.id);
       const finalRoles = resolveFinalRoles(distribution, gameState.actions);
@@ -328,7 +328,7 @@ describe("ゲームシナリオテスト", () => {
       gameState = executeVote(gameState, "player-2", "player-1");
       gameState = executeVote(gameState, "player-3", "player-2");
 
-      expect(gameState.phase).toBe("RESULT");
+      expect(gameState.phase).toBe("FINISHED");
 
       const playerIds = players.map((p) => p.id);
       const finalRoles = resolveFinalRoles(distribution, gameState.actions);
@@ -384,7 +384,7 @@ describe("ゲームシナリオテスト", () => {
       gameState = executeVote(gameState, "player-2", "player-1");
       gameState = executeVote(gameState, "player-3", "player-2");
 
-      expect(gameState.phase).toBe("RESULT");
+      expect(gameState.phase).toBe("FINISHED");
 
       const playerIds = players.map((p) => p.id);
       const finalRoles = resolveFinalRoles(distribution, gameState.actions);
@@ -455,7 +455,7 @@ describe("ゲームシナリオテスト", () => {
       gameState = executeVote(gameState, "player-3", "player-2");
       gameState = executeVote(gameState, "player-4", "player-2");
 
-      expect(gameState.phase).toBe("RESULT");
+      expect(gameState.phase).toBe("FINISHED");
 
       const playerIds = players.map((p) => p.id);
       const finalRoles = resolveFinalRoles(distribution, gameState.actions);
@@ -513,7 +513,7 @@ describe("ゲームシナリオテスト", () => {
       gameState = executeVote(gameState, "player-3", "player-1");
       gameState = executeVote(gameState, "player-4", "player-1");
 
-      expect(gameState.phase).toBe("RESULT");
+      expect(gameState.phase).toBe("FINISHED");
 
       const playerIds = players.map((p) => p.id);
       const finalRoles = resolveFinalRoles(distribution, gameState.actions);
@@ -595,7 +595,7 @@ describe("ゲームシナリオテスト", () => {
       gameState = executeVote(gameState, "player-2", "player-1");
       gameState = executeVote(gameState, "player-3", "player-1");
 
-      expect(gameState.phase).toBe("RESULT");
+      expect(gameState.phase).toBe("FINISHED");
 
       const playerIds = players.map((p) => p.id);
       const finalRoles = resolveFinalRoles(distribution, gameState.actions);
@@ -648,7 +648,7 @@ describe("ゲームシナリオテスト", () => {
       gameState = executeVote(gameState, "player-3", "player-1"); // 吊人→村人
       gameState = executeVote(gameState, "player-4", "player-3"); // 人狼→吊人
 
-      expect(gameState.phase).toBe("RESULT");
+      expect(gameState.phase).toBe("FINISHED");
 
       const playerIds = players.map((p) => p.id);
       const finalRoles = resolveFinalRoles(distribution, gameState.actions);
@@ -701,7 +701,7 @@ describe("ゲームシナリオテスト", () => {
       gameState = executeVote(gameState, "player-3", "player-4"); // 村人→人狼
       gameState = executeVote(gameState, "player-4", "player-1"); // 人狼→村人
 
-      expect(gameState.phase).toBe("RESULT");
+      expect(gameState.phase).toBe("FINISHED");
 
       const playerIds = players.map((p) => p.id);
       const finalRoles = resolveFinalRoles(distribution, gameState.actions);
@@ -820,7 +820,7 @@ describe("データマスキングテスト", () => {
     gameState = executeVote(gameState, "player-2", "player-1");
     gameState = executeVote(gameState, "player-3", "player-2");
 
-    expect(gameState.phase).toBe("RESULT");
+    expect(gameState.phase).toBe("FINISHED");
 
     const playerView = maskGameState(gameState, "player-3");
 

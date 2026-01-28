@@ -43,7 +43,8 @@ export function LobbyScreen({
   const playerCount = gameState.players.length;
   const requiredRoles = playerCount + 2;
   const hasValidRoles = localConfig.roles.length === requiredRoles;
-  const canStart = isHost && playerCount >= 3 && hasValidRoles;
+  const allPlayersReady = gameState.allPlayersReady ?? true;
+  const canStart = isHost && playerCount >= 3 && hasValidRoles && allPlayersReady;
 
   const saveConfig = (newConfig: GameConfig) => {
     setLocalConfig(newConfig);
@@ -162,6 +163,7 @@ export function LobbyScreen({
               currentPlayerId={playerId}
               isHost={isHost}
               onKickPlayer={handleKickPlayer}
+              readyForNextGame={gameState.phase === "FINISHED" ? gameState.readyForNextGame : undefined}
             />
           )}
 
@@ -215,6 +217,8 @@ export function LobbyScreen({
                   ? "3人以上でプレイできます"
                   : !hasValidRoles
                   ? "役職を設定してください"
+                  : !allPlayersReady
+                  ? "全員がロビーに戻るのを待っています..."
                   : ""}
               </p>
             )}
@@ -223,7 +227,9 @@ export function LobbyScreen({
 
         {!isHost && (
           <div className="text-center pb-4 text-[var(--color-text-muted)] text-sm">
-            ホストがゲームを開始するのを待っています...
+            {!allPlayersReady
+              ? "全員がロビーに戻るのを待っています..."
+              : "ホストがゲームを開始するのを待っています..."}
           </div>
         )}
       </div>

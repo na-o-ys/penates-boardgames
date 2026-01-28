@@ -366,12 +366,15 @@ export const votingRobberNotVotedState: ClientGameState = {
 };
 
 // ========================================
-// RESULT
+// FINISHED
 // ========================================
 
 export const resultVillageWinState: ClientGameState = {
   ...BASE_STATE,
-  phase: "RESULT",
+  phase: "FINISHED",
+  readyForNextGame: {},
+  isReadyForNextGame: false,
+  allPlayersReady: false,
   myRole: "SEER",
   initialRoles: {
     p1: "SEER",
@@ -401,7 +404,10 @@ export const resultVillageWinState: ClientGameState = {
 
 export const resultWerewolfWinState: ClientGameState = {
   ...BASE_STATE,
-  phase: "RESULT",
+  phase: "FINISHED",
+  readyForNextGame: {},
+  isReadyForNextGame: false,
+  allPlayersReady: false,
   myRole: "SEER",
   initialRoles: {
     p1: "SEER",
@@ -428,7 +434,10 @@ export const resultWerewolfWinState: ClientGameState = {
 
 export const resultSwappedState: ClientGameState = {
   ...BASE_STATE,
-  phase: "RESULT",
+  phase: "FINISHED",
+  readyForNextGame: {},
+  isReadyForNextGame: false,
+  allPlayersReady: false,
   myRole: "ROBBER",
   initialRoles: {
     p1: "ROBBER",

@@ -21,6 +21,7 @@ export {
   autoHunterRevengeAction,
   advancePhaseAction,
   resetGameAction,
+  markReadyForNextGameAction,
   getClientGameStateAction,
   getCurrentPlayerIdAction,
 } from "./game";

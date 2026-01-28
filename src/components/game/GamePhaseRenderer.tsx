@@ -12,7 +12,7 @@ import {
   autoVoteAction,
   submitHunterRevengeAction,
   autoHunterRevengeAction,
-  resetGameAction,
+  markReadyForNextGameAction,
 } from "@/actions";
 import { LobbyScreen } from "@/components/lobby/LobbyScreen";
 import { NightScreen } from "@/components/night/NightScreen";
@@ -83,13 +83,27 @@ export function GamePhaseRenderer({
           onAutoRevenge={() => autoHunterRevengeAction(roomId, playerId)}
         />
       );
-    case "RESULT":
+    case "FINISHED":
+      // 準備完了済みならLobbyScreenを表示
+      if (gameState.isReadyForNextGame) {
+        return (
+          <LobbyScreen
+            roomId={roomId}
+            playerId={playerId}
+            gameState={gameState}
+            onStartGame={() => startGameAction(roomId, playerId)}
+            onSaveConfig={(config) => updateGameConfigAction(roomId, playerId, config)}
+            onKickPlayer={(targetId) => kickPlayerAction(roomId, playerId, targetId)}
+          />
+        );
+      }
+      // 未準備ならResultScreenを表示
       return (
         <ResultScreen
           roomId={roomId}
           playerId={playerId}
           gameState={gameState}
-          onPlayAgain={() => resetGameAction(roomId, playerId)}
+          onMarkReady={() => markReadyForNextGameAction(roomId, playerId)}
         />
       );
     default:

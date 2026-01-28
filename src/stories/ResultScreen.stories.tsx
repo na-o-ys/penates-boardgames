@@ -10,7 +10,7 @@ const meta = {
   component: ResultScreen,
   parameters: { layout: "fullscreen" },
   args: {
-    onPlayAgain: fn(success),
+    onMarkReady: fn(success),
   },
 } satisfies Meta<typeof ResultScreen>;
 
