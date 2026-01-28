@@ -5,7 +5,7 @@
   --font-body: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', 'Yu Gothic', sans-serif;
 
   /* フォント（明朝体ディスプレイ用） */
-  --font-display: var(--font-cinzel), var(--font-mincho), 'Hiragino Mincho ProN', serif;
+  --font-display: var(--font-cinzel), 'Shippori Mincho', 'Hiragino Mincho ProN', serif;
 
   /* プライマリカラー（ゴールド） */
   --color-primary: #D4AF37;
@@ -87,7 +87,7 @@ body {
 
 /* ゴールドグラデーションテキスト（明朝体） */
 @utility gold-text {
-  font-family: var(--font-cinzel), var(--font-mincho), 'Hiragino Mincho ProN', serif;
+  font-family: var(--font-cinzel), 'Shippori Mincho', 'Hiragino Mincho ProN', serif;
   background: linear-gradient(to bottom, var(--color-primary-light), var(--color-primary-dark));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

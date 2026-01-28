@@ -1,18 +1,11 @@
 import type { Metadata } from "next";
-import { Cinzel, Shippori_Mincho } from "next/font/google";
+import { Cinzel } from "next/font/google";
 import "./globals.css";
 
 const cinzel = Cinzel({
   subsets: ["latin"],
   weight: ["400", "700", "900"],
   variable: "--font-cinzel",
-  display: "swap",
-});
-
-const shipporiMincho = Shippori_Mincho({
-  subsets: ["latin"],
-  weight: ["400", "600", "800"],
-  variable: "--font-mincho",
   display: "swap",
 });
 
@@ -27,8 +20,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja" className={`${cinzel.variable} ${shipporiMincho.variable}`}>
+    <html lang="ja" className={cinzel.variable}>
       <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&display=swap"
+          rel="stylesheet"
+        />
         <link
           href="https://fonts.googleapis.com/icon?family=Material+Icons"
           rel="stylesheet"
