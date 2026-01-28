@@ -282,32 +282,6 @@ export function NightScreen({
             {formatTime(timeLeft)}
           </div>
 
-          {/* Role notification + instruction */}
-          {myRole && (
-            <div className="space-y-1">
-              <p className="text-xs text-[var(--color-text-muted)]">あなたの役職</p>
-              <button
-                type="button"
-                onClick={() => setDetailRole(myRole)}
-                className="flex items-center justify-center gap-1.5 cursor-pointer mx-auto"
-              >
-                <span className={`material-icons ${ROLE_ACCENT_COLORS[myRole].iconText}`}>
-                  {ROLE_MATERIAL_ICONS[myRole]}
-                </span>
-                <span className={`font-bold ${ROLE_ACCENT_COLORS[myRole].iconText}`}>
-                  {ROLE_NAMES[myRole]}
-                </span>
-                <span className="material-icons text-sm text-[var(--color-text-muted)]">chevron_right</span>
-              </button>
-              {!hasActed ? (
-                <p className="text-[var(--color-text-secondary)] text-sm">
-                  {getInstructionText()}
-                </p>
-              ) : (
-                <p className="text-[var(--color-ready)] font-semibold">アクション完了</p>
-              )}
-            </div>
-          )}
         </div>
 
         {error && (
@@ -345,14 +319,38 @@ export function NightScreen({
                   playerName={player.name}
                   isCurrentPlayer={isCurrentPlayer}
                   onClick={cardOnClick}
-                  statusBadges={swapReason ? (
-                    <div className="text-xs">
-                      <span className="text-yellow-500">
-                        <span className="material-icons text-sm align-middle animate-pulse">sync_alt</span>
-                        {" "}{swapReason}
-                      </span>
-                    </div>
-                  ) : undefined}
+                  statusBadges={
+                    isCurrentPlayer && myRole ? (
+                      <div className="space-y-0.5 mt-1">
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setDetailRole(myRole); }}
+                          className="flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <span className="text-xs text-[var(--color-text-muted)]">あなたの役職:</span>
+                          <span className={`material-icons text-sm ${ROLE_ACCENT_COLORS[myRole].iconText}`}>
+                            {ROLE_MATERIAL_ICONS[myRole]}
+                          </span>
+                          <span className={`font-bold text-sm ${ROLE_ACCENT_COLORS[myRole].iconText}`}>
+                            {ROLE_NAMES[myRole]}
+                          </span>
+                          <span className="material-icons text-xs text-[var(--color-text-muted)]">chevron_right</span>
+                        </button>
+                        {!hasActed ? (
+                          <p className="text-[var(--color-text-secondary)] text-xs">{getInstructionText()}</p>
+                        ) : (
+                          <p className="text-[var(--color-ready)] font-semibold text-xs">アクション完了</p>
+                        )}
+                      </div>
+                    ) : swapReason ? (
+                      <div className="text-xs">
+                        <span className="text-yellow-500">
+                          <span className="material-icons text-sm align-middle animate-pulse">sync_alt</span>
+                          {" "}{swapReason}
+                        </span>
+                      </div>
+                    ) : undefined
+                  }
                 >
                   {renderPlayerCard(player.id, isCurrentPlayer)}
                 </PlayerCard>
