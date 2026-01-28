@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ROLE_NAMES, ROLE_MATERIAL_ICONS, ROLE_ACCENT_COLORS, ROLE_TEAM, TEAM_BORDER_COLORS, TEAM_LABEL_COLORS, type Role } from "@/lib/game";
+import { ROLES, TEAM_BORDER_COLORS, TEAM_LABEL_COLORS, type Role } from "@/lib/game";
 import { RoleDetailModal } from "../common/RoleDetailModal";
 
 type RoleCardSize = "small" | "medium" | "large";
@@ -59,20 +59,20 @@ export function RoleCard({
     );
   }
 
-  const accent = ROLE_ACCENT_COLORS[role];
+  const roleDef = ROLES[role];
 
   return (
     <>
       <div
         onClick={handleClick}
-        className={`${sizeConfig.card} bg-slate-800 rounded border ${TEAM_BORDER_COLORS[ROLE_TEAM[role]].border} flex flex-col items-center justify-center ${cardClassName}`}
+        className={`${sizeConfig.card} bg-slate-800 rounded border ${TEAM_BORDER_COLORS[roleDef.team].border} flex flex-col items-center justify-center ${cardClassName}`}
       >
-        <span className={`material-icons ${accent.iconText} ${sizeConfig.icon}`}>
-          {ROLE_MATERIAL_ICONS[role]}
+        <span className={`material-icons ${roleDef.accentColors.iconText} ${sizeConfig.icon}`}>
+          {roleDef.materialIcon}
         </span>
         {size === "large" && (
-          <span className={`${TEAM_LABEL_COLORS[ROLE_TEAM[role]]} ${sizeConfig.label} font-bold mt-1`}>
-            {ROLE_NAMES[role]}
+          <span className={`${TEAM_LABEL_COLORS[roleDef.team]} ${sizeConfig.label} font-bold mt-1`}>
+            {roleDef.name}
           </span>
         )}
       </div>

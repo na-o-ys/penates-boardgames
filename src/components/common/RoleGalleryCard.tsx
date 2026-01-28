@@ -1,10 +1,6 @@
 import type { ReactNode } from "react";
 import {
-  ROLE_NAMES,
-  ROLE_DESCRIPTIONS,
-  ROLE_MATERIAL_ICONS,
-  ROLE_ACCENT_COLORS,
-  ROLE_TEAM,
+  ROLES,
   TEAM_BORDER_COLORS,
   type Role,
 } from "@/lib/game";
@@ -17,8 +13,8 @@ interface RoleGalleryCardProps {
 }
 
 export function RoleGalleryCard({ role, onClick, disabled = false, children }: RoleGalleryCardProps) {
-  const accent = ROLE_ACCENT_COLORS[role];
-  const teamBorder = TEAM_BORDER_COLORS[ROLE_TEAM[role]];
+  const roleDef = ROLES[role];
+  const teamBorder = TEAM_BORDER_COLORS[roleDef.team];
 
   return (
     <div
@@ -34,16 +30,16 @@ export function RoleGalleryCard({ role, onClick, disabled = false, children }: R
         onClick={onClick}
         className="flex flex-col items-center relative z-10 cursor-pointer"
       >
-        <div className={`w-12 h-12 rounded-full bg-slate-800 border ${accent.iconBorder} flex items-center justify-center mb-2 shadow-inner`}>
-          <span className={`material-icons ${accent.iconText} text-2xl`}>
-            {ROLE_MATERIAL_ICONS[role]}
+        <div className={`w-12 h-12 rounded-full bg-slate-800 border ${roleDef.accentColors.iconBorder} flex items-center justify-center mb-2 shadow-inner`}>
+          <span className={`material-icons ${roleDef.accentColors.iconText} text-2xl`}>
+            {roleDef.materialIcon}
           </span>
         </div>
         <div className="text-sm font-bold text-gray-100">
-          {ROLE_NAMES[role]}
+          {roleDef.name}
         </div>
         <div className="text-[10px] text-gray-400 mb-2 line-clamp-2 min-h-[2.5em] text-center">
-          {ROLE_DESCRIPTIONS[role].ability}
+          {roleDef.description.ability}
         </div>
       </button>
 
@@ -61,7 +57,7 @@ interface VillagerBarProps {
 }
 
 export function VillagerBar({ onClick, disabled = false, children }: VillagerBarProps) {
-  const accent = ROLE_ACCENT_COLORS.VILLAGER;
+  const villagerDef = ROLES.VILLAGER;
 
   return (
     <div
@@ -77,13 +73,13 @@ export function VillagerBar({ onClick, disabled = false, children }: VillagerBar
         onClick={onClick}
         className="flex items-center space-x-3 relative z-10 cursor-pointer"
       >
-        <div className={`w-10 h-10 rounded-full bg-slate-800 border ${accent.iconBorder} flex items-center justify-center shadow-inner`}>
-          <span className={`material-icons ${accent.iconText} text-xl`}>
-            {ROLE_MATERIAL_ICONS.VILLAGER}
+        <div className={`w-10 h-10 rounded-full bg-slate-800 border ${villagerDef.accentColors.iconBorder} flex items-center justify-center shadow-inner`}>
+          <span className={`material-icons ${villagerDef.accentColors.iconText} text-xl`}>
+            {villagerDef.materialIcon}
           </span>
         </div>
         <div className="text-sm font-bold text-gray-100">
-          {ROLE_NAMES.VILLAGER}
+          {villagerDef.name}
         </div>
       </button>
 

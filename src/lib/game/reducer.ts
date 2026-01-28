@@ -1,5 +1,5 @@
 import type { GameAction, GameConfig, GameState, Phase, Player, PlayerId, Role } from "./types";
-import { ROLE_HAS_ACTION } from "./types";
+import { ROLES } from "./types";
 import { distributeRoles } from "./distribution";
 import { getActionResult } from "./resolver";
 import { resolveFinalRoles } from "./resolver";
@@ -233,7 +233,7 @@ function shouldAutoAdvanceFromNight(state: GameState): boolean {
   // アクション持ちの役職を持つプレイヤーを取得
   const playersWithActions = state.players.filter((player) => {
     const role = state.initialDistribution[player.id];
-    return ROLE_HAS_ACTION[role];
+    return ROLES[role].hasNightAction;
   });
 
   // 全員がアクションを実行したかチェック

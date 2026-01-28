@@ -2,10 +2,7 @@
 
 import { useState, useEffect, useCallback, Fragment } from "react";
 import {
-  ROLE_HAS_ACTION,
-  ROLE_NAMES,
-  ROLE_MATERIAL_ICONS,
-  ROLE_ACCENT_COLORS,
+  ROLES,
   buildRevealedInfo,
   getSwapReason,
   type ClientGameState,
@@ -88,7 +85,7 @@ export function NightScreen({
   };
 
   const myRole = gameState.myRole;
-  const hasAction = myRole ? ROLE_HAS_ACTION[myRole] : false;
+  const hasAction = myRole ? ROLES[myRole].hasNightAction : false;
   const fellowWerewolves = gameState.fellowWerewolves ?? [];
   const otherPlayers = gameState.players.filter((p) => p.id !== playerId);
   const sortedPlayers = [...gameState.players].sort((a, b) =>
@@ -343,11 +340,11 @@ export function NightScreen({
                           className="flex items-center gap-1.5 cursor-pointer"
                         >
                           <span className="text-xs text-[var(--color-text-muted)]">あなたの役職:</span>
-                          <span className={`material-icons text-sm ${ROLE_ACCENT_COLORS[myRole].iconText}`}>
-                            {ROLE_MATERIAL_ICONS[myRole]}
+                          <span className={`material-icons text-sm ${ROLES[myRole].accentColors.iconText}`}>
+                            {ROLES[myRole].materialIcon}
                           </span>
-                          <span className={`font-bold text-sm ${ROLE_ACCENT_COLORS[myRole].iconText}`}>
-                            {ROLE_NAMES[myRole]}
+                          <span className={`font-bold text-sm ${ROLES[myRole].accentColors.iconText}`}>
+                            {ROLES[myRole].name}
                           </span>
                           <span className="material-icons text-xs text-[var(--color-text-muted)]">chevron_right</span>
                         </button>
@@ -436,7 +433,7 @@ export function NightScreen({
             break;
           case "ROBBER_SWAP": {
             const player = gameState.players.find(p => p.id === pendingResult.targets[0]);
-            resultTitle = `${player?.name}から${ROLE_NAMES[actionResult.revealedRoles[0]]}を奪った`;
+            resultTitle = `${player?.name}から${ROLES[actionResult.revealedRoles[0]].name}を奪った`;
             resultTargets = [{ name: player?.name ?? "", role: actionResult.revealedRoles[0] }];
             break;
           }

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ClientGameState, Player, Role, Team } from "@/lib/game";
-import { ROLE_NAMES, getSwapReason } from "@/lib/game";
+import { getSwapReason } from "@/lib/game";
 import { useState, Fragment } from "react";
 import { RoleMiniCard, UnknownMiniCard } from "../common/RoleMiniCard";
 import { PlayerCard } from "../common/PlayerCard";

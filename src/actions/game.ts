@@ -15,7 +15,7 @@ import {
   resetGame,
   maskGameState,
   maskGameStateForWerewolf,
-  ROLE_IS_WEREWOLF_ALLY,
+  ROLES,
   SKIP_VOTE,
   type GameAction,
   type ActionType,
@@ -340,7 +340,7 @@ export async function getClientGameStateAction(
     const myRole = result.gameState.initialDistribution[playerId];
     let clientState: ClientGameState;
 
-    if (myRole && ROLE_IS_WEREWOLF_ALLY[myRole]) {
+    if (myRole && ROLES[myRole].isWerewolfNightAlly) {
       clientState = maskGameStateForWerewolf(result.gameState, playerId);
     } else {
       clientState = maskGameState(result.gameState, playerId);

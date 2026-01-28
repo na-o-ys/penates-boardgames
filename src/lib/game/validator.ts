@@ -1,5 +1,5 @@
 import type { ActionType, GameAction, GameState, Role } from "./types";
-import { ROLE_HAS_ACTION } from "./types";
+import { ROLES } from "./types";
 
 /** バリデーションエラー */
 export interface ValidationError {
@@ -50,7 +50,7 @@ export function hasPlayerActed(
 export function haveAllPlayersActed(state: GameState): boolean {
   const playersWithActions = state.players.filter((player) => {
     const role = state.initialDistribution[player.id];
-    return ROLE_HAS_ACTION[role];
+    return ROLES[role].hasNightAction;
   });
 
   // アクション持ち役職は全員行動済み
