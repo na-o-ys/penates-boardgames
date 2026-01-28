@@ -11,6 +11,10 @@ import { validateAction, validateVote, validateHunterRevenge, haveAllPlayersVote
  */
 function getDefaultRoles(playerCount: number): Role[] {
   switch (playerCount) {
+    case 0:
+    case 1:
+    case 2:
+      return [];
     case 3: return ["WEREWOLF", "WEREWOLF", "VILLAGER", "SEER", "ROBBER"];
     case 4: return ["WEREWOLF", "WEREWOLF", "VILLAGER", "VILLAGER", "SEER", "ROBBER"];
     case 5: return ["WEREWOLF", "WEREWOLF", "VILLAGER", "VILLAGER", "VILLAGER", "SEER", "ROBBER"];
@@ -80,6 +84,7 @@ export function addPlayer(
       ...state.config,
       roles: getDefaultRoles(newPlayers.length),
       dayDuration: defaultDayDuration(newPlayers.length),
+      updatedAt: Date.now(),
     },
   };
 }
@@ -103,6 +108,7 @@ export function removePlayer(
       ...state.config,
       roles: getDefaultRoles(newPlayers.length),
       dayDuration: defaultDayDuration(newPlayers.length),
+      updatedAt: Date.now(),
     },
   };
 }

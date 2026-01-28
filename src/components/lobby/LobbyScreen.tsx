@@ -178,9 +178,11 @@ export function LobbyScreen({
                 onChange={handleRolesChange}
                 disabled={!isHost}
               />
-              <p className="mt-2 text-xs text-[var(--color-text-muted)]">
-                必要枚数: {requiredRoles}枚（{playerCount}人 + 中央2枚）
-              </p>
+              {playerCount >= 3 && (
+                <p className="mt-2 text-xs text-[var(--color-text-muted)]">
+                  必要枚数: {requiredRoles}枚（{playerCount}人 + 中央2枚）
+                </p>
+              )}
             </div>
           )}
 
