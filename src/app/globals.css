@@ -1,0 +1,156 @@
+@import "tailwindcss";
+
+:root {
+  /* プライマリカラー（ゴールド） */
+  --color-primary: #D4AF37;
+  --color-primary-light: #FCD34D;
+  --color-primary-dark: #D97706;
+
+  /* 背景 */
+  --color-bg-deep: #0F172A;
+  --color-surface: rgba(30, 41, 59, 0.8);
+  --color-surface-light: rgba(51, 65, 85, 0.6);
+
+  /* テキスト */
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #64748B;
+
+  /* ボーダー */
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-gold: rgba(212, 175, 55, 0.5);
+
+  /* シャドウ */
+  --shadow-glow: 0 0 15px rgba(212, 175, 55, 0.3);
+
+  /* 役職カラー */
+  --color-role-werewolf: #EF4444;
+  --color-role-seer: #6366F1;
+  --color-role-robber: #6B7280;
+  --color-role-troublemaker: #10B981;
+  --color-role-villager: #3B82F6;
+  --color-role-hunter: #22C55E;
+  --color-role-tanner: #F97316;
+
+  /* ステータス */
+  --color-ready: #10B981;
+  --color-error: #EF4444;
+}
+
+body {
+  background-color: var(--color-bg-deep);
+  color: var(--color-text-primary);
+}
+
+/* レスポンシブ背景画像（縦長=bg_v、横長=bg_h） */
+@utility bg-game {
+  background-image: url('/images/bg_v.jpeg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+
+  @media (min-aspect-ratio: 1/1) {
+    background-image: url('/images/bg_h.jpeg');
+  }
+}
+
+/* コンテンツ可読性のためのNavy系オーバーレイ */
+@utility game-overlay {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(1px);
+}
+
+/* 透過カードパネル - メインコンテナ用 */
+@utility glass-card {
+  background: var(--color-surface);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--color-border);
+}
+
+/* 透過パネル - 小さなセクション用 */
+@utility glass-panel {
+  background: var(--color-surface-light);
+  backdrop-filter: blur(4px);
+}
+
+/* 透過入力フィールド */
+@utility glass-input {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* ゴールドグラデーションテキスト */
+@utility gold-text {
+  background: linear-gradient(to bottom, var(--color-primary-light), var(--color-primary-dark));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* プライマリボタン（ゴールド） */
+@utility btn-primary {
+  background: var(--color-primary);
+  color: #0F172A;
+  font-weight: 700;
+  transition: all 0.2s;
+  border-top: 1px solid var(--color-primary-light);
+  &:hover {
+    background: var(--color-primary-light);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+/* セカンダリボタン（暗い半透明） */
+@utility btn-secondary {
+  background: rgba(30, 41, 59, 0.8);
+  color: var(--color-text-primary);
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  transition: all 0.2s;
+  &:hover {
+    background: rgba(51, 65, 85, 0.8);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/* ゴールドボーダー＋グローシャドウ（自分のカード） */
+@utility card-highlight {
+  border: 2px solid var(--color-border-gold) !important;
+  box-shadow: var(--shadow-glow);
+}
+
+/* タイマースライダー */
+input[type=range] {
+  -webkit-appearance: none;
+  background: transparent;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  cursor: pointer;
+  margin-top: -8px;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+  border: 2px solid var(--color-primary-light);
+}
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: #4B5563;
+  border-radius: 2px;
+}
+input[type=range]:disabled {
+  opacity: 0.5;
+}
