@@ -1,8 +1,9 @@
-import { UnknownMiniCard } from "../common/RoleMiniCard";
+import type { Role } from "@/lib/game";
+import { RoleMiniCard, UnknownMiniCard } from "../common/RoleMiniCard";
 
 interface ConfirmModalProps {
   title: string;
-  targets: { name: string }[];
+  targets: { name: string; role?: Role }[];
   confirmLabel: string;
   onConfirm: () => void;
   onCancel: () => void;
@@ -35,7 +36,7 @@ export function ConfirmModal({
             {targets.map((target) => (
               <div key={target.name} className="flex flex-col items-center gap-2">
                 <span className="text-white font-semibold text-sm">{target.name}</span>
-                <UnknownMiniCard />
+                {target.role ? <RoleMiniCard role={target.role} size="medium" /> : <UnknownMiniCard />}
               </div>
             ))}
           </div>

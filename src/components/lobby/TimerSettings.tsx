@@ -30,7 +30,7 @@ interface PhaseSliderConfig {
 }
 
 const PHASE_CONFIGS: PhaseSliderConfig[] = [
-  { label: "夜フェーズ", key: "nightDuration", min: 10, max: 60, step: 10, dotColor: "bg-indigo-500" },
+  { label: "夜フェーズ", key: "nightDuration", min: 10, max: 180, step: 10, dotColor: "bg-indigo-500" },
   { label: "議論フェーズ", key: "dayDuration", min: 10, max: 600, step: 10, dotColor: "bg-yellow-500" },
   { label: "投票フェーズ", key: "votingDuration", min: 10, max: 60, step: 10, dotColor: "bg-emerald-500" },
 ];

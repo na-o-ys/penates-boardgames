@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, Fragment } from "react";
 import type { ClientGameState, Role } from "@/lib/game";
-import { SKIP_VOTE } from "@/lib/game";
+import { SKIP_VOTE, buildRevealedInfo } from "@/lib/game";
 import { PlayerCard } from "../common/PlayerCard";
 import { PlayerRoleDisplay } from "../common/PlayerRoleDisplay";
 import { RoleDetailModal } from "../common/RoleDetailModal";
@@ -20,7 +20,7 @@ interface VotingScreenProps {
 }
 
 export function VotingScreen({ gameState, playerId, roomId, onSubmitVote, onAutoVote }: VotingScreenProps) {
-  const [confirmTarget, setConfirmTarget] = useState<{ id: string; name: string } | "skip" | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<{ id: string; name: string; role?: Role } | "skip" | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detailRole, setDetailRole] = useState<Role | null>(null);
@@ -88,6 +88,7 @@ export function VotingScreen({ gameState, playerId, roomId, onSubmitVote, onAuto
   };
 
   const isTimeLow = timeLeft <= 10 && timeLeft > 0;
+  const revealedInfo = buildRevealedInfo(gameState.actionResults);
 
   const sortedPlayers = [...gameState.players].sort((a, b) =>
     a.id === playerId ? -1 : b.id === playerId ? 1 : 0
@@ -134,7 +135,7 @@ export function VotingScreen({ gameState, playerId, roomId, onSubmitVote, onAuto
             const playerHasVoted = gameState.votedPlayers?.includes(player.id) ?? false;
 
             const cardOnClick = (!isCurrentPlayer && !hasVoted)
-              ? () => setConfirmTarget({ id: player.id, name: player.name })
+              ? () => setConfirmTarget({ id: player.id, name: player.name, role: revealedInfo.players[player.id] })
               : undefined;
 
             return (
@@ -194,7 +195,7 @@ export function VotingScreen({ gameState, playerId, roomId, onSubmitVote, onAuto
       {confirmTarget && (
         <ConfirmModal
           title={confirmTarget === "skip" ? "投票をスキップしますか？" : `${confirmTarget.name}に投票しますか？`}
-          targets={confirmTarget === "skip" ? [] : [{ name: confirmTarget.name }]}
+          targets={confirmTarget === "skip" ? [] : [{ name: confirmTarget.name, role: confirmTarget.role }]}
           confirmLabel={confirmTarget === "skip" ? "スキップ" : "投票する"}
           onConfirm={handleConfirm}
           onCancel={() => setConfirmTarget(null)}
