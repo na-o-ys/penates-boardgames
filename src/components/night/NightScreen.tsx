@@ -1,10 +1,22 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { ROLE_HAS_ACTION, buildRevealedInfo, getSwapReason, type ClientGameState, type ActionType } from "@/lib/game";
+import {
+  ROLE_HAS_ACTION,
+  ROLE_NAMES,
+  ROLE_MATERIAL_ICONS,
+  ROLE_CARD_COLORS,
+  buildRevealedInfo,
+  getSwapReason,
+  type ClientGameState,
+  type ActionType,
+  type Role,
+} from "@/lib/game";
 import { RoleMiniCard, UnknownMiniCard } from "../common/RoleMiniCard";
 import { PlayerCard } from "../common/PlayerCard";
 import { CemeterySection } from "../common/CemeterySection";
+import { TappableUnknownCard } from "./TappableUnknownCard";
+import { ConfirmModal } from "./ConfirmModal";
 
 interface NightScreenProps {
   roomId: string;
@@ -22,6 +34,7 @@ export function NightScreen({
   onAutoSkip,
 }: NightScreenProps) {
   const [selectedTargets, setSelectedTargets] = useState<string[]>([]);
+  const [confirmAction, setConfirmAction] = useState<{ type: ActionType; targets: string[] } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,49 +78,19 @@ export function NightScreen({
 
   const myRole = gameState.myRole;
   const hasAction = myRole ? ROLE_HAS_ACTION[myRole] : false;
-  const actionResult = gameState.actionResults[0];
   const fellowWerewolves = gameState.fellowWerewolves ?? [];
-
   const otherPlayers = gameState.players.filter((p) => p.id !== playerId);
   const sortedPlayers = [...gameState.players].sort((a, b) =>
     a.id === playerId ? -1 : b.id === playerId ? 1 : 0
   );
   const revealedInfo = buildRevealedInfo(gameState.actionResults);
 
-  const handleTargetClick = (targetId: string) => {
-    if (hasActed || isSubmitting) return;
-
-    if (selectedTargets.includes(targetId)) {
-      setSelectedTargets(selectedTargets.filter((t) => t !== targetId));
-    } else {
-      const maxTargets = getMaxTargets();
-      if (selectedTargets.length < maxTargets) {
-        setSelectedTargets([...selectedTargets, targetId]);
-      } else if (maxTargets === 1) {
-        setSelectedTargets([targetId]);
-      }
-    }
-  };
-
-  const getMaxTargets = () => {
-    switch (myRole) {
-      case "SEER":
-        return 2;
-      case "ROBBER":
-        return 1;
-      case "TROUBLEMAKER":
-        return 2;
-      default:
-        return 0;
-    }
-  };
-
-  const handleSubmitAction = async (actionType: ActionType, targets?: string[]) => {
+  const handleSubmitAction = async (actionType: ActionType, targets: string[]) => {
     setIsSubmitting(true);
     setError(null);
 
     try {
-      const result = await onSubmitAction(actionType, targets ?? selectedTargets);
+      const result = await onSubmitAction(actionType, targets);
       if (!result.success) {
         setError(result.error ?? "アクションの実行に失敗しました");
       }
@@ -115,187 +98,179 @@ export function NightScreen({
       setError("エラーが発生しました");
     } finally {
       setIsSubmitting(false);
+      setConfirmAction(null);
     }
   };
 
-  const handleSkip = () => handleSubmitAction("SKIP");
+  const handleSkip = () => handleSubmitAction("SKIP", []);
+
+  const handleConfirm = () => {
+    if (!confirmAction) return;
+    handleSubmitAction(confirmAction.type, confirmAction.targets);
+  };
+
+  const handleCancelConfirm = () => {
+    setConfirmAction(null);
+    if (myRole === "TROUBLEMAKER") {
+      setSelectedTargets([]);
+    }
+  };
+
+  const handleTroublemakerSelect = (targetId: string) => {
+    if (selectedTargets.includes(targetId)) {
+      setSelectedTargets(selectedTargets.filter((t) => t !== targetId));
+      return;
+    }
+    if (selectedTargets.length === 0) {
+      setSelectedTargets([targetId]);
+    } else if (selectedTargets.length === 1) {
+      setConfirmAction({
+        type: "TROUBLEMAKER_SWAP",
+        targets: [selectedTargets[0], targetId],
+      });
+    }
+  };
 
   const isTimeLow = timeLeft <= 10 && timeLeft > 0;
 
-  const renderActionUI = () => {
-    if (!myRole || hasActed) return null;
+  // Action instruction text
+  const getInstructionText = (): string | null => {
+    if (hasActed) return null;
+    if (!myRole) return null;
 
     switch (myRole) {
+      case "SEER":
+        return "対象のカードを選択してください（プレイヤー1人 or 墓地）";
+      case "ROBBER":
+        return "交換する対象のカードを選択してください";
+      case "TROUBLEMAKER":
+        if (selectedTargets.length === 1) {
+          return "もう1人を選択してください";
+        }
+        return "入れ替える2人のカードを選択してください";
       case "WEREWOLF":
         if (fellowWerewolves.length > 0) {
-          const fellowPlayers = fellowWerewolves
-            .map((id) => gameState.players.find((p) => p.id === id))
-            .filter(Boolean);
-          return (
-            <div className="space-y-4">
-              <p className="text-[var(--color-text-secondary)]">あなたの仲間の人狼:</p>
-              <div className="space-y-2">
-                {fellowPlayers.map((player) => (
-                  <div
-                    key={player!.id}
-                    className="flex items-center justify-between p-3 rounded-xl glass-card border-l-4 border-[var(--color-role-werewolf)]"
-                  >
-                    <span className="text-white font-semibold">{player!.name}</span>
-                    <UnknownMiniCard />
-                  </div>
-                ))}
-              </div>
-              <button
-                onClick={handleSkip}
-                disabled={isSubmitting}
-                className="w-full py-3 btn-primary rounded-xl"
-              >
-                {isSubmitting ? "処理中..." : "確認した"}
-              </button>
-            </div>
-          );
+          const fellowNames = fellowWerewolves
+            .map((id) => gameState.players.find((p) => p.id === id)?.name)
+            .filter(Boolean)
+            .join("、");
+          return `仲間の人狼は ${fellowNames} です`;
         }
-        return (
-          <div className="space-y-4">
-            <p className="text-[var(--color-text-secondary)]">
-              あなたは唯一の人狼です。
-            </p>
-            <button
-              onClick={handleSkip}
-              disabled={isSubmitting}
-              className="w-full py-3 btn-primary rounded-xl"
-            >
-              {isSubmitting ? "処理中..." : "確認した"}
-            </button>
-          </div>
-        );
+        return "あなたは唯一の人狼です";
+      default:
+        return "夜の行動はありません";
+    }
+  };
 
+  // Confirm modal text builders
+  const getConfirmTitle = (): string => {
+    if (!confirmAction) return "";
+    const targetNames = confirmAction.targets
+      .map((id) => gameState.players.find((p) => p.id === id)?.name)
+      .filter(Boolean);
+
+    switch (confirmAction.type) {
+      case "SEER_LOOK_PLAYER":
+        return `${targetNames[0]}を占いますか？`;
+      case "SEER_LOOK_CENTER":
+        return "墓地のカードを占いますか？";
+      case "ROBBER_SWAP":
+        return `${targetNames[0]}と交換しますか？`;
+      case "TROUBLEMAKER_SWAP":
+        return `${targetNames[0]}と${targetNames[1]}を入れ替えますか？`;
+      default:
+        return "";
+    }
+  };
+
+  const getConfirmLabel = (): string => {
+    if (!confirmAction) return "";
+    switch (confirmAction.type) {
+      case "SEER_LOOK_PLAYER":
+      case "SEER_LOOK_CENTER":
+        return "占う";
+      case "ROBBER_SWAP":
+        return "交換する";
+      case "TROUBLEMAKER_SWAP":
+        return "入れ替える";
+      default:
+        return "実行";
+    }
+  };
+
+  const getConfirmTargets = (): { name: string }[] => {
+    if (!confirmAction) return [];
+    if (confirmAction.type === "SEER_LOOK_CENTER") {
+      return [{ name: "中央カード1" }, { name: "中央カード2" }];
+    }
+    return confirmAction.targets
+      .map((id) => {
+        const player = gameState.players.find((p) => p.id === id);
+        return player ? { name: player.name } : null;
+      })
+      .filter((t): t is { name: string } => t !== null);
+  };
+
+  // Render card for each player in the list
+  const renderPlayerCard = (playerId_: string, isCurrentPlayer: boolean) => {
+    // Self: always show own role
+    if (isCurrentPlayer) {
+      return gameState.myRole ? (
+        <RoleMiniCard role={gameState.myRole} size="medium" />
+      ) : (
+        <UnknownMiniCard />
+      );
+    }
+
+    // After acting: show revealed or unknown
+    if (hasActed) {
+      const swapReason = getSwapReason(playerId_, gameState.myActions, gameState.players);
+      // Already handled in PlayerCard statusBadges
+      return revealedInfo.players[playerId_] ? (
+        <RoleMiniCard role={revealedInfo.players[playerId_]} size="medium" />
+      ) : (
+        <UnknownMiniCard />
+      );
+    }
+
+    // Before acting
+    if (!myRole) return <UnknownMiniCard />;
+
+    switch (myRole) {
       case "SEER":
         return (
-          <div className="space-y-4">
-            <p className="text-[var(--color-text-secondary)]">
-              プレイヤー1人のカード、または中央のカード2枚を確認できます
-            </p>
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-[var(--color-text-muted)] mb-2">プレイヤーを選択</p>
-                <div className="space-y-2">
-                  {otherPlayers.map((player) => (
-                    <button
-                      key={player.id}
-                      onClick={() => {
-                        setSelectedTargets([player.id]);
-                      }}
-                      disabled={isSubmitting}
-                      className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${
-                        selectedTargets.includes(player.id)
-                          ? "glass-card card-highlight"
-                          : "glass-card hover:border-[var(--color-text-muted)]"
-                      }`}
-                    >
-                      <span className="text-white font-medium">{player.name}</span>
-                      <UnknownMiniCard />
-                    </button>
-                  ))}
-                </div>
-                <button
-                  onClick={() => handleSubmitAction("SEER_LOOK_PLAYER")}
-                  disabled={selectedTargets.length !== 1 || selectedTargets[0]?.startsWith("CENTER") || isSubmitting}
-                  className="w-full mt-2 py-2 btn-primary rounded-xl"
-                >
-                  プレイヤーを占う
-                </button>
-              </div>
-              <div className="text-center text-[var(--color-text-muted)]">または</div>
-              <div>
-                <button
-                  onClick={() => handleSubmitAction("SEER_LOOK_CENTER", ["CENTER_0", "CENTER_1"])}
-                  disabled={isSubmitting}
-                  className="w-full py-3 btn-secondary rounded-xl"
-                >
-                  中央を占う
-                </button>
-              </div>
-            </div>
-          </div>
+          <TappableUnknownCard
+            onClick={() => setConfirmAction({ type: "SEER_LOOK_PLAYER", targets: [playerId_] })}
+          />
         );
-
       case "ROBBER":
         return (
-          <div className="space-y-4">
-            <p className="text-[var(--color-text-secondary)]">
-              他のプレイヤー1人とカードを交換し、新しいカードを確認します
-            </p>
-            <div className="space-y-2">
-              {otherPlayers.map((player) => (
-                <button
-                  key={player.id}
-                  onClick={() => handleTargetClick(player.id)}
-                  disabled={isSubmitting}
-                  className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${
-                    selectedTargets.includes(player.id)
-                      ? "glass-card card-highlight"
-                      : "glass-card hover:border-[var(--color-text-muted)]"
-                  }`}
-                >
-                  <span className="text-white font-medium">{player.name}</span>
-                  <UnknownMiniCard />
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => handleSubmitAction("ROBBER_SWAP")}
-              disabled={selectedTargets.length !== 1 || isSubmitting}
-              className="w-full py-3 btn-primary rounded-xl"
-            >
-              カードを奪う
-            </button>
-          </div>
+          <TappableUnknownCard
+            onClick={() => setConfirmAction({ type: "ROBBER_SWAP", targets: [playerId_] })}
+          />
         );
-
       case "TROUBLEMAKER":
         return (
-          <div className="space-y-4">
-            <p className="text-[var(--color-text-secondary)]">
-              他のプレイヤー2人のカードを入れ替えます（中身は見られません）
-            </p>
-            <div className="space-y-2">
-              {otherPlayers.map((player) => (
-                <button
-                  key={player.id}
-                  onClick={() => handleTargetClick(player.id)}
-                  disabled={isSubmitting}
-                  className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${
-                    selectedTargets.includes(player.id)
-                      ? "glass-card card-highlight"
-                      : "glass-card hover:border-[var(--color-text-muted)]"
-                  }`}
-                >
-                  <span className="text-white font-medium">{player.name}</span>
-                  <UnknownMiniCard />
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => handleSubmitAction("TROUBLEMAKER_SWAP")}
-              disabled={selectedTargets.length !== 2 || isSubmitting}
-              className="w-full py-3 btn-primary rounded-xl"
-            >
-              カードを入れ替える
-            </button>
-          </div>
+          <TappableUnknownCard
+            selected={selectedTargets.includes(playerId_)}
+            onClick={() => handleTroublemakerSelect(playerId_)}
+          />
         );
-
+      case "WEREWOLF":
+        if (fellowWerewolves.includes(playerId_)) {
+          return <RoleMiniCard role={"WEREWOLF" as Role} size="medium" />;
+        }
+        return <UnknownMiniCard />;
       default:
-        return null;
+        return <UnknownMiniCard />;
     }
   };
 
   return (
-    <div className="flex flex-col min-h-screen game-overlay p-4 md:p-8">
-      <div className="max-w-md mx-auto w-full">
-        {/* ヘッダー */}
-        <div className="text-center mb-8 pt-4">
+    <div className="flex flex-col min-h-screen game-overlay">
+      <div className="max-w-md mx-auto w-full flex flex-col flex-1">
+        {/* Header */}
+        <div className="pt-8 pb-4 px-4 text-center">
           <h1 className="font-[family-name:var(--font-display)] font-bold text-3xl gold-text mb-2">
             夜フェーズ
           </h1>
@@ -304,87 +279,91 @@ export function NightScreen({
           }`}>
             {formatTime(timeLeft)}
           </div>
-          <p className="text-[var(--color-text-secondary)]">目を閉じて、能力を使ってください</p>
+
+          {/* Role notification + instruction */}
+          {myRole && !hasActed && (
+            <div className="space-y-1">
+              <div className="flex items-center justify-center gap-2">
+                <span className={`material-icons ${ROLE_CARD_COLORS[myRole].text}`}>
+                  {ROLE_MATERIAL_ICONS[myRole]}
+                </span>
+                <span className={`font-bold ${ROLE_CARD_COLORS[myRole].text}`}>
+                  {ROLE_NAMES[myRole]}
+                </span>
+              </div>
+              <p className="text-[var(--color-text-secondary)] text-sm">
+                {getInstructionText()}
+              </p>
+            </div>
+          )}
+
+          {hasActed && (
+            <p className="text-[var(--color-ready)] font-semibold">アクション完了</p>
+          )}
         </div>
 
         {error && (
-          <div className="mb-6 px-4 py-3 bg-[var(--color-error)]/20 border border-[var(--color-error)]/40 rounded-xl text-[var(--color-error)] text-center text-sm">
+          <div className="mx-4 mb-4 px-4 py-3 bg-[var(--color-error)]/20 border border-[var(--color-error)]/40 rounded-xl text-[var(--color-error)] text-center text-sm">
             {error}
           </div>
         )}
 
-        <div className="flex-1">
-          {hasActed ? (
-            <div className="space-y-3">
-              <p className="text-[var(--color-ready)] text-center font-semibold mb-2">アクション完了</p>
-              {sortedPlayers.map((player) => {
-                const isCurrentPlayer = player.id === playerId;
-                const swapReason = getSwapReason(player.id, gameState.myActions, gameState.players);
-                return (
-                  <PlayerCard
-                    key={player.id}
-                    playerName={player.name}
-                    isCurrentPlayer={isCurrentPlayer}
-                    statusBadges={swapReason ? (
-                      <div className="text-xs">
-                        <span className="text-yellow-500">
-                          <span className="material-icons text-sm align-middle animate-pulse">sync_alt</span>
-                          {" "}{swapReason}
-                        </span>
-                      </div>
-                    ) : undefined}
-                  >
-                    {isCurrentPlayer && gameState.myRole ? (
-                      <RoleMiniCard role={gameState.myRole} size="medium" />
-                    ) : revealedInfo.players[player.id] ? (
-                      <RoleMiniCard role={revealedInfo.players[player.id]} size="medium" />
-                    ) : (
-                      <UnknownMiniCard />
-                    )}
-                  </PlayerCard>
-                );
-              })}
-              <CemeterySection centerRoles={revealedInfo.centers} />
-              <p className="text-center text-[var(--color-text-muted)]">
-                他のプレイヤーの行動を待っています...
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {/* 自分の役職をプレイヤーカードで表示 */}
+        {/* Player list + Cemetery (scrollable) */}
+        <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-24">
+          {sortedPlayers.map((player) => {
+            const isCurrentPlayer = player.id === playerId;
+            const swapReason = hasActed
+              ? getSwapReason(player.id, gameState.myActions, gameState.players)
+              : null;
+
+            return (
               <PlayerCard
-                playerName={gameState.players.find((p) => p.id === playerId)?.name ?? ""}
-                isCurrentPlayer={true}
+                key={player.id}
+                playerName={player.name}
+                isCurrentPlayer={isCurrentPlayer}
+                statusBadges={swapReason ? (
+                  <div className="text-xs">
+                    <span className="text-yellow-500">
+                      <span className="material-icons text-sm align-middle animate-pulse">sync_alt</span>
+                      {" "}{swapReason}
+                    </span>
+                  </div>
+                ) : undefined}
               >
-                {gameState.myRole ? (
-                  <RoleMiniCard role={gameState.myRole} size="medium" />
-                ) : (
-                  <UnknownMiniCard />
-                )}
+                {renderPlayerCard(player.id, isCurrentPlayer)}
               </PlayerCard>
+            );
+          })}
 
-              {hasAction ? (
-                renderActionUI()
-              ) : (
-                <div className="text-center">
-                  <p className="text-[var(--color-text-secondary)] mb-4">
-                    あなたの役職には夜の行動がありません
-                  </p>
-                  <button
-                    onClick={handleSkip}
-                    disabled={isSubmitting}
-                    className="px-6 py-3 btn-secondary rounded-xl"
-                  >
-                    {isSubmitting ? "処理中..." : "待機する"}
-                  </button>
-                </div>
-              )}
-            </div>
+          {/* Cemetery */}
+          {hasActed ? (
+            <CemeterySection centerRoles={revealedInfo.centers} />
+          ) : myRole === "SEER" ? (
+            <CemeterySection
+              centerRoles={{}}
+              onTapCenter={() => setConfirmAction({ type: "SEER_LOOK_CENTER", targets: ["CENTER_0", "CENTER_1"] })}
+            />
+          ) : (
+            <CemeterySection centerRoles={{}} />
           )}
+        </div>
 
-          {/* スキップリンク */}
-          {hasAction && !hasActed && (
-            <div className="mt-6 text-center">
+        {/* Footer */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[var(--color-bg-deep)] via-[var(--color-bg-deep)]/95 to-transparent z-20 max-w-md mx-auto">
+          {hasActed ? (
+            <p className="text-center text-[var(--color-text-muted)] py-3">
+              他のプレイヤーの行動を待っています...
+            </p>
+          ) : !hasAction || myRole === "WEREWOLF" ? (
+            <button
+              onClick={handleSkip}
+              disabled={isSubmitting}
+              className="w-full py-3 btn-primary rounded-xl"
+            >
+              {isSubmitting ? "処理中..." : myRole === "WEREWOLF" ? "確認した" : "待機する"}
+            </button>
+          ) : (
+            <div className="text-center">
               <button
                 onClick={handleSkip}
                 disabled={isSubmitting}
@@ -396,6 +375,18 @@ export function NightScreen({
           )}
         </div>
       </div>
+
+      {/* Confirm Modal */}
+      {confirmAction && (
+        <ConfirmModal
+          title={getConfirmTitle()}
+          targets={getConfirmTargets()}
+          confirmLabel={getConfirmLabel()}
+          onConfirm={handleConfirm}
+          onCancel={handleCancelConfirm}
+          isSubmitting={isSubmitting}
+        />
+      )}
     </div>
   );
 }
