@@ -155,6 +155,7 @@ export function HunterRevengeScreen({
                   playerId={player.id}
                   currentPlayerId={playerId}
                   gameState={gameState}
+                  tappable={canSelect && !isCurrentPlayer}
                 />
               </PlayerCard>
             );

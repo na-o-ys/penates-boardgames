@@ -16,7 +16,6 @@ import { RoleMiniCard, UnknownMiniCard } from "../common/RoleMiniCard";
 import { PlayerCard } from "../common/PlayerCard";
 import { PlayerRoleDisplay } from "../common/PlayerRoleDisplay";
 import { CemeterySection } from "../common/CemeterySection";
-import { TappableUnknownCard } from "./TappableUnknownCard";
 import { ConfirmModal } from "../common/ConfirmModal";
 import { SkipLink } from "../common/SkipLink";
 
@@ -231,24 +230,11 @@ export function NightScreen({
 
     switch (myRole) {
       case "SEER":
-        return (
-          <TappableUnknownCard
-            onClick={() => setConfirmAction({ type: "SEER_LOOK_PLAYER", targets: [playerId_] })}
-          />
-        );
+        return <UnknownMiniCard tappable />;
       case "ROBBER":
-        return (
-          <TappableUnknownCard
-            onClick={() => setConfirmAction({ type: "ROBBER_SWAP", targets: [playerId_] })}
-          />
-        );
+        return <UnknownMiniCard tappable />;
       case "TROUBLEMAKER":
-        return (
-          <TappableUnknownCard
-            selected={selectedTargets.includes(playerId_)}
-            onClick={() => handleTroublemakerSelect(playerId_)}
-          />
-        );
+        return <UnknownMiniCard tappable selected={selectedTargets.includes(playerId_)} />;
       case "WEREWOLF":
         if (fellowWerewolves.includes(playerId_)) {
           return <RoleMiniCard role={"WEREWOLF" as Role} size="medium" />;

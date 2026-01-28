@@ -207,6 +207,21 @@ export const votingVotedState: ClientGameState = {
   phaseStartedAt: Date.now(),
 };
 
+export const votingRobberNotVotedState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "VOTING",
+  myRole: "ROBBER",
+  myActions: [
+    { actorId: "p1", type: "ROBBER_SWAP", targetIds: ["p2"], result: ["WEREWOLF"], timestamp: 0 },
+  ],
+  actionResults: [
+    { type: "ROBBER_SWAP", targetIds: ["p2"], revealedRoles: ["WEREWOLF"] },
+  ],
+  votedPlayers: [],
+  myVote: null,
+  phaseStartedAt: Date.now(),
+};
+
 // ========================================
 // RESULT
 // ========================================

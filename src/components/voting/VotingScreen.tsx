@@ -144,6 +144,7 @@ export function VotingScreen({ gameState, playerId, roomId, onSubmitVote, onAuto
                   playerId={player.id}
                   currentPlayerId={playerId}
                   gameState={gameState}
+                  tappable={!isCurrentPlayer && !hasVoted}
                 />
               </PlayerCard>
             );

@@ -6,9 +6,10 @@ interface PlayerRoleDisplayProps {
   playerId: string;
   currentPlayerId: string;
   gameState: ClientGameState;
+  tappable?: boolean;
 }
 
-export function PlayerRoleDisplay({ playerId, currentPlayerId, gameState }: PlayerRoleDisplayProps) {
+export function PlayerRoleDisplay({ playerId, currentPlayerId, gameState, tappable = false }: PlayerRoleDisplayProps) {
   const isCurrentPlayer = playerId === currentPlayerId;
   const revealedInfo = buildRevealedInfo(gameState.actionResults);
 
@@ -23,7 +24,7 @@ export function PlayerRoleDisplay({ playerId, currentPlayerId, gameState }: Play
           <RoleMiniCard role={gameState.myRole} size="small" />
         </div>
         <span className="material-icons text-gray-500 text-sm">arrow_forward</span>
-        <RoleMiniCard role={robberSwap.revealedRoles![0]} size="medium" />
+        <RoleMiniCard role={robberSwap.revealedRoles![0]} size="medium" tappable={tappable} />
       </>
     );
   }
@@ -35,19 +36,19 @@ export function PlayerRoleDisplay({ playerId, currentPlayerId, gameState }: Play
           <RoleMiniCard role={robberSwap.revealedRoles![0]} size="small" />
         </div>
         <span className="material-icons text-gray-500 text-sm">arrow_forward</span>
-        <RoleMiniCard role={gameState.myRole} size="medium" />
+        <RoleMiniCard role={gameState.myRole} size="medium" tappable={tappable} />
       </>
     );
   }
 
   if (isCurrentPlayer && gameState.myRole) {
-    return <RoleMiniCard role={gameState.myRole} size="medium" />;
+    return <RoleMiniCard role={gameState.myRole} size="medium" tappable={tappable} />;
   }
 
   const revealedRole = revealedInfo.players[playerId];
   if (revealedRole) {
-    return <RoleMiniCard role={revealedRole} size="medium" />;
+    return <RoleMiniCard role={revealedRole} size="medium" tappable={tappable} />;
   }
 
-  return <UnknownMiniCard />;
+  return <UnknownMiniCard tappable={tappable} />;
 }
