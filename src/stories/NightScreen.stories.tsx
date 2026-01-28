@@ -11,11 +11,13 @@ import {
   nightVillagerState,
   nightTannerState,
   nightMadmanState,
+  nightBakerState,
   nightAlphaWolfState,
   nightAlphaWolfWithFellowsState,
   nightActedState,
   nightActedSeerCenterState,
   nightActedRobberState,
+  nightReceivedBreadState,
 } from "./mocks/gameState";
 
 const success = async () => ({ success: true as const });
@@ -105,6 +107,14 @@ export const Madman: Story = {
   },
 };
 
+export const Baker: Story = {
+  args: {
+    roomId: "test-room-id",
+    playerId: "p1",
+    gameState: nightBakerState,
+  },
+};
+
 export const AlphaWolf: Story = {
   args: {
     roomId: "test-room-id",
@@ -161,5 +171,13 @@ export const ResultRobber: Story = {
     playerId: "p1",
     gameState: nightActedRobberState,
     initialPendingResult: { type: "ROBBER_SWAP", targets: ["p2"] },
+  },
+};
+
+export const ReceivedBread: Story = {
+  args: {
+    roomId: "test-room-id",
+    playerId: "p1",
+    gameState: nightReceivedBreadState,
   },
 };

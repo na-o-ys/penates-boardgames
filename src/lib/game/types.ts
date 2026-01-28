@@ -15,7 +15,8 @@ export type Role =
   | "TROUBLEMAKER"
   | "HUNTER"
   | "TANNER"
-  | "MADMAN";
+  | "MADMAN"
+  | "BAKER";
 
 /** ゲームフェーズ */
 export type Phase = "LOBBY" | "NIGHT" | "DAY" | "VOTING" | "HUNTER_REVENGE" | "RESULT";
@@ -84,6 +85,7 @@ export interface GameState {
   readonly actions: readonly GameAction[];
   readonly votes: Record<PlayerId, PlayerId>;
   readonly hunterRevengeTarget: Record<PlayerId, PlayerId>; // 狩人ID → 道連れ対象ID
+  readonly breadRecipientId: PlayerId | null; // パンを受け取ったプレイヤーID
   readonly phaseStartedAt: number | null;
 }
 
@@ -120,6 +122,8 @@ export interface ClientGameState {
   readonly executedHunterIds?: readonly PlayerId[]; // 処刑された狩人のID
   readonly isExecutedHunter?: boolean; // 自分が処刑された狩人か
   readonly hunterRevengeChosen?: Record<PlayerId, boolean>; // 狩人が道連れを選択済みか
+  // パン屋からパンを受け取ったか
+  readonly receivedBread?: boolean;
   // RESULTフェーズのみ
   readonly initialRoles?: Record<string, Role>;
   readonly finalRoles?: Record<string, Role>;

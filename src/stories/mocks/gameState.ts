@@ -124,6 +124,14 @@ export const nightMadmanState: ClientGameState = {
   phaseStartedAt: Date.now(),
 };
 
+export const nightBakerState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "NIGHT",
+  myRole: "BAKER",
+  hasActed: false,
+  phaseStartedAt: Date.now(),
+};
+
 export const nightAlphaWolfState: ClientGameState = {
   ...BASE_STATE,
   phase: "NIGHT",
@@ -192,9 +200,43 @@ export const nightActedRobberState: ClientGameState = {
   phaseStartedAt: Date.now(),
 };
 
+// パンを受け取ったプレイヤー（夜フェーズ）
+export const nightReceivedBreadState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "NIGHT",
+  myRole: "VILLAGER",
+  hasActed: true,
+  allActed: false,
+  myActions: [
+    { actorId: "p1", type: "SKIP", targetIds: [], result: [], timestamp: 0 },
+  ],
+  actionResults: [
+    { type: "SKIP", targetIds: [], revealedRoles: [] },
+  ],
+  receivedBread: true,
+  phaseStartedAt: Date.now(),
+};
+
 // ========================================
 // DAY
 // ========================================
+
+// パンを受け取ったプレイヤー（昼フェーズ）
+export const dayReceivedBreadState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "DAY",
+  myRole: "VILLAGER",
+  hasActed: true,
+  allActed: true,
+  myActions: [
+    { actorId: "p1", type: "SKIP", targetIds: [], result: [], timestamp: 0 },
+  ],
+  actionResults: [
+    { type: "SKIP", targetIds: [], revealedRoles: [] },
+  ],
+  receivedBread: true,
+  phaseStartedAt: Date.now(),
+};
 
 export const dayNormalState: ClientGameState = {
   ...BASE_STATE,

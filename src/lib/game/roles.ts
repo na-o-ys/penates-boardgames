@@ -184,6 +184,24 @@ const madman: RoleDefinition = {
   },
 };
 
+const baker: RoleDefinition = {
+  name: "パン屋",
+  team: "VILLAGE",
+  priority: 99,
+  hasNightAction: false,
+  isWerewolfExecution: false,
+  isWerewolfNightAlly: false,
+  revealsCenter: false,
+  materialIcon: "bakery_dining",
+  cardColors: { bg: "bg-amber-900", border: "border-amber-400", text: "text-amber-200" },
+  accentColors: { border30: "border-amber-400/30", gradient: "to-amber-400/10", iconBorder: "border-amber-400/50", iconText: "text-amber-400" },
+  description: {
+    team: "村人陣営",
+    ability: "夜時間にランダムなプレイヤーにパンを届けます。届け先は自分にもわかりません。",
+    winCondition: "人狼を1人以上処刑すれば勝利",
+  },
+};
+
 // ========================================
 // ROLESマップ
 // ========================================
@@ -198,6 +216,7 @@ export const ROLES: Record<Role, RoleDefinition> = {
   HUNTER: hunter,
   TANNER: tanner,
   MADMAN: madman,
+  BAKER: baker,
 };
 
 // ========================================
@@ -205,3 +224,19 @@ export const ROLES: Record<Role, RoleDefinition> = {
 // ========================================
 
 export const DISABLED_ROLES: ReadonlySet<Role> = new Set(["TROUBLEMAKER"]);
+
+// ========================================
+// 選択可能な役職（VILLAGER以外）
+// ========================================
+
+export const SELECTABLE_ROLES: readonly Role[] = ([
+  "WEREWOLF",
+  "ALPHA_WOLF",
+  "MADMAN",
+  "SEER",
+  "ROBBER",
+  "TROUBLEMAKER",
+  "HUNTER",
+  "TANNER",
+  "BAKER",
+] as const).filter((r) => !DISABLED_ROLES.has(r));

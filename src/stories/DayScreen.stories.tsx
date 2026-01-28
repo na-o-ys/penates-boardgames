@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { fn } from "storybook/test";
 import { DayScreen } from "@/components/day/DayScreen";
-import { dayNormalState, dayRobberSwapState } from "./mocks/gameState";
+import { dayNormalState, dayRobberSwapState, dayReceivedBreadState } from "./mocks/gameState";
 
 const success = async () => ({ success: true as const });
 
@@ -30,5 +30,13 @@ export const RobberSwap: Story = {
     roomId: "test-room-id",
     playerId: "p1",
     gameState: dayRobberSwapState,
+  },
+};
+
+export const ReceivedBread: Story = {
+  args: {
+    roomId: "test-room-id",
+    playerId: "p1",
+    gameState: dayReceivedBreadState,
   },
 };

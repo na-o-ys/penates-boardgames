@@ -2,22 +2,11 @@
 
 import { useState } from "react";
 import {
-  DISABLED_ROLES,
+  SELECTABLE_ROLES,
   type Role,
 } from "@/lib/game";
 import { RoleDetailModal } from "../common/RoleDetailModal";
 import { RoleGalleryCard, VillagerBar } from "../common/RoleGalleryCard";
-
-const SPECIAL_ROLES = ([
-  "WEREWOLF",
-  "ALPHA_WOLF",
-  "MADMAN",
-  "SEER",
-  "ROBBER",
-  "TROUBLEMAKER",
-  "HUNTER",
-  "TANNER",
-] as const satisfies readonly Role[]).filter((r) => !DISABLED_ROLES.has(r));
 
 function CounterControl({
   count,
@@ -93,7 +82,7 @@ export function RoleSelector({
   return (
     <div className="space-y-4" data-testid="role-selector">
       <div className="grid grid-cols-2 gap-3">
-        {SPECIAL_ROLES.map((role) => {
+        {SELECTABLE_ROLES.map((role) => {
           const count = getRoleCount(role);
           return (
             <RoleGalleryCard

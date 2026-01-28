@@ -44,6 +44,7 @@ export function createInitialGameState(roomId: string): GameState {
     actions: [],
     votes: {},
     hunterRevengeTarget: {},
+    breadRecipientId: null,
     phaseStartedAt: null,
   };
 }
@@ -142,10 +143,26 @@ export function startGame(state: GameState): GameState {
   // 役職を配布
   const distribution = distributeRoles(state.players, state.config.roles);
 
+  // パン屋がいればランダムな他プレイヤーにパンを配達
+  const bakerEntry = Object.entries(distribution).find(
+    ([id, role]) => role === "BAKER" && !id.startsWith("CENTER")
+  );
+  let breadRecipientId: PlayerId | null = null;
+  if (bakerEntry) {
+    const bakerId = bakerEntry[0];
+    const otherPlayerIds = state.players
+      .filter((p) => p.id !== bakerId)
+      .map((p) => p.id);
+    if (otherPlayerIds.length > 0) {
+      breadRecipientId = otherPlayerIds[Math.floor(Math.random() * otherPlayerIds.length)];
+    }
+  }
+
   const nightState: GameState = {
     ...state,
     phase: "NIGHT",
     initialDistribution: distribution,
+    breadRecipientId,
     phaseStartedAt: Date.now(),
   };
 
@@ -172,10 +189,26 @@ export function startGameWithDistribution(
     throw new Error("最低3人のプレイヤーが必要です");
   }
 
+  // パン屋がいればランダムな他プレイヤーにパンを配達（テスト用固定配置）
+  const bakerEntryTest = Object.entries(distribution).find(
+    ([id, role]) => role === "BAKER" && !id.startsWith("CENTER")
+  );
+  let breadRecipientIdTest: PlayerId | null = null;
+  if (bakerEntryTest) {
+    const bakerId = bakerEntryTest[0];
+    const otherPlayerIds = state.players
+      .filter((p) => p.id !== bakerId)
+      .map((p) => p.id);
+    if (otherPlayerIds.length > 0) {
+      breadRecipientIdTest = otherPlayerIds[Math.floor(Math.random() * otherPlayerIds.length)];
+    }
+  }
+
   const nightState: GameState = {
     ...state,
     phase: "NIGHT",
     initialDistribution: distribution,
+    breadRecipientId: breadRecipientIdTest,
     phaseStartedAt: Date.now(),
   };
 
@@ -364,6 +397,7 @@ export function resetGame(state: GameState): GameState {
     actions: [],
     votes: {},
     hunterRevengeTarget: {},
+    breadRecipientId: null,
     phaseStartedAt: null,
   };
 }

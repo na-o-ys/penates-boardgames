@@ -2,20 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { DISABLED_ROLES, type Role } from "@/lib/game";
+import { SELECTABLE_ROLES, type Role } from "@/lib/game";
 import { RoleDetailContent } from "./RoleDetailContent";
 import { RoleGalleryCard, VillagerBar } from "./RoleGalleryCard";
-
-const SPECIAL_ROLES = ([
-  "WEREWOLF",
-  "ALPHA_WOLF",
-  "MADMAN",
-  "SEER",
-  "ROBBER",
-  "TROUBLEMAKER",
-  "HUNTER",
-  "TANNER",
-] as const satisfies readonly Role[]).filter((r) => !DISABLED_ROLES.has(r));
 
 interface RoleConfigModalProps {
   roles: Role[];
@@ -41,7 +30,7 @@ export function RoleConfigModal({ roles, onClose }: RoleConfigModalProps) {
 
   if (!mounted) return null;
 
-  const specialRolesWithCount = SPECIAL_ROLES.filter((role) => getRoleCount(role) > 0);
+  const specialRolesWithCount = SELECTABLE_ROLES.filter((role) => getRoleCount(role) > 0);
   const villagerCount = getRoleCount("VILLAGER");
 
   return createPortal(

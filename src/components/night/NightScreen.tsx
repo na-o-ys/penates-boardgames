@@ -353,6 +353,12 @@ export function NightScreen({
                         ) : (
                           <p className="text-[var(--color-ready)] font-semibold text-xs">アクション完了</p>
                         )}
+                        {gameState.receivedBread && (
+                          <div className="flex items-center gap-1 text-amber-400 text-xs mt-1">
+                            <span className="material-icons text-sm">bakery_dining</span>
+                            <span>パン屋からパンが届きました</span>
+                          </div>
+                        )}
                       </div>
                     ) : swapReason ? (
                       <div className="text-xs">
