@@ -2,8 +2,10 @@ import {
   ROLE_NAMES,
   ROLE_DESCRIPTIONS,
   ROLE_MATERIAL_ICONS,
-  ROLE_CARD_COLORS,
+  ROLE_ACCENT_COLORS,
+  ROLE_TEAM,
   TEAM_COLORS,
+  TEAM_BORDER_COLORS,
   type Role,
 } from "@/lib/game";
 
@@ -13,13 +15,13 @@ interface RoleDetailContentProps {
 
 export function RoleDetailContent({ role }: RoleDetailContentProps) {
   const description = ROLE_DESCRIPTIONS[role];
-  const colors = ROLE_CARD_COLORS[role];
+  const accent = ROLE_ACCENT_COLORS[role];
 
   return (
     <>
       <div className="flex flex-col items-center mb-4">
-        <div className={`w-20 h-20 rounded-full ${colors.bg} border-2 ${colors.border} flex items-center justify-center mb-3`}>
-          <span className={`material-icons text-5xl ${colors.text}`}>
+        <div className={`w-20 h-20 rounded-full bg-slate-800 border-2 ${TEAM_BORDER_COLORS[ROLE_TEAM[role]].border} flex items-center justify-center mb-3`}>
+          <span className={`material-icons text-5xl ${accent.iconText}`}>
             {ROLE_MATERIAL_ICONS[role]}
           </span>
         </div>

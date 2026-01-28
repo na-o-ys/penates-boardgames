@@ -19,7 +19,7 @@ export type Role =
 export type Phase = "LOBBY" | "NIGHT" | "DAY" | "VOTING" | "HUNTER_REVENGE" | "RESULT";
 
 /** 陣営 */
-export type Team = "VILLAGE" | "WEREWOLF" | "TANNER";
+export type Team = "VILLAGE" | "WEREWOLF" | "MINORITY";
 
 /** 配置キー (プレイヤーID or 中央カード) */
 export type DistributionKey = PlayerId | "CENTER_0" | "CENTER_1";
@@ -174,7 +174,7 @@ export const ROLE_TEAM: Record<Role, Team> = {
   ROBBER: "VILLAGE",
   TROUBLEMAKER: "VILLAGE",
   HUNTER: "VILLAGE",
-  TANNER: "TANNER",
+  TANNER: "MINORITY",
 };
 
 /** 役職の日本語名 */
@@ -289,6 +289,23 @@ export const TEAM_COLORS: Record<string, string> = {
   "人狼陣営": "text-[var(--color-role-werewolf)]",
   "村人陣営": "text-[var(--color-ready)]",
   "第三陣営": "text-[var(--color-role-tanner)]",
+};
+
+/** 陣営に対応するボーダーカラー */
+export const TEAM_BORDER_COLORS: Record<Team, {
+  border: string;
+  border30: string;
+  border50: string;
+}> = {
+  WEREWOLF: { border: "border-red-500", border30: "border-red-500/30", border50: "border-red-500/50" },
+  VILLAGE: { border: "border-emerald-500", border30: "border-emerald-500/30", border50: "border-emerald-500/50" },
+  MINORITY: { border: "border-orange-500", border30: "border-orange-500/30", border50: "border-orange-500/50" },
+};
+
+export const TEAM_LABEL_COLORS: Record<Team, string> = {
+  WEREWOLF: "text-red-400",
+  VILLAGE: "text-white",
+  MINORITY: "text-orange-400",
 };
 
 /** 無効化された役職（UIに表示しない） */

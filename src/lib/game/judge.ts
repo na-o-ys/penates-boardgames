@@ -82,7 +82,7 @@ export function determineWinner(
   if (tannerExecuted) {
     const tannerWinners = executedTanners;
     return {
-      winningTeam: "TANNER",
+      winningTeam: "MINORITY",
       winners: tannerWinners,
       executedPlayerIds,
     };

@@ -4,6 +4,8 @@ import {
   ROLE_DESCRIPTIONS,
   ROLE_MATERIAL_ICONS,
   ROLE_ACCENT_COLORS,
+  ROLE_TEAM,
+  TEAM_BORDER_COLORS,
   type Role,
 } from "@/lib/game";
 
@@ -16,11 +18,12 @@ interface RoleGalleryCardProps {
 
 export function RoleGalleryCard({ role, onClick, disabled = false, children }: RoleGalleryCardProps) {
   const accent = ROLE_ACCENT_COLORS[role];
+  const teamBorder = TEAM_BORDER_COLORS[ROLE_TEAM[role]];
 
   return (
     <div
       data-testid={`role-${role}`}
-      className={`bg-slate-900/80 border ${accent.border30} rounded-xl p-3 flex flex-col items-center shadow-lg relative overflow-hidden ${
+      className={`bg-slate-900/80 border ${teamBorder.border30} rounded-xl p-3 flex flex-col items-center shadow-lg relative overflow-hidden ${
         disabled ? "opacity-60" : ""
       }`}
     >
@@ -63,7 +66,7 @@ export function VillagerBar({ onClick, disabled = false, children }: VillagerBar
   return (
     <div
       data-testid="role-VILLAGER"
-      className={`col-span-2 bg-slate-900/80 border ${accent.border30} rounded-xl p-3 flex items-center justify-between shadow-lg relative overflow-hidden px-4 ${
+      className={`col-span-2 bg-slate-900/80 border ${TEAM_BORDER_COLORS.VILLAGE.border30} rounded-xl p-3 flex items-center justify-between shadow-lg relative overflow-hidden px-4 ${
         disabled ? "opacity-60" : ""
       }`}
     >

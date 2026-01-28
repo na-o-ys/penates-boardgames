@@ -19,7 +19,7 @@ interface ResultScreenProps {
 const TEAM_NAMES: Record<Team, string> = {
   VILLAGE: "村人陣営",
   WEREWOLF: "人狼陣営",
-  TANNER: "吊人",
+  MINORITY: "吊人",
 };
 
 export function ResultScreen({ gameState, playerId, roomId, onPlayAgain }: ResultScreenProps) {

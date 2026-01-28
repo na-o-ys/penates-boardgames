@@ -232,7 +232,7 @@ describe("ゲームシナリオテスト", () => {
       // 吊人（player-1）が処刑される
       expect(result.executedPlayerIds).toContain("player-1");
       // 吊人の単独勝利
-      expect(result.winningTeam).toBe("TANNER");
+      expect(result.winningTeam).toBe("MINORITY");
       expect(result.winners).toEqual(["player-1"]);
     });
   });
@@ -659,7 +659,7 @@ describe("ゲームシナリオテスト", () => {
       expect(result.executedPlayerIds).toContain("player-3");
       expect(result.executedPlayerIds.length).toBe(2);
       // 吊人が処刑されたので吊人の勝利
-      expect(result.winningTeam).toBe("TANNER");
+      expect(result.winningTeam).toBe("MINORITY");
       expect(result.winners).toEqual(["player-3"]);
     });
 
