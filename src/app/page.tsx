@@ -53,21 +53,31 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center game-overlay p-8">
-      <h1 className="font-[family-name:var(--font-display)] font-black text-5xl gold-text mb-3 tracking-wider">
+      <h1 className="font-[family-name:var(--font-display)] font-black text-5xl gold-text mb-8 tracking-wider">
         ワンナイト人狼
       </h1>
-      <p className="text-sm text-[var(--color-text-secondary)] mb-10 tracking-wide">
-        3〜10人で遊べるブラウザゲーム
-      </p>
-      <div className="glass-card rounded-xl p-8 w-full max-w-sm space-y-4">
-        <input
-          type="text"
-          placeholder="プレイヤー名"
-          value={playerName}
-          onChange={(e) => setPlayerName(e.target.value)}
-          className="w-full px-4 py-3 glass-input rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-          disabled={isLoading}
-        />
+      <div className="glass-card rounded-xl p-8 w-full max-w-sm space-y-5">
+        {/* プレイヤー名 */}
+        <div className="space-y-2">
+          <label className="block text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider ml-1">
+            プレイヤー名
+          </label>
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+              <span className="material-icons-outlined text-lg">person</span>
+            </span>
+            <input
+              type="text"
+              placeholder="名前を入力してください"
+              value={playerName}
+              onChange={(e) => setPlayerName(e.target.value)}
+              className="w-full pl-10 pr-3 py-3 glass-input rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              disabled={isLoading}
+            />
+          </div>
+        </div>
+
+        {/* 部屋作成ボタン */}
         <button
           onClick={handleCreateRoom}
           disabled={isLoading || !playerName.trim()}
@@ -75,15 +85,29 @@ export default function Home() {
         >
           部屋を作成
         </button>
+
+        {/* セパレーター */}
+        <div className="flex items-center">
+          <div className="flex-grow border-t border-slate-700"></div>
+          <span className="mx-4 text-slate-500 text-xs uppercase tracking-widest">or Join</span>
+          <div className="flex-grow border-t border-slate-700"></div>
+        </div>
+
+        {/* 参加セクション */}
         <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="部屋ID"
-            value={roomId}
-            onChange={(e) => setRoomId(e.target.value)}
-            className="flex-1 px-4 py-3 glass-input rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-            disabled={isLoading}
-          />
+          <div className="relative flex-1">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+              <span className="material-icons-outlined text-lg">vpn_key</span>
+            </span>
+            <input
+              type="text"
+              placeholder="部屋ID"
+              value={roomId}
+              onChange={(e) => setRoomId(e.target.value)}
+              className="w-full pl-10 pr-3 py-3 glass-input rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              disabled={isLoading}
+            />
+          </div>
           <button
             onClick={handleJoinRoom}
             disabled={isLoading || !playerName.trim() || !roomId.trim()}
@@ -92,6 +116,8 @@ export default function Home() {
             参加
           </button>
         </div>
+
+        {/* エラー表示 */}
         {error && (
           <p className="text-[var(--color-error)] text-sm text-center">{error}</p>
         )}

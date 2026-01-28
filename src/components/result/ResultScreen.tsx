@@ -175,9 +175,8 @@ export function ResultScreen({ gameState, playerId, roomId, onMarkReady }: Resul
           <button
             onClick={handleMarkReady}
             disabled={isSubmitting}
-            className="w-full py-3 btn-primary rounded-lg text-lg font-[family-name:var(--font-display)] tracking-wider flex items-center justify-center gap-1"
+            className="w-full py-3 btn-primary rounded-lg tracking-wider flex items-center justify-center gap-1"
           >
-            <span className="material-icons text-sm">meeting_room</span>
             {isSubmitting ? "移動中..." : "ロビーへ戻る"}
           </button>
         </div>

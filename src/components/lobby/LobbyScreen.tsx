@@ -113,7 +113,7 @@ export function LobbyScreen({
             <span className="material-icons text-xl">leaderboard</span>
           </button>
           <h1 className="font-[family-name:var(--font-display)] font-black text-3xl gold-text mb-3 tracking-wider">
-            ロビー
+            LOBBY
           </h1>
           <div className="flex items-center justify-center gap-2">
             <span className="text-[var(--color-text-muted)] text-xs uppercase tracking-widest">部屋ID</span>
