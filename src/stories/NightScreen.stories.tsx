@@ -11,6 +11,7 @@ import {
   nightVillagerState,
   nightTannerState,
   nightMadmanState,
+  nightCiaState,
   nightBakerState,
   nightAlphaWolfState,
   nightAlphaWolfWithFellowsState,
@@ -104,6 +105,14 @@ export const Madman: Story = {
     roomId: "test-room-id",
     playerId: "p1",
     gameState: nightMadmanState,
+  },
+};
+
+export const CIA: Story = {
+  args: {
+    roomId: "test-room-id",
+    playerId: "p1",
+    gameState: nightCiaState,
   },
 };
 

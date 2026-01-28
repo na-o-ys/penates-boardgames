@@ -37,7 +37,7 @@ const werewolf: RoleDefinition = {
   accentColors: { border30: "border-red-500/30", gradient: "to-red-500/10", iconBorder: "border-red-500/50", iconText: "text-red-400" },
   description: {
     team: "人狼陣営",
-    ability: "夜に仲間の人狼を確認できます。単独の場合、中央カード1枚を確認できます。",
+    ability: "夜に仲間の人狼を確認できます。",
     winCondition: "人狼が1人も処刑されなければ勝利",
   },
 };
@@ -208,7 +208,7 @@ const baker: RoleDefinition = {
   accentColors: { border30: "border-amber-400/30", gradient: "to-amber-400/10", iconBorder: "border-amber-400/50", iconText: "text-amber-400" },
   description: {
     team: "村人陣営",
-    ability: "夜時間にランダムなプレイヤーにパンを届けます。届け先は自分にもわかりません。",
+    ability: "夜にランダムなプレイヤーにパンを届けます。届け先は自分にもわかりません。",
     winCondition: "人狼を1人以上処刑すれば勝利",
   },
 };
@@ -232,6 +232,25 @@ const mayor: RoleDefinition = {
   },
 };
 
+const cia: RoleDefinition = {
+  name: "CIA",
+  team: "VILLAGE",
+  priority: 1,
+  hasNightAction: false,
+  isWerewolfExecution: false,
+  isWerewolfNightAlly: true,
+  revealsCenter: false,
+  voteWeight: 1,
+  materialIcon: "policy",
+  cardColors: { bg: "bg-cyan-900", border: "border-cyan-400", text: "text-cyan-200" },
+  accentColors: { border30: "border-cyan-400/30", gradient: "to-cyan-400/10", iconBorder: "border-cyan-400/50", iconText: "text-cyan-400" },
+  description: {
+    team: "村人陣営",
+    ability: "夜の人狼仲間確認に人狼として参加します。",
+    winCondition: "人狼を1人以上処刑すれば勝利（※自分がCIAであることを話してはいけません）",
+  },
+};
+
 // ========================================
 // ROLESマップ
 // ========================================
@@ -248,6 +267,7 @@ export const ROLES: Record<Role, RoleDefinition> = {
   MADMAN: madman,
   BAKER: baker,
   MAYOR: mayor,
+  CIA: cia,
 };
 
 // ========================================
@@ -264,6 +284,7 @@ export const SELECTABLE_ROLES: readonly Role[] = ([
   "WEREWOLF",
   "ALPHA_WOLF",
   "MADMAN",
+  "CIA",
   "SEER",
   "ROBBER",
   "TROUBLEMAKER",

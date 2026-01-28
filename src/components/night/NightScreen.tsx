@@ -161,30 +161,23 @@ export function NightScreen({
           return "もう1人を選択してください";
         }
         return "入れ替える2人のカードを選択してください";
-      case "WEREWOLF":
-        if (fellowWerewolves.length > 0) {
-          const fellowNames = fellowWerewolves
-            .map((id) => gameState.players.find((p) => p.id === id)?.name)
-            .filter(Boolean)
-            .join("、");
-          return `仲間の人狼は ${fellowNames} です`;
-        }
-        return "あなたは唯一の人狼です";
-      case "ALPHA_WOLF": {
-        const parts: string[] = [];
-        if (fellowWerewolves.length > 0) {
-          const fellowNames = fellowWerewolves
-            .map((id) => gameState.players.find((p) => p.id === id)?.name)
-            .filter(Boolean)
-            .join("、");
-          parts.push(`仲間の人狼は ${fellowNames} です`);
-        } else {
-          parts.push("あなたは唯一の人狼です");
-        }
-        parts.push("墓地のカードが開示されています");
-        return parts.join("。");
-      }
       default:
+        if (ROLES[myRole].isWerewolfNightAlly) {
+          const parts: string[] = [];
+          if (fellowWerewolves.length > 0) {
+            const fellowNames = fellowWerewolves
+              .map((id) => gameState.players.find((p) => p.id === id)?.name)
+              .filter(Boolean)
+              .join("、");
+            parts.push(`人狼仲間は ${fellowNames} です`);
+          } else {
+            parts.push("人狼仲間はいません");
+          }
+          if (ROLES[myRole].revealsCenter) {
+            parts.push("墓地のカードが開示されています");
+          }
+          return parts.join("。");
+        }
         return "夜の行動はありません";
     }
   };
@@ -262,13 +255,10 @@ export function NightScreen({
         return <UnknownMiniCard tappable />;
       case "TROUBLEMAKER":
         return <UnknownMiniCard tappable selected={selectedTargets.includes(playerId_)} />;
-      case "WEREWOLF":
-      case "ALPHA_WOLF":
-        if (fellowWerewolves.includes(playerId_)) {
+      default:
+        if (ROLES[myRole].isWerewolfNightAlly && fellowWerewolves.includes(playerId_)) {
           return <RoleMiniCard role={"WEREWOLF" as Role} size="medium" onClick={() => setDetailRole("WEREWOLF")} />;
         }
-        return <UnknownMiniCard />;
-      default:
         return <UnknownMiniCard />;
     }
   };
@@ -384,7 +374,7 @@ export function NightScreen({
               centerRoles={{}}
               onTapCenter={() => setConfirmAction({ type: "SEER_LOOK_CENTER", targets: ["CENTER_0", "CENTER_1"] })}
             />
-          ) : myRole === "ALPHA_WOLF" && gameState.revealedCenterRoles ? (
+          ) : myRole && ROLES[myRole].revealsCenter && gameState.revealedCenterRoles ? (
             <CemeterySection centerRoles={gameState.revealedCenterRoles} />
           ) : (
             <CemeterySection centerRoles={{}} />
@@ -393,21 +383,28 @@ export function NightScreen({
 
         {/* Footer */}
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[var(--color-bg-deep)] via-[var(--color-bg-deep)]/95 to-transparent z-20 max-w-md mx-auto">
-          {hasActed || (!hasAction && myRole !== "WEREWOLF" && myRole !== "ALPHA_WOLF") ? (
-            <p className="text-center text-[var(--color-text-muted)] py-3">
-              他のプレイヤーの行動を待っています...
-            </p>
-          ) : (myRole === "WEREWOLF" || myRole === "ALPHA_WOLF") ? (
-            <button
-              onClick={handleSkip}
-              disabled={isSubmitting}
-              className="w-full py-3 btn-primary rounded-xl"
-            >
-              {isSubmitting ? "処理中..." : "確認した"}
-            </button>
-          ) : (
-            <SkipLink label="行動をスキップ" onClick={handleSkip} disabled={isSubmitting} />
-          )}
+          {(() => {
+            const isWerewolfAlly = myRole && ROLES[myRole].isWerewolfNightAlly;
+            if (hasActed || (!hasAction && !isWerewolfAlly)) {
+              return (
+                <p className="text-center text-[var(--color-text-muted)] py-3">
+                  他のプレイヤーの行動を待っています...
+                </p>
+              );
+            }
+            if (isWerewolfAlly) {
+              return (
+                <button
+                  onClick={handleSkip}
+                  disabled={isSubmitting}
+                  className="w-full py-3 btn-primary rounded-xl"
+                >
+                  {isSubmitting ? "処理中..." : "確認した"}
+                </button>
+              );
+            }
+            return <SkipLink label="行動をスキップ" onClick={handleSkip} disabled={isSubmitting} />;
+          })()}
         </div>
       </div>
 

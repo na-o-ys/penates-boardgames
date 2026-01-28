@@ -124,6 +124,15 @@ export const nightMadmanState: ClientGameState = {
   phaseStartedAt: Date.now(),
 };
 
+export const nightCiaState: ClientGameState = {
+  ...BASE_STATE,
+  phase: "NIGHT",
+  myRole: "CIA",
+  hasActed: false,
+  fellowWerewolves: ["p2"],
+  phaseStartedAt: Date.now(),
+};
+
 export const nightBakerState: ClientGameState = {
   ...BASE_STATE,
   phase: "NIGHT",
