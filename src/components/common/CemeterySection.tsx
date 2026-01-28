@@ -15,7 +15,7 @@ export function CemeterySection({ centerRoles, onTapCenter }: CemeterySectionPro
         墓地（中央カード）
       </h3>
       <div
-        className={`flex justify-center space-x-4 ${isTappable ? "cursor-pointer" : ""}`}
+        className={`flex justify-center space-x-4 ${isTappable ? "cursor-pointer group" : ""}`}
         onClick={isTappable ? onTapCenter : undefined}
         role={isTappable ? "button" : undefined}
       >
@@ -38,7 +38,7 @@ export function CemeterySection({ centerRoles, onTapCenter }: CemeterySectionPro
                 <>
                   <div className={`w-12 h-16 bg-gray-800 rounded border flex items-center justify-center transition-all ${
                     isTappable
-                      ? "border-amber-400/50 shadow-[0_0_12px_rgba(212,175,55,0.3)] hover:border-amber-400 hover:shadow-[0_0_18px_rgba(212,175,55,0.5)] active:scale-95"
+                      ? "border-amber-400/50 shadow-[0_0_12px_rgba(212,175,55,0.3)] group-hover:border-amber-400 group-hover:shadow-[0_0_18px_rgba(212,175,55,0.5)] active:scale-95"
                       : "border-gray-600 opacity-80"
                   }`}>
                     <span className={`material-icons ${isTappable ? "text-amber-300" : "text-gray-400"}`}>question_mark</span>

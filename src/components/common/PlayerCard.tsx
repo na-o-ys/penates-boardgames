@@ -6,6 +6,7 @@ interface PlayerCardProps {
   highlight?: boolean;
   leftIndicator?: ReactNode;
   statusBadges?: ReactNode;
+  onClick?: () => void;
   children: ReactNode;
 }
 
@@ -15,14 +16,18 @@ export function PlayerCard({
   highlight = false,
   leftIndicator,
   statusBadges,
+  onClick,
   children,
 }: PlayerCardProps) {
   return (
     <div
+      onClick={onClick}
       className={`rounded-xl p-3 relative overflow-hidden ${
+        onClick ? "cursor-pointer group/player" : ""
+      } ${
         highlight
           ? "bg-gray-800/90 border-2 border-[var(--color-primary)] shadow-[0_0_15px_rgba(212,175,55,0.5)]"
-          : "bg-white/10 backdrop-blur-md border border-white/10"
+          : "bg-white/15 backdrop-blur-md border border-white/10"
       }`}
     >
       {isCurrentPlayer && (

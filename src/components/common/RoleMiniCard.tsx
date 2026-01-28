@@ -28,7 +28,7 @@ export function UnknownMiniCard() {
       <div className="w-10 h-14 bg-gray-800 rounded border border-gray-600 flex items-center justify-center opacity-80">
         <span className="material-icons text-gray-400">question_mark</span>
       </div>
-      <span className="text-[9px] text-gray-400 mt-0.5 font-bold">???</span>
+      <span className="text-[9px] text-gray-400 mt-0.5 font-bold">不明</span>
     </div>
   );
 }

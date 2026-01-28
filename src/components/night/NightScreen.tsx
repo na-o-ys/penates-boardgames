@@ -316,11 +316,26 @@ export function NightScreen({
               ? getSwapReason(player.id, gameState.myActions, gameState.players)
               : null;
 
+            const cardOnClick = (() => {
+              if (isCurrentPlayer || hasActed || !myRole) return undefined;
+              switch (myRole) {
+                case "SEER":
+                  return () => setConfirmAction({ type: "SEER_LOOK_PLAYER", targets: [player.id] });
+                case "ROBBER":
+                  return () => setConfirmAction({ type: "ROBBER_SWAP", targets: [player.id] });
+                case "TROUBLEMAKER":
+                  return () => handleTroublemakerSelect(player.id);
+                default:
+                  return undefined;
+              }
+            })();
+
             return (
               <PlayerCard
                 key={player.id}
                 playerName={player.name}
                 isCurrentPlayer={isCurrentPlayer}
+                onClick={cardOnClick}
                 statusBadges={swapReason ? (
                   <div className="text-xs">
                     <span className="text-yellow-500">
