@@ -96,12 +96,12 @@ export function determineWinner(
   if (!hasWerewolf) {
     // 誰も処刑されなかった場合：村人陣営の勝利
     if (executedPlayerIds.length === 0) {
-      const villageWinners = playerRoles
-        .filter((p) => p.team === "VILLAGE")
+      const winners = playerRoles
+        .filter((p) => p.team !== "MINORITY")
         .map((p) => p.id);
       return {
         winningTeam: "VILLAGE",
-        winners: villageWinners,
+        winners,
         executedPlayerIds,
       };
     }

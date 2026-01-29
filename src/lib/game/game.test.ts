@@ -718,6 +718,146 @@ describe("ゲームシナリオテスト", () => {
       expect(result.winners).toContain("player-3");
     });
   });
+
+  describe("シナリオ11: 人狼不在・狂人の扱い", () => {
+    it("処刑なし：狂人含む全員勝利", () => {
+      // 4人プレイ: 村人、村人、村人、狂人 + 中央2枚（人狼、人狼）
+      const { state, players } = setupGame(4, [
+        "VILLAGER",
+        "VILLAGER",
+        "VILLAGER",
+        "MADMAN",
+        "WEREWOLF",
+        "WEREWOLF",
+      ]);
+
+      const distribution: Record<string, Role> = {
+        "player-1": "VILLAGER",
+        "player-2": "VILLAGER",
+        "player-3": "VILLAGER",
+        "player-4": "MADMAN",
+        CENTER_0: "WEREWOLF",
+        CENTER_1: "WEREWOLF",
+      };
+
+      let gameState = startGameWithDistribution(state, distribution);
+      expect(gameState.phase).toBe("DAY");
+
+      gameState = advancePhase(gameState);
+
+      // 散票で処刑なし
+      gameState = executeVote(gameState, "player-1", "player-2");
+      gameState = executeVote(gameState, "player-2", "player-3");
+      gameState = executeVote(gameState, "player-3", "player-4");
+      gameState = executeVote(gameState, "player-4", "player-1");
+
+      expect(gameState.phase).toBe("FINISHED");
+
+      const playerIds = players.map((p) => p.id);
+      const finalRoles = resolveFinalRoles(distribution, gameState.actions);
+      const result = calculateGameResult(gameState.votes, distribution, finalRoles, playerIds);
+
+      expect(result.executedPlayerIds).toEqual([]);
+      expect(result.winningTeam).toBe("VILLAGE");
+      // 狂人含む全員が勝者
+      expect(result.winners).toContain("player-1");
+      expect(result.winners).toContain("player-2");
+      expect(result.winners).toContain("player-3");
+      expect(result.winners).toContain("player-4");
+      expect(result.winners.length).toBe(4);
+    });
+
+    it("狂人処刑：全員敗北", () => {
+      // 4人プレイ: 村人、村人、村人、狂人 + 中央2枚（人狼、人狼）
+      const { state, players } = setupGame(4, [
+        "VILLAGER",
+        "VILLAGER",
+        "VILLAGER",
+        "MADMAN",
+        "WEREWOLF",
+        "WEREWOLF",
+      ]);
+
+      const distribution: Record<string, Role> = {
+        "player-1": "VILLAGER",
+        "player-2": "VILLAGER",
+        "player-3": "VILLAGER",
+        "player-4": "MADMAN",
+        CENTER_0: "WEREWOLF",
+        CENTER_1: "WEREWOLF",
+      };
+
+      let gameState = startGameWithDistribution(state, distribution);
+      expect(gameState.phase).toBe("DAY");
+
+      gameState = advancePhase(gameState);
+
+      // 狂人に投票集中
+      gameState = executeVote(gameState, "player-1", "player-4");
+      gameState = executeVote(gameState, "player-2", "player-4");
+      gameState = executeVote(gameState, "player-3", "player-4");
+      gameState = executeVote(gameState, "player-4", "player-1");
+
+      expect(gameState.phase).toBe("FINISHED");
+
+      const playerIds = players.map((p) => p.id);
+      const finalRoles = resolveFinalRoles(distribution, gameState.actions);
+      const result = calculateGameResult(gameState.votes, distribution, finalRoles, playerIds);
+
+      expect(result.executedPlayerIds).toContain("player-4");
+      expect(result.winningTeam).toBeNull();
+      expect(result.winners).toEqual([]);
+    });
+  });
+
+  describe("シナリオ12: 人狼不在・吊人の扱い", () => {
+    it("処刑なし：吊人以外が勝利", () => {
+      // 4人プレイ: 村人、村人、村人、吊人 + 中央2枚（人狼、人狼）
+      const { state, players } = setupGame(4, [
+        "VILLAGER",
+        "VILLAGER",
+        "VILLAGER",
+        "TANNER",
+        "WEREWOLF",
+        "WEREWOLF",
+      ]);
+
+      const distribution: Record<string, Role> = {
+        "player-1": "VILLAGER",
+        "player-2": "VILLAGER",
+        "player-3": "VILLAGER",
+        "player-4": "TANNER",
+        CENTER_0: "WEREWOLF",
+        CENTER_1: "WEREWOLF",
+      };
+
+      let gameState = startGameWithDistribution(state, distribution);
+      expect(gameState.phase).toBe("DAY");
+
+      gameState = advancePhase(gameState);
+
+      // 散票で処刑なし
+      gameState = executeVote(gameState, "player-1", "player-2");
+      gameState = executeVote(gameState, "player-2", "player-3");
+      gameState = executeVote(gameState, "player-3", "player-4");
+      gameState = executeVote(gameState, "player-4", "player-1");
+
+      expect(gameState.phase).toBe("FINISHED");
+
+      const playerIds = players.map((p) => p.id);
+      const finalRoles = resolveFinalRoles(distribution, gameState.actions);
+      const result = calculateGameResult(gameState.votes, distribution, finalRoles, playerIds);
+
+      expect(result.executedPlayerIds).toEqual([]);
+      expect(result.winningTeam).toBe("VILLAGE");
+      // 村人3人が勝者、吊人は敗北
+      expect(result.winners).toContain("player-1");
+      expect(result.winners).toContain("player-2");
+      expect(result.winners).toContain("player-3");
+      expect(result.winners).not.toContain("player-4");
+      expect(result.winners.length).toBe(3);
+    });
+  });
 });
 
 describe("データマスキングテスト", () => {

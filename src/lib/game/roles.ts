@@ -228,7 +228,7 @@ const madman: RoleDefinition = {
   description: {
     team: "人狼陣営",
     ability: "特殊能力はありません。人狼の仲間として村人を欺きましょう。",
-    winCondition: "人狼が1人も処刑されなければ勝利（自分が処刑されても負けにならない）",
+    winCondition: "人狼が1人も処刑されなければ勝利（自分が処刑されても負けにならない）。人狼不在の場合は村人陣営として扱われる",
   },
 };
 
