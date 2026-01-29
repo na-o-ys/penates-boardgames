@@ -95,10 +95,44 @@ export function PlayerStatsModal({
         </button>
 
         <h2 className="font-[family-name:var(--font-display)] text-lg font-bold gold-text text-center mb-4">
-          プレイヤースタッツ
+          STATS
         </h2>
 
         <div className="space-y-3">
+          {/* 全体集計 */}
+          {players.length > 0 && (() => {
+            const totals = players.reduce(
+              (acc, p) => {
+                const s = playerStats[p.id] ?? EMPTY_STAT;
+                return {
+                  totalGames: acc.totalGames + s.totalGames,
+                  totalWins: acc.totalWins + s.totalWins,
+                  villageGames: acc.villageGames + s.villageGames,
+                  villageWins: acc.villageWins + s.villageWins,
+                  werewolfGames: acc.werewolfGames + s.werewolfGames,
+                  werewolfWins: acc.werewolfWins + s.werewolfWins,
+                  minorityGames: acc.minorityGames + s.minorityGames,
+                  minorityWins: acc.minorityWins + s.minorityWins,
+                };
+              },
+              { ...EMPTY_STAT }
+            );
+            return (
+              <div className="glass-panel rounded-lg p-3 border border-white/10">
+                <div className="font-semibold text-sm mb-2 text-[var(--color-text-secondary)]">
+                  <span className="material-icons text-sm align-middle mr-1">groups</span>
+                  全体
+                </div>
+                <div className="grid grid-cols-4 gap-1">
+                  <StatBlock label="全体" games={totals.totalGames} wins={totals.totalWins} colorClass="text-[var(--color-text-secondary)]" />
+                  <StatBlock label="村人" games={totals.villageGames} wins={totals.villageWins} colorClass="text-emerald-400" />
+                  <StatBlock label="人狼" games={totals.werewolfGames} wins={totals.werewolfWins} colorClass="text-red-400" />
+                  <StatBlock label="第三" games={totals.minorityGames} wins={totals.minorityWins} colorClass="text-orange-400" />
+                </div>
+              </div>
+            );
+          })()}
+
           {players.map((player) => {
             const stats = playerStats[player.id] ?? EMPTY_STAT;
             return (
