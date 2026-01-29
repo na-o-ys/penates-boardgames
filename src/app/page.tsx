@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createRoomAction, joinRoomAction } from "@/actions/room";
 
 export default function Home() {
@@ -53,8 +54,8 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center game-overlay p-8">
-      <h1 className="font-[family-name:var(--font-display)] font-black text-5xl gold-text mb-8 tracking-wider">
-        ワンナイト人狼
+      <h1 className="font-[family-name:var(--font-display)] font-black text-5xl gold-text mb-8 tracking-wider text-center">
+        <span className="inline-block">ワンナイト</span><span className="inline-block">人狼</span>
       </h1>
       <div className="glass-card rounded-xl p-8 w-full max-w-sm space-y-5">
         {/* プレイヤー名 */}
@@ -89,7 +90,9 @@ export default function Home() {
         {/* セパレーター */}
         <div className="flex items-center">
           <div className="flex-grow border-t border-slate-700"></div>
-          <span className="mx-4 text-slate-500 text-xs uppercase tracking-widest">or Join</span>
+          <span className="mx-4 text-slate-500 text-xs uppercase tracking-widest">
+            or Join
+          </span>
           <div className="flex-grow border-t border-slate-700"></div>
         </div>
 
@@ -119,8 +122,21 @@ export default function Home() {
 
         {/* エラー表示 */}
         {error && (
-          <p className="text-[var(--color-error)] text-sm text-center">{error}</p>
+          <p className="text-[var(--color-error)] text-sm text-center">
+            {error}
+          </p>
         )}
+
+        {/* 練習モード */}
+        <div className="pt-2">
+          <Link
+            href="/practice"
+            className="block text-center text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors text-sm"
+          >
+            <span className="material-icons text-sm align-middle mr-1">school</span>
+            練習モードで遊ぶ
+          </Link>
+        </div>
       </div>
     </main>
   );

@@ -24,4 +24,5 @@ export {
   markReadyForNextGameAction,
   getClientGameStateAction,
   getCurrentPlayerIdAction,
+  forceAdvancePhaseAction,
 } from "./game";

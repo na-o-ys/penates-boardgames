@@ -133,7 +133,7 @@ export function HunterRevengeScreen({
           <h1 className="font-[family-name:var(--font-display)] font-bold text-3xl text-[var(--color-error)] mb-2">
             狩人の道連れ
           </h1>
-          <div className={`text-5xl font-bold mb-4 ${
+          <div className={`text-5xl font-bold mb-4 font-[family-name:var(--font-display)] ${
             isTimeLow ? "text-[var(--color-error)] animate-pulse" : "text-white"
           }`}>
             {formatTime(timeLeft)}

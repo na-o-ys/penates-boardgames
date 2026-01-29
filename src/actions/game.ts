@@ -410,3 +410,90 @@ export async function getCurrentPlayerIdAction(): Promise<
     };
   }
 }
+
+/**
+ * フェーズを強制進行（dev/test-room 用）
+ */
+export async function forceAdvancePhaseAction(
+  roomId: string
+): Promise<ActionResult> {
+  try {
+    const supabase = await createClient();
+
+    await updateRoomWithRetry(supabase, roomId, (state) => {
+      switch (state.phase) {
+        case "NIGHT": {
+          let s = state;
+          for (const player of state.players) {
+            if (!s.actions.some((a) => a.actorId === player.id)) {
+              const role = s.initialDistribution[player.id];
+              if (ROLES[role].hasNightAction) {
+                s = executeNightAction(s, {
+                  actorId: player.id,
+                  type: "SKIP",
+                  targetIds: [],
+                  timestamp: Date.now(),
+                });
+              }
+            }
+          }
+          if (s.phase === "NIGHT") {
+            s = advancePhase(s);
+          }
+          return s;
+        }
+        case "DAY":
+          return advancePhase(state);
+        case "VOTING": {
+          let s = state;
+          for (const player of state.players) {
+            if (!s.votes[player.id]) {
+              s = executeVote(s, player.id, SKIP_VOTE);
+            }
+          }
+          if (s.phase === "VOTING") {
+            s = advancePhase(s);
+          }
+          return s;
+        }
+        case "HUNTER_REVENGE": {
+          let s = state;
+          for (const player of state.players) {
+            if (!s.hunterRevengeTarget[player.id]) {
+              try {
+                const others = state.players.filter((p) => p.id !== player.id);
+                const target = others[Math.floor(Math.random() * others.length)];
+                s = executeHunterRevenge(s, player.id, target.id);
+              } catch {
+                /* not an executed hunter */
+              }
+            }
+          }
+          if (s.phase === "HUNTER_REVENGE") {
+            s = advancePhase(s);
+          }
+          return s;
+        }
+        case "FINISHED": {
+          let s = state;
+          for (const player of state.players) {
+            if (!s.readyForNextGame[player.id]) {
+              s = markReadyForNextGame(s, player.id);
+            }
+          }
+          return s;
+        }
+        default:
+          return state;
+      }
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("強制進行に失敗:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "強制進行に失敗しました",
+    };
+  }
+}

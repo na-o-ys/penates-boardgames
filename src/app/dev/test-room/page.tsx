@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createTestRoomAction } from "@/actions";
+import { createTestRoomAction, forceAdvancePhaseAction } from "@/actions";
 import { PlayerColumn } from "@/components/dev/PlayerColumn";
 
 interface RoomData {
@@ -44,8 +44,16 @@ export default function TestRoomPage() {
   }
 
   return (
-    <main className="h-screen p-2">
-      <div className="grid grid-cols-4 gap-2 h-full">
+    <main className="h-screen p-2 flex flex-col">
+      <div className="flex justify-end mb-1 shrink-0">
+        <button
+          onClick={() => forceAdvancePhaseAction(roomData.roomId)}
+          className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded"
+        >
+          Force Advance
+        </button>
+      </div>
+      <div className="grid grid-cols-4 gap-2 flex-1 min-h-0">
         {roomData.playerIds.map((playerId, i) => (
           <PlayerColumn
             key={playerId}

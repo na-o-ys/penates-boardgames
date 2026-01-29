@@ -98,7 +98,7 @@ export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DaySc
           <h1 className="font-[family-name:var(--font-display)] font-bold text-3xl gold-text mb-2">
             DISCUSSION PHASE
           </h1>
-          <div className={`text-5xl font-bold mb-4 ${
+          <div className={`text-5xl font-bold mb-4 font-[family-name:var(--font-display)] ${
             isTimeLow ? "text-[var(--color-error)] animate-pulse" : "gold-text"
           }`}>
             {formatTime(timeLeft)}

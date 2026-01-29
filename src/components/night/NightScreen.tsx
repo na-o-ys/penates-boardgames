@@ -26,6 +26,8 @@ interface NightScreenProps {
   playerId: string;
   onSubmitAction: (actionType: ActionType, targets: string[]) => Promise<{ success: boolean; error?: string }>;
   onAutoSkip: () => Promise<{ success: boolean; error?: string }>;
+  /** 結果モーダルの「確認した」後に呼ばれるコールバック */
+  onResultConfirmed?: () => void;
   /** Storybook 用: 結果モーダルの初期表示状態 */
   initialPendingResult?: { type: ActionType; targets: string[] } | null;
 }
@@ -36,6 +38,7 @@ export function NightScreen({
   playerId,
   onSubmitAction,
   onAutoSkip,
+  onResultConfirmed,
   initialPendingResult = null,
 }: NightScreenProps) {
   const [selectedTargets, setSelectedTargets] = useState<string[]>([]);
@@ -280,7 +283,7 @@ export function NightScreen({
           <h1 className="font-[family-name:var(--font-display)] font-bold text-3xl gold-text mb-2">
             NIGHT PHASE
           </h1>
-          <div className={`text-5xl font-bold mb-4 ${
+          <div className={`text-5xl font-bold mb-4 font-[family-name:var(--font-display)] ${
             isTimeLow ? "text-[var(--color-error)] animate-pulse" : "gold-text"
           }`}>
             {formatTime(timeLeft)}
@@ -457,7 +460,7 @@ export function NightScreen({
           <NightResultModal
             title={resultTitle}
             targets={resultTargets}
-            onConfirm={() => setPendingResult(null)}
+            onConfirm={() => { setPendingResult(null); onResultConfirmed?.(); }}
           />
         );
       })()}

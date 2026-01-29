@@ -30,7 +30,7 @@ export function PlayerColumn({ roomId, playerId, playerName }: PlayerColumnProps
           <span className="ml-1 text-xs bg-yellow-600 px-1 rounded">Host</span>
         )}
       </header>
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto [&>*]:min-h-0">
         <GamePhaseRenderer
           roomId={roomId}
           playerId={playerId}
