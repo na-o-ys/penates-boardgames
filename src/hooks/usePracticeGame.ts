@@ -110,11 +110,6 @@ export function usePracticeGame() {
         const newState = executeNightAction(gameState, action);
         setGameState(newState);
 
-        if (newState.phase === "DAY") {
-          setPhase("DAY");
-          setViewPlayerId(null);
-        }
-
         return { success: true };
       } catch (error) {
         return {
@@ -127,8 +122,14 @@ export function usePracticeGame() {
   );
 
   const advanceNightActor = useCallback(() => {
-    setCurrentActorIndex((prev) => prev + 1);
-  }, []);
+    const nextIndex = currentActorIndex + 1;
+    if (nextIndex >= nightActors.length) {
+      setPhase("DAY");
+      setViewPlayerId(null);
+    } else {
+      setCurrentActorIndex(nextIndex);
+    }
+  }, [currentActorIndex, nightActors.length]);
 
   const returnToLobby = useCallback(() => {
     setPhase("LOBBY");
