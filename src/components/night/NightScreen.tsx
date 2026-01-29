@@ -157,6 +157,8 @@ export function NightScreen({
     switch (myRole) {
       case "SEER":
         return "対象のカードを選択してください（プレイヤー1人 or 墓地）";
+      case "APPRENTICE_SEER":
+        return "占うプレイヤーを1人選択してください";
       case "ROBBER":
       case "WHITE_ROBBER":
         return "交換する対象のカードを選択してください";
@@ -254,6 +256,7 @@ export function NightScreen({
 
     switch (myRole) {
       case "SEER":
+      case "APPRENTICE_SEER":
         return <UnknownMiniCard tappable />;
       case "ROBBER":
       case "WHITE_ROBBER":
@@ -309,6 +312,7 @@ export function NightScreen({
               if (isCurrentPlayer || hasActed || !myRole) return undefined;
               switch (myRole) {
                 case "SEER":
+                case "APPRENTICE_SEER":
                   return () => setConfirmAction({ type: "SEER_LOOK_PLAYER", targets: [player.id] });
                 case "ROBBER":
                 case "WHITE_ROBBER":

@@ -11,6 +11,7 @@ export type Role =
   | "ALPHA_WOLF"
   | "VILLAGER"
   | "SEER"
+  | "APPRENTICE_SEER"
   | "ROBBER"
   | "WHITE_ROBBER"
   | "TROUBLEMAKER"

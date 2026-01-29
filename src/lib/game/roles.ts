@@ -99,6 +99,25 @@ const seer: RoleDefinition = {
   },
 };
 
+const apprenticeSeer: RoleDefinition = {
+  name: "占い師見習い",
+  team: "VILLAGE",
+  priority: 2,
+  hasNightAction: true,
+  isWerewolfExecution: false,
+  isWerewolfNightAlly: false,
+  revealsCenter: false,
+  voteWeight: 1,
+  materialIcon: "manage_search",
+  cardColors: { bg: "bg-cyan-900", border: "border-cyan-400", text: "text-cyan-200" },
+  accentColors: { border30: "border-cyan-400/30", gradient: "to-cyan-400/10", iconBorder: "border-cyan-400/50", iconText: "text-cyan-400" },
+  description: {
+    team: "村人陣営",
+    ability: "夜に他プレイヤー1人の役職を確認できます。墓地は確認できません。",
+    winCondition: "人狼を1人以上処刑すれば勝利",
+  },
+};
+
 const robber: RoleDefinition = {
   name: "怪盗",
   team: "VILLAGE",
@@ -279,6 +298,7 @@ export const ROLES: Record<Role, RoleDefinition> = {
   ALPHA_WOLF: alphaWolf,
   VILLAGER: villager,
   SEER: seer,
+  APPRENTICE_SEER: apprenticeSeer,
   ROBBER: robber,
   WHITE_ROBBER: whiteRobber,
   TROUBLEMAKER: troublemaker,
@@ -305,6 +325,7 @@ export const SELECTABLE_ROLES: readonly Role[] = ([
   "ALPHA_WOLF",
   "MADMAN",
   "SEER",
+  "APPRENTICE_SEER",
   "CIA",
   "ROBBER",
   "WHITE_ROBBER",

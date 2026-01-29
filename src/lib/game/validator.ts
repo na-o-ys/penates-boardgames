@@ -21,6 +21,8 @@ export function getValidActionTypes(role: Role): readonly ActionType[] {
       return ["WEREWOLF_LOOK", "SKIP"];
     case "SEER":
       return ["SEER_LOOK_PLAYER", "SEER_LOOK_CENTER", "SKIP"];
+    case "APPRENTICE_SEER":
+      return ["SEER_LOOK_PLAYER", "SKIP"];
     case "ROBBER":
     case "WHITE_ROBBER":
       return ["ROBBER_SWAP", "SKIP"];
