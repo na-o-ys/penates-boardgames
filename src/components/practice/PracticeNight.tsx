@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { ClientGameState, ActionType, Player, GameState } from "@/lib/game";
+import type { ActionType, Player, GameState } from "@/lib/game";
+import type { ClientRoomState } from "@/lib/room";
 import { NightScreen } from "../night/NightScreen";
 import { GodViewPanel } from "./GodViewPanel";
 
@@ -11,7 +12,7 @@ interface PracticeNightProps {
   currentActor: Player | null;
   currentActorIndex: number;
   nightActors: Player[];
-  currentClientState: ClientGameState | null;
+  currentRoomState: ClientRoomState | null;
   gameState: GameState;
   onSubmitAction: (type: ActionType, targets: string[]) => Promise<{ success: boolean; error?: string }>;
   onAdvanceActor: () => void;
@@ -23,7 +24,7 @@ export function PracticeNight({
   currentActor,
   currentActorIndex,
   nightActors,
-  currentClientState,
+  currentRoomState,
   gameState,
   onSubmitAction,
   onAdvanceActor,
@@ -41,7 +42,7 @@ export function PracticeNight({
     [onSubmitAction, onAdvanceActor]
   );
 
-  if (!currentActor || !currentClientState) {
+  if (!currentActor || !currentRoomState) {
     return (
       <div className="flex min-h-screen items-center justify-center game-overlay">
         <div className="text-white animate-pulse">夜フェーズ準備中...</div>
@@ -105,7 +106,7 @@ export function PracticeNight({
           <NightScreen
             key={currentActor.id}
             roomId="practice"
-            gameState={currentClientState}
+            roomState={currentRoomState}
             playerId={currentActor.id}
             onSubmitAction={handleSubmitAction}
             onAutoSkip={noOp}

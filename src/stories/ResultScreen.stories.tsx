@@ -3,14 +3,12 @@ import { fn } from "storybook/test";
 import { ResultScreen } from "@/components/result/ResultScreen";
 import { resultVillageWinState, resultWerewolfWinState, resultSwappedState } from "./mocks/gameState";
 
-const success = async () => ({ success: true as const });
-
 const meta = {
   title: "Screens/ResultScreen",
   component: ResultScreen,
   parameters: { layout: "fullscreen" },
   args: {
-    onMarkReady: fn(success),
+    onReturnToLobby: fn(),
   },
 } satisfies Meta<typeof ResultScreen>;
 
@@ -21,7 +19,7 @@ export const VillageWin: Story = {
   args: {
     roomId: "test-room-id",
     playerId: "p1",
-    gameState: resultVillageWinState,
+    roomState: resultVillageWinState,
   },
 };
 
@@ -29,7 +27,7 @@ export const WerewolfWin: Story = {
   args: {
     roomId: "test-room-id",
     playerId: "p1",
-    gameState: resultWerewolfWinState,
+    roomState: resultWerewolfWinState,
   },
 };
 
@@ -37,6 +35,6 @@ export const Swapped: Story = {
   args: {
     roomId: "test-room-id",
     playerId: "p1",
-    gameState: resultSwappedState,
+    roomState: resultSwappedState,
   },
 };

@@ -9,18 +9,13 @@ import { resolveFinalRoles } from "./resolver";
 import { calculateExecutedPlayers, calculateGameResult } from "./judge";
 
 /**
- * サーバー側のGameStateをクライアント用にマスキングする
- *
- * @param state - サーバー側の完全なGameState
- * @param playerId - クライアントのプレイヤーID
- * @returns マスキングされたClientGameState
+ * サーバー側の GameState をクライアント用にマスキングする
  */
 export function maskGameState(
   state: GameState,
   playerId: PlayerId
 ): ClientGameState {
-  const myRole =
-    state.phase === "LOBBY" ? null : state.initialDistribution[playerId] ?? null;
+  const myRole = state.initialDistribution[playerId] ?? null;
 
   // 自分のアクションのみ取得
   const myActions = state.actions.filter(
@@ -60,10 +55,8 @@ export function maskGameState(
 
   // 基本のマスク済み状態
   const baseClientState: ClientGameState = {
-    roomId: state.roomId,
     phase: state.phase,
     players: state.players,
-    config: state.config,
     myRole,
     myActions,
     actionResults,
@@ -73,8 +66,6 @@ export function maskGameState(
     myVote,
     receivedBread,
     receivedNotice,
-    playerStats: state.playerStats,
-    roomStats: state.roomStats,
     phaseStartedAt: state.phaseStartedAt,
   };
 
@@ -86,7 +77,6 @@ export function maskGameState(
       (id) => finalRoles[id] === "HUNTER"
     );
 
-    // 狩人が道連れを選択済みかどうか
     const hunterRevengeChosen: Record<PlayerId, boolean> = {};
     for (const hunterId of executedHunterIds) {
       hunterRevengeChosen[hunterId] =
@@ -124,10 +114,6 @@ export function maskGameState(
       hunterRevengeTargets: state.hunterRevengeTarget,
       winners: gameResult.winners,
       winningTeam: gameResult.winningTeam,
-      // 次ゲーム準備状態
-      readyForNextGame: state.readyForNextGame,
-      isReadyForNextGame: state.readyForNextGame[playerId] ?? false,
-      allPlayersReady: state.players.every((p) => state.readyForNextGame[p.id]),
     };
   }
 
@@ -143,33 +129,26 @@ export function maskGameStateForWerewolf(
 ): ClientGameState {
   const baseState = maskGameState(state, playerId);
 
-  // 人狼仲間チェック対象でない場合は通常のマスキング
   if (!baseState.myRole || !ROLES[baseState.myRole].isWerewolfNightAlly) {
     return baseState;
   }
 
-  // 夜フェーズ以降で人狼仲間の場合、仲間情報を教える
-  if (state.phase !== "LOBBY") {
-    const playerIds = state.players.map((p) => p.id);
-    const fellowWerewolves = playerIds.filter(
-      (id) => id !== playerId && ROLES[state.initialDistribution[id]].isWerewolfNightAlly
-    );
+  const playerIds = state.players.map((p) => p.id);
+  const fellowWerewolves = playerIds.filter(
+    (id) => id !== playerId && ROLES[state.initialDistribution[id]].isWerewolfNightAlly
+  );
 
-    const result: ClientGameState = { ...baseState, fellowWerewolves };
+  const result: ClientGameState = { ...baseState, fellowWerewolves };
 
-    // 墓地カード自動開示
-    if (ROLES[baseState.myRole].revealsCenter) {
-      return {
-        ...result,
-        revealedCenterRoles: {
-          CENTER_0: state.initialDistribution["CENTER_0"],
-          CENTER_1: state.initialDistribution["CENTER_1"],
-        },
-      };
-    }
-
-    return result;
+  if (ROLES[baseState.myRole].revealsCenter) {
+    return {
+      ...result,
+      revealedCenterRoles: {
+        CENTER_0: state.initialDistribution["CENTER_0"],
+        CENTER_1: state.initialDistribution["CENTER_1"],
+      },
+    };
   }
 
-  return baseState;
+  return result;
 }

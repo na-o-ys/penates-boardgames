@@ -20,8 +20,6 @@ export {
   submitHunterRevengeAction,
   autoHunterRevengeAction,
   advancePhaseAction,
-  resetGameAction,
-  markReadyForNextGameAction,
   getClientGameStateAction,
   getCurrentPlayerIdAction,
   forceAdvancePhaseAction,

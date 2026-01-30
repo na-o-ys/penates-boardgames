@@ -1,7 +1,8 @@
 "use client";
 
-import type { ClientGameState, Player, Role, Team } from "@/lib/game";
-import { getSwapReason, SKIP_VOTE } from "@/lib/game";
+import type { Player, Role, Team } from "@/lib/game";
+import { getSwapReason, countVotes } from "@/lib/game";
+import type { ClientRoomState } from "@/lib/room";
 import { useState, Fragment } from "react";
 import { RoleMiniCard, UnknownMiniCard } from "../common/RoleMiniCard";
 import { PlayerCard } from "../common/PlayerCard";
@@ -9,13 +10,13 @@ import { CemeterySection } from "../common/CemeterySection";
 import { RoleDetailModal } from "../common/RoleDetailModal";
 import { PlayerStatsModal } from "../common/PlayerStatsModal";
 import { OtherPlayersDivider } from "../common/OtherPlayersDivider";
-import { VoteTargetBadge } from "../common/VoteTargetBadge";
+import { VotesReceivedBadge } from "../common/VotesReceivedBadge";
 
 interface ResultScreenProps {
-  gameState: ClientGameState;
+  roomState: ClientRoomState;
   playerId: string;
   roomId: string;
-  onMarkReady: () => Promise<{ success: boolean; error?: string }>;
+  onReturnToLobby: () => void;
 }
 
 const TEAM_NAMES: Record<Team, string> = {
@@ -24,22 +25,22 @@ const TEAM_NAMES: Record<Team, string> = {
   MINORITY: "吊人",
 };
 
-export function ResultScreen({ gameState, playerId, roomId, onMarkReady }: ResultScreenProps) {
+export function ResultScreen({ roomState, playerId, roomId, onReturnToLobby }: ResultScreenProps) {
   const currentPlayerId = playerId;
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [detailRole, setDetailRole] = useState<Role | null>(null);
   const [showStats, setShowStats] = useState(false);
 
-  const winningTeam = gameState.winningTeam;
-  const winners = gameState.winners ?? [];
-  const executedPlayerIds = gameState.executedPlayerIds ?? [];
-  const initialRoles = gameState.initialRoles ?? {};
-  const finalRoles = gameState.finalRoles ?? {};
-  const allActions = gameState.allActions ?? [];
+  const game = roomState.game!;
+  const winningTeam = game.winningTeam;
+  const winners = game.winners ?? [];
+  const executedPlayerIds = game.executedPlayerIds ?? [];
+  const initialRoles = game.initialRoles ?? {};
+  const finalRoles = game.finalRoles ?? {};
+  const allActions = game.allActions ?? [];
 
   const isWinner = winners.includes(currentPlayerId);
 
-  const sortedPlayers = [...gameState.players].sort((a, b) =>
+  const sortedPlayers = [...game.players].sort((a, b) =>
     a.id === currentPlayerId ? -1 : b.id === currentPlayerId ? 1 : 0
   );
 
@@ -48,23 +49,17 @@ export function ResultScreen({ gameState, playerId, roomId, onMarkReady }: Resul
     CENTER_1: finalRoles["CENTER_1"] as Role | undefined,
   };
 
-  const handleMarkReady = async () => {
-    setIsSubmitting(true);
-    try {
-      const result = await onMarkReady();
-      if (!result.success) {
-        console.error("Failed to mark ready:", result.error);
-      }
-    } catch (error) {
-      console.error("Error marking ready:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
+  const votesReceived = game.allVotes && game.initialRoles
+    ? countVotes(game.allVotes, game.initialRoles)
+    : {};
+
+  const handleReturnToLobby = () => {
+    onReturnToLobby();
   };
 
   return (
-    <div className="flex flex-col min-h-screen game-overlay">
-      <div className="max-w-md mx-auto w-full flex flex-col flex-1">
+    <div className="flex flex-col h-dvh overflow-hidden game-overlay">
+      <div className="max-w-md mx-auto w-full flex flex-col flex-1 min-h-0">
         {/* ヘッダー */}
         <div className="pt-8 pb-4 text-center relative">
           <button
@@ -93,26 +88,26 @@ export function ResultScreen({ gameState, playerId, roomId, onMarkReady }: Resul
         </div>
 
         {/* プレイヤーカード (scrollable) */}
-        <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-24">
+        <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-4 ">
           {sortedPlayers.map((player: Player, index: number) => {
             const isCurrentPlayer = player.id === currentPlayerId;
             const isPlayerWinner = winners.includes(player.id);
             const isExecuted = executedPlayerIds.includes(player.id);
             const isHunterVictim = Object.values(
-              gameState.hunterRevengeTargets ?? {}
+              game.hunterRevengeTargets ?? {}
             ).includes(player.id);
 
             const initRole = initialRoles[player.id];
             const finalRole = finalRoles[player.id];
             const roleChanged = initRole && finalRole && initRole !== finalRole;
             const swapReason = roleChanged
-              ? getSwapReason(player.id, allActions, gameState.players)
+              ? getSwapReason(player.id, allActions, game.players)
               : null;
 
-            const voteTarget = gameState.allVotes?.[player.id];
-            const voteTargetPlayer = voteTarget && voteTarget !== SKIP_VOTE
-              ? gameState.players.find(p => p.id === voteTarget)
-              : null;
+            const received = votesReceived[player.id];
+            const voterNames = received
+              ? received.voterIds.map((id) => game.players.find((p) => p.id === id)?.name ?? "?")
+              : [];
 
             return (
               <Fragment key={player.id}>
@@ -127,24 +122,24 @@ export function ResultScreen({ gameState, playerId, roomId, onMarkReady }: Resul
                   ) : undefined
                 }
                 statusBadges={
-                  <div className="text-xs space-x-2">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
                     {isExecuted && (
-                      <span className="text-[var(--color-error)] font-bold">処刑</span>
+                      <span className="whitespace-nowrap text-[var(--color-error)] font-bold">処刑</span>
                     )}
                     {isHunterVictim && (
-                      <span className="text-[var(--color-error)] font-bold">道連れ</span>
+                      <span className="whitespace-nowrap text-[var(--color-error)] font-bold">道連れ</span>
                     )}
                     {isPlayerWinner && (
-                      <span className="text-[var(--color-ready)] font-bold">勝者</span>
+                      <span className="whitespace-nowrap text-[var(--color-ready)] font-bold">勝者</span>
                     )}
                     {roleChanged && swapReason && (
-                      <span className="text-yellow-500">
+                      <span className="whitespace-nowrap text-yellow-500">
                         <span className="material-icons text-sm align-middle animate-pulse">sync_alt</span>
                         {" "}{swapReason}
                       </span>
                     )}
-                    {voteTarget && (
-                      <VoteTargetBadge targetName={voteTargetPlayer?.name ?? null} />
+                    {received && (
+                      <VotesReceivedBadge count={received.count} voterNames={voterNames} />
                     )}
                   </div>
                 }
@@ -171,13 +166,12 @@ export function ResultScreen({ gameState, playerId, roomId, onMarkReady }: Resul
         </div>
 
         {/* 固定フッター */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[var(--color-bg-deep)] via-[var(--color-bg-deep)]/95 to-transparent z-20 max-w-md mx-auto">
+        <div className="shrink-0 px-4 pb-4 pt-8 -mt-8 relative z-10 bg-gradient-to-t from-[var(--color-bg-deep)] via-[var(--color-bg-deep)]/95 to-transparent">
           <button
-            onClick={handleMarkReady}
-            disabled={isSubmitting}
+            onClick={handleReturnToLobby}
             className="w-full py-3 btn-primary rounded-lg tracking-wider flex items-center justify-center gap-1"
           >
-            {isSubmitting ? "送信中..." : "確認した"}
+            ロビーに戻る
           </button>
         </div>
       </div>
@@ -188,9 +182,9 @@ export function ResultScreen({ gameState, playerId, roomId, onMarkReady }: Resul
 
       {showStats && (
         <PlayerStatsModal
-          players={gameState.players}
-          playerStats={gameState.playerStats ?? {}}
-          roomStats={gameState.roomStats ?? { gamesPlayed: 0, villageWins: 0, werewolfWins: 0, minorityWins: 0, draws: 0 }}
+          players={roomState.members}
+          playerStats={roomState.playerStats ?? {}}
+          roomStats={roomState.roomStats ?? { gamesPlayed: 0, villageWins: 0, werewolfWins: 0, minorityWins: 0, draws: 0 }}
           onClose={() => setShowStats(false)}
         />
       )}

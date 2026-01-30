@@ -22,8 +22,8 @@ export type Role =
   | "MAYOR"
   | "CIA";
 
-/** ゲームフェーズ */
-export type Phase = "LOBBY" | "NIGHT" | "DAY" | "VOTING" | "HUNTER_REVENGE" | "FINISHED";
+/** ゲームフェーズ（ゲーム進行中のみ。ロビーは game === null で表現） */
+export type GamePhase = "NIGHT" | "DAY" | "VOTING" | "HUNTER_REVENGE" | "FINISHED";
 
 /** 陣営 */
 export type Team = "VILLAGE" | "WEREWOLF" | "MINORITY";
@@ -79,12 +79,10 @@ export interface GameConfig {
 // ゲーム状態型
 // ========================================
 
-/** ゲーム状態全体（Single Source of Truth） */
+/** ゲーム状態（ゲーム進行中のみ存在。ルームレベルの情報は含まない） */
 export interface GameState {
-  readonly roomId: string;
-  readonly phase: Phase;
-  readonly players: readonly Player[];
-  readonly config: GameConfig;
+  readonly phase: GamePhase;
+  readonly players: readonly Player[]; // ゲーム参加者（startGame 時にスナップショット）
   readonly initialDistribution: Record<string, Role>; // Key: PlayerId | 'CENTER_n'
   readonly actions: readonly GameAction[];
   readonly votes: Record<PlayerId, PlayerId>;
@@ -92,9 +90,6 @@ export interface GameState {
   readonly breadRecipientId: PlayerId | null; // パンを受け取ったプレイヤーID
   readonly noticeRecipientId: PlayerId | null; // 予告状を受け取ったプレイヤーID
   readonly phaseStartedAt: number | null;
-  readonly playerStats: Record<PlayerId, PlayerStat>; // プレイヤースタッツ
-  readonly roomStats: RoomStats; // ルーム全体スタッツ
-  readonly readyForNextGame: Record<PlayerId, boolean>; // 次ゲームへの準備完了状態
 }
 
 // ========================================
@@ -110,10 +105,8 @@ export interface ActionResult {
 
 /** クライアント用ゲーム状態（マスク済み） */
 export interface ClientGameState {
-  readonly roomId: string;
-  readonly phase: Phase;
-  readonly players: readonly Player[];
-  readonly config: GameConfig;
+  readonly phase: GamePhase;
+  readonly players: readonly Player[]; // ゲーム参加者
   readonly myRole: Role | null;
   readonly myActions: readonly GameAction[];
   readonly actionResults: readonly ActionResult[];
@@ -134,9 +127,6 @@ export interface ClientGameState {
   readonly receivedBread?: boolean;
   // 白怪盗から予告状を受け取ったか
   readonly receivedNotice?: boolean;
-  // スタッツ
-  readonly playerStats?: Record<PlayerId, PlayerStat>;
-  readonly roomStats?: RoomStats;
   // FINISHEDフェーズのみ
   readonly initialRoles?: Record<string, Role>;
   readonly finalRoles?: Record<string, Role>;
@@ -146,10 +136,6 @@ export interface ClientGameState {
   readonly hunterRevengeTargets?: Record<PlayerId, PlayerId>; // 狩人の道連れ結果
   readonly winners?: readonly PlayerId[];
   readonly winningTeam?: Team | null;
-  // 次ゲーム準備状態
-  readonly readyForNextGame?: Record<PlayerId, boolean>;
-  readonly isReadyForNextGame?: boolean; // 自分が準備完了か
-  readonly allPlayersReady?: boolean; // 全員準備完了か
 }
 
 // ========================================
@@ -186,19 +172,6 @@ export interface WinResult {
   readonly winningTeam: Team | null; // nullは引き分け
   readonly winners: readonly PlayerId[];
   readonly executedPlayerIds: readonly PlayerId[];
-}
-
-// ========================================
-// データベース型
-// ========================================
-
-/** Roomsテーブルの行型 */
-export interface RoomRow {
-  id: string;
-  version: number;
-  game_state: GameState;
-  created_at: string;
-  updated_at: string;
 }
 
 // ========================================

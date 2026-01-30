@@ -4,17 +4,17 @@ import { v4 as uuidv4 } from "uuid";
 import { createClient } from "@/lib/supabase/server";
 import {
   createRoom as dbCreateRoom,
-  getGameState,
+  getRoomState,
   updateRoomWithRetry,
   RoomNotFoundError,
 } from "@/lib/supabase/rooms";
 import {
-  createInitialGameState,
-  addPlayer,
-  removePlayer,
-  type Player,
-  type GameConfig,
-} from "@/lib/game";
+  createInitialRoomState,
+  addMember,
+  removeMember,
+  updateConfig,
+} from "@/lib/room";
+import type { Player, GameConfig } from "@/lib/game";
 import { getOrCreatePlayerId, setPlayerName } from "@/lib/session";
 import { authorizePlayer } from "@/lib/auth";
 
@@ -35,24 +35,18 @@ export async function createRoomAction(
     const playerId = await getOrCreatePlayerId();
     await setPlayerName(playerName);
 
-    // 初期ゲーム状態を作成
-    const initialState = createInitialGameState("");
-
-    // ホストプレイヤーを追加
-    const player: Player = {
+    const host: Player = {
       id: playerId,
       name: playerName,
       isHost: true,
       isConnected: true,
     };
 
-    const stateWithPlayer = addPlayer(initialState, player);
+    // 仮roomIdで初期状態を作成（DB保存後に更新）
+    const initialState = createInitialRoomState("", host);
 
     // DBに保存
-    const roomId = await dbCreateRoom(supabase, {
-      ...stateWithPlayer,
-      roomId: "", // roomIdはDB側で生成される
-    });
+    const roomId = await dbCreateRoom(supabase, initialState);
 
     // roomIdを更新
     await updateRoomWithRetry(supabase, roomId, (state) => ({
@@ -84,11 +78,11 @@ export async function joinRoomAction(
 
     await updateRoomWithRetry(supabase, roomId, (state) => {
       // 既に参加済みの場合は名前を更新
-      const existingPlayer = state.players.find((p) => p.id === playerId);
-      if (existingPlayer) {
+      const existingMember = state.members.find((p) => p.id === playerId);
+      if (existingMember) {
         return {
           ...state,
-          players: state.players.map((p) =>
+          members: state.members.map((p) =>
             p.id === playerId ? { ...p, name: playerName, isConnected: true } : p
           ),
         };
@@ -102,7 +96,7 @@ export async function joinRoomAction(
         isConnected: true,
       };
 
-      return addPlayer(state, player);
+      return addMember(state, player);
     });
 
     return { success: true };
@@ -130,7 +124,7 @@ export async function leaveRoomAction(
     const supabase = await createClient();
 
     await updateRoomWithRetry(supabase, roomId, (state) => {
-      return removePlayer(state, playerId);
+      return removeMember(state, playerId);
     });
 
     return { success: true };
@@ -157,7 +151,7 @@ export async function kickPlayerAction(
 
     await updateRoomWithRetry(supabase, roomId, (state) => {
       // ホストチェック
-      const player = state.players.find((p) => p.id === playerId);
+      const player = state.members.find((p) => p.id === playerId);
       if (!player?.isHost) {
         throw new Error("ホストのみがプレイヤーを退室させられます");
       }
@@ -168,12 +162,12 @@ export async function kickPlayerAction(
       }
 
       // 対象プレイヤーが存在するか確認
-      const targetPlayer = state.players.find((p) => p.id === targetPlayerId);
+      const targetPlayer = state.members.find((p) => p.id === targetPlayerId);
       if (!targetPlayer) {
         throw new Error("対象プレイヤーが見つかりません");
       }
 
-      return removePlayer(state, targetPlayerId);
+      return removeMember(state, targetPlayerId);
     });
 
     return { success: true };
@@ -200,12 +194,12 @@ export async function updateGameConfigAction(
 
     await updateRoomWithRetry(supabase, roomId, (state) => {
       // ホストチェック
-      const player = state.players.find((p) => p.id === playerId);
+      const player = state.members.find((p) => p.id === playerId);
       if (!player?.isHost) {
         throw new Error("ホストのみがゲーム設定を変更できます");
       }
 
-      return { ...state, config };
+      return updateConfig(state, config);
     });
 
     return { success: true };
@@ -226,7 +220,7 @@ export async function checkRoomExistsAction(
 ): Promise<ActionResult<{ exists: boolean }>> {
   try {
     const supabase = await createClient();
-    const room = await getGameState(supabase, roomId);
+    const room = await getRoomState(supabase, roomId);
 
     return { success: true, data: { exists: room !== null } };
   } catch (error) {
@@ -259,25 +253,29 @@ export async function createTestRoomAction(): Promise<
     const playerIds = [uuidv4(), uuidv4(), uuidv4(), uuidv4()];
     const playerNames = ["Player1", "Player2", "Player3", "Player4"];
 
-    // 初期ゲーム状態を作成
-    let state = createInitialGameState("");
+    // ホストプレイヤーで初期状態を作成
+    const host: Player = {
+      id: playerIds[0],
+      name: playerNames[0],
+      isHost: true,
+      isConnected: true,
+    };
 
-    // 4人のプレイヤーを追加
-    playerIds.forEach((id, index) => {
+    let state = createInitialRoomState("", host);
+
+    // 残り3人を追加
+    for (let i = 1; i < 4; i++) {
       const player: Player = {
-        id,
-        name: playerNames[index],
-        isHost: index === 0,
+        id: playerIds[i],
+        name: playerNames[i],
+        isHost: false,
         isConnected: true,
       };
-      state = addPlayer(state, player);
-    });
+      state = addMember(state, player);
+    }
 
     // DBに保存
-    const roomId = await dbCreateRoom(supabase, {
-      ...state,
-      roomId: "",
-    });
+    const roomId = await dbCreateRoom(supabase, state);
 
     // roomIdを更新
     await updateRoomWithRetry(supabase, roomId, (s) => ({

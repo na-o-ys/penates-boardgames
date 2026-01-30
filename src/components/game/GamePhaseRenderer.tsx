@@ -1,6 +1,8 @@
 "use client";
 
-import type { ClientGameState } from "@/lib/game";
+import { useState, useEffect } from "react";
+import type { ClientRoomState } from "@/lib/room";
+import { PhaseInterstitial } from "@/components/common/PhaseInterstitial";
 import {
   startGameAction,
   updateGameConfigAction,
@@ -12,7 +14,6 @@ import {
   autoVoteAction,
   submitHunterRevengeAction,
   autoHunterRevengeAction,
-  markReadyForNextGameAction,
 } from "@/actions";
 import { LobbyScreen } from "@/components/lobby/LobbyScreen";
 import { NightScreen } from "@/components/night/NightScreen";
@@ -24,32 +25,55 @@ import { ResultScreen } from "@/components/result/ResultScreen";
 interface GamePhaseRendererProps {
   roomId: string;
   playerId: string;
-  gameState: ClientGameState;
+  roomState: ClientRoomState;
 }
 
 export function GamePhaseRenderer({
   roomId,
   playerId,
-  gameState,
+  roomState,
 }: GamePhaseRendererProps) {
-  switch (gameState.phase) {
-    case "LOBBY":
-      return (
-        <LobbyScreen
-          roomId={roomId}
-          playerId={playerId}
-          gameState={gameState}
-          onStartGame={() => startGameAction(roomId, playerId)}
-          onSaveConfig={(config) => updateGameConfigAction(roomId, playerId, config)}
-          onKickPlayer={(targetId) => kickPlayerAction(roomId, playerId, targetId)}
-        />
-      );
+  const game = roomState.game;
+  const [returnedToLobby, setReturnedToLobby] = useState(false);
+  const [shownForPhase, setShownForPhase] = useState<string | null>(game?.phase ?? null);
+
+  // フェーズが FINISHED 以外に変わったらリセット
+  useEffect(() => {
+    if (game?.phase !== "FINISHED") {
+      setReturnedToLobby(false);
+    }
+  }, [game?.phase]);
+
+  // ロビー（ゲーム未開始）または途中参加者（ゲーム参加者でない）
+  if (!game || game.myRole === null) {
+    return (
+      <LobbyScreen
+        roomId={roomId}
+        playerId={playerId}
+        roomState={roomState}
+        onStartGame={() => startGameAction(roomId, playerId)}
+        onSaveConfig={(config) => updateGameConfigAction(roomId, playerId, config)}
+        onKickPlayer={(targetId) => kickPlayerAction(roomId, playerId, targetId)}
+      />
+    );
+  }
+
+  if (game.phase !== shownForPhase) {
+    return (
+      <PhaseInterstitial
+        phase={game.phase}
+        onComplete={() => setShownForPhase(game.phase)}
+      />
+    );
+  }
+
+  switch (game.phase) {
     case "NIGHT":
       return (
         <NightScreen
           roomId={roomId}
           playerId={playerId}
-          gameState={gameState}
+          roomState={roomState}
           onSubmitAction={(actionType, targets) => submitNightActionAction(roomId, playerId, actionType, targets)}
           onAutoSkip={() => autoSkipNightActionAction(roomId, playerId)}
         />
@@ -59,7 +83,7 @@ export function GamePhaseRenderer({
         <DayScreen
           roomId={roomId}
           playerId={playerId}
-          gameState={gameState}
+          roomState={roomState}
           onAdvancePhase={() => advancePhaseAction(roomId, playerId)}
         />
       );
@@ -68,7 +92,7 @@ export function GamePhaseRenderer({
         <VotingScreen
           roomId={roomId}
           playerId={playerId}
-          gameState={gameState}
+          roomState={roomState}
           onSubmitVote={(targetId) => submitVoteAction(roomId, playerId, targetId)}
           onAutoVote={() => autoVoteAction(roomId, playerId)}
         />
@@ -78,39 +102,37 @@ export function GamePhaseRenderer({
         <HunterRevengeScreen
           roomId={roomId}
           playerId={playerId}
-          gameState={gameState}
+          roomState={roomState}
           onSubmitRevenge={(targetId) => submitHunterRevengeAction(roomId, playerId, targetId)}
           onAutoRevenge={() => autoHunterRevengeAction(roomId, playerId)}
         />
       );
     case "FINISHED":
-      // 準備完了済みならLobbyScreenを表示
-      if (gameState.isReadyForNextGame) {
+      if (returnedToLobby) {
         return (
           <LobbyScreen
             roomId={roomId}
             playerId={playerId}
-            gameState={gameState}
+            roomState={roomState}
             onStartGame={() => startGameAction(roomId, playerId)}
             onSaveConfig={(config) => updateGameConfigAction(roomId, playerId, config)}
             onKickPlayer={(targetId) => kickPlayerAction(roomId, playerId, targetId)}
           />
         );
       }
-      // 未準備ならResultScreenを表示
       return (
         <ResultScreen
           roomId={roomId}
           playerId={playerId}
-          gameState={gameState}
-          onMarkReady={() => markReadyForNextGameAction(roomId, playerId)}
+          roomState={roomState}
+          onReturnToLobby={() => setReturnedToLobby(true)}
         />
       );
     default:
       return (
         <div className="flex min-h-screen flex-col items-center justify-center p-8">
           <h1 className="text-2xl font-bold mb-4 text-white">不明なフェーズ</h1>
-          <p className="text-gray-400">フェーズ: {gameState.phase}</p>
+          <p className="text-gray-400">フェーズ: {game.phase}</p>
         </div>
       );
   }

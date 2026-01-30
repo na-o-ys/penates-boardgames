@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { GameState } from "@/lib/game/types";
+import type { RoomState } from "@/lib/room/types";
+import { calculateStats, type GameState } from "@/lib/game";
 import type { Database, RoomRow } from "./database.types";
 
 export type TypedSupabaseClient = SupabaseClient<Database>;
@@ -25,12 +26,12 @@ export class RoomNotFoundError extends Error {
  */
 export async function createRoom(
   supabase: TypedSupabaseClient,
-  gameState: GameState
+  roomState: RoomState
 ): Promise<string> {
   const { data, error } = await supabase
     .from("rooms")
     .insert({
-      game_state: gameState,
+      game_state: roomState,
       version: 1,
     })
     .select("id")
@@ -74,16 +75,16 @@ export async function getRoom(
 /**
  * 部屋のゲーム状態を取得
  */
-export async function getGameState(
+export async function getRoomState(
   supabase: TypedSupabaseClient,
   roomId: string
-): Promise<{ gameState: GameState; version: number } | null> {
+): Promise<{ roomState: RoomState; version: number } | null> {
   const room = await getRoom(supabase, roomId);
   if (!room) {
     return null;
   }
   return {
-    gameState: room.game_state,
+    roomState: room.game_state,
     version: room.version,
   };
 }
@@ -94,7 +95,7 @@ export async function getGameState(
  * @param supabase - Supabaseクライアント
  * @param roomId - 部屋ID
  * @param currentVersion - 現在のバージョン（楽観的ロック用）
- * @param newGameState - 新しいゲーム状態
+ * @param newRoomState - 新しいゲーム状態
  * @returns 成功した場合は新しいバージョン番号
  * @throws OptimisticLockError - バージョンが一致しない場合
  */
@@ -102,12 +103,12 @@ export async function updateRoom(
   supabase: TypedSupabaseClient,
   roomId: string,
   currentVersion: number,
-  newGameState: GameState
+  newRoomState: RoomState
 ): Promise<number> {
   const { data, error } = await supabase
     .from("rooms")
     .update({
-      game_state: newGameState,
+      game_state: newRoomState,
       version: currentVersion + 1,
     })
     .eq("id", roomId)
@@ -137,18 +138,18 @@ export async function updateRoom(
 export async function updateRoomWithRetry(
   supabase: TypedSupabaseClient,
   roomId: string,
-  updateFn: (currentState: GameState) => GameState,
+  updateFn: (currentState: RoomState) => RoomState,
   maxRetries: number = 3
-): Promise<{ gameState: GameState; version: number }> {
+): Promise<{ roomState: RoomState; version: number }> {
   let retries = 0;
 
   while (retries < maxRetries) {
-    const current = await getGameState(supabase, roomId);
+    const current = await getRoomState(supabase, roomId);
     if (!current) {
       throw new RoomNotFoundError(roomId);
     }
 
-    const newState = updateFn(current.gameState);
+    const newState = updateFn(current.roomState);
 
     try {
       const newVersion = await updateRoom(
@@ -157,7 +158,7 @@ export async function updateRoomWithRetry(
         current.version,
         newState
       );
-      return { gameState: newState, version: newVersion };
+      return { roomState: newState, version: newVersion };
     } catch (e) {
       if (e instanceof OptimisticLockError) {
         retries++;
@@ -173,6 +174,38 @@ export async function updateRoomWithRetry(
   }
 
   throw new OptimisticLockError();
+}
+
+/**
+ * リトライ付きでゲーム状態を更新
+ *
+ * @param supabase - Supabaseクライアント
+ * @param roomId - 部屋ID
+ * @param transform - ゲーム状態を変換する純粋関数
+ * @param maxRetries - 最大リトライ回数
+ */
+export async function updateGame(
+  supabase: TypedSupabaseClient,
+  roomId: string,
+  transform: (game: GameState) => GameState,
+  maxRetries: number = 3
+): Promise<{ roomState: RoomState; version: number }> {
+  return updateRoomWithRetry(
+    supabase,
+    roomId,
+    (roomState) => {
+      if (!roomState.game) {
+        throw new Error("ゲームが開始されていません");
+      }
+      const newGame = transform(roomState.game);
+      if (newGame.phase === "FINISHED" && roomState.game.phase !== "FINISHED") {
+        const stats = calculateStats(newGame, roomState.playerStats, roomState.roomStats);
+        return { ...roomState, game: newGame, playerStats: stats.playerStats, roomStats: stats.roomStats };
+      }
+      return { ...roomState, game: newGame };
+    },
+    maxRetries
+  );
 }
 
 /**

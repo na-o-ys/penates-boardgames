@@ -1,4 +1,4 @@
-import type { GameAction, GameConfig, GameState, Phase, Player, PlayerId, PlayerStat, Role, RoomStats } from "./types";
+import type { GameAction, GameConfig, GamePhase, GameState, Player, PlayerId, PlayerStat, Role, RoomStats } from "./types";
 import { ROLES } from "./types";
 import { distributeRoles } from "./distribution";
 import { getActionResult } from "./resolver";
@@ -7,193 +7,35 @@ import { calculateExecutedPlayers, calculateGameResult } from "./judge";
 import { validateAction, validateVote, validateHunterRevenge, haveAllPlayersVoted, haveAllExecutedHuntersChosen } from "./validator";
 
 /**
- * プレイヤー人数に応じたデフォルト役職構成を返す
+ * ゲームを開始（members + config からゲーム状態を生成）
  */
-function getDefaultRoles(playerCount: number): Role[] {
-  switch (playerCount) {
-    case 0:
-    case 1:
-    case 2:
-      return [];
-    case 3: return ["WEREWOLF", "WEREWOLF", "VILLAGER", "SEER", "ROBBER"];
-    case 4: return ["WEREWOLF", "WEREWOLF", "VILLAGER", "VILLAGER", "SEER", "ROBBER"];
-    case 5: return ["WEREWOLF", "WEREWOLF", "VILLAGER", "VILLAGER", "VILLAGER", "SEER", "ROBBER"];
-    case 6: return ["WEREWOLF", "WEREWOLF", "VILLAGER", "VILLAGER", "VILLAGER", "VILLAGER", "SEER", "ROBBER"];
-    case 7: return ["WEREWOLF", "WEREWOLF", "VILLAGER", "VILLAGER", "VILLAGER", "VILLAGER", "SEER", "SEER", "ROBBER"];
-    case 8: return ["WEREWOLF", "WEREWOLF", "MADMAN", "VILLAGER", "VILLAGER", "VILLAGER", "VILLAGER", "SEER", "SEER", "ROBBER"];
-    default: {
-      const base = getDefaultRoles(8);
-      for (let i = 8; i < playerCount; i++) base.push("VILLAGER");
-      return base;
-    }
-  }
-}
-
-/**
- * 初期ゲーム状態を作成
- */
-export function createInitialGameState(roomId: string): GameState {
-  return {
-    roomId,
-    phase: "LOBBY",
-    players: [],
-    config: {
-      roles: getDefaultRoles(3),
-      nightDuration: 30,
-      dayDuration: 120,
-      votingDuration: 30,
-      updatedAt: 0,
-    },
-    initialDistribution: {},
-    actions: [],
-    votes: {},
-    hunterRevengeTarget: {},
-    breadRecipientId: null,
-    noticeRecipientId: null,
-    phaseStartedAt: null,
-    playerStats: {},
-    roomStats: { gamesPlayed: 0, villageWins: 0, werewolfWins: 0, minorityWins: 0, draws: 0 },
-    readyForNextGame: {},
-  };
-}
-
-/** 議論フェーズのデフォルト時間を算出（(人数-1)分、最低1分） */
-function defaultDayDuration(playerCount: number): number {
-  return Math.max(60, (playerCount - 1) * 60);
-}
-
-/**
- * プレイヤーを追加
- */
-export function addPlayer(
-  state: GameState,
-  player: Player
-): GameState {
-  if (state.phase !== "LOBBY") {
-    throw new Error("ロビーフェーズでのみプレイヤーを追加できます");
-  }
-
-  if (state.players.some((p) => p.id === player.id)) {
-    throw new Error("既に参加済みのプレイヤーです");
-  }
-
-  const newPlayers = [...state.players, player];
-  return {
-    ...state,
-    players: newPlayers,
-    config: {
-      ...state.config,
-      roles: getDefaultRoles(newPlayers.length),
-      dayDuration: defaultDayDuration(newPlayers.length),
-      updatedAt: Date.now(),
-    },
-  };
-}
-
-/**
- * プレイヤーを削除
- */
-export function removePlayer(
-  state: GameState,
-  playerId: PlayerId
-): GameState {
-  if (state.phase !== "LOBBY") {
-    throw new Error("ロビーフェーズでのみプレイヤーを削除できます");
-  }
-
-  const newPlayers = state.players.filter((p) => p.id !== playerId);
-  return {
-    ...state,
-    players: newPlayers,
-    config: {
-      ...state.config,
-      roles: getDefaultRoles(newPlayers.length),
-      dayDuration: defaultDayDuration(newPlayers.length),
-      updatedAt: Date.now(),
-    },
-  };
-}
-
-/**
- * ゲーム設定を更新
- */
-export function updateConfig(
-  state: GameState,
+export function startGame(
+  members: readonly Player[],
   config: GameConfig
 ): GameState {
-  if (state.phase !== "LOBBY") {
-    throw new Error("ロビーフェーズでのみ設定を変更できます");
-  }
-
-  return {
-    ...state,
-    config,
-  };
-}
-
-/**
- * ゲームを開始（ロビー/終了 → 夜フェーズ）
- */
-export function startGame(state: GameState): GameState {
-  if (state.phase !== "LOBBY" && state.phase !== "FINISHED") {
-    throw new Error("ロビーまたは終了フェーズからのみゲームを開始できます");
-  }
-
-  // FINISHED からの開始時は全員 ready が必要
-  if (state.phase === "FINISHED") {
-    const allReady = state.players.every((p) => state.readyForNextGame[p.id]);
-    if (!allReady) {
-      throw new Error("全員がロビーに戻るまで開始できません");
-    }
-  }
-
-  if (state.players.length < 3) {
+  if (members.length < 3) {
     throw new Error("最低3人のプレイヤーが必要です");
   }
 
-  const requiredRoles = state.players.length + 2;
-  if (state.config.roles.length !== requiredRoles) {
+  const requiredRoles = members.length + 2;
+  if (config.roles.length !== requiredRoles) {
     throw new Error(
-      `役職数が不正です。必要: ${requiredRoles}, 設定: ${state.config.roles.length}`
+      `役職数が不正です。必要: ${requiredRoles}, 設定: ${config.roles.length}`
     );
   }
 
   // 役職を配布
-  const distribution = distributeRoles(state.players, state.config.roles);
+  const distribution = distributeRoles(members, config.roles);
 
   // パン屋がいればランダムな他プレイヤーにパンを配達
-  const bakerEntry = Object.entries(distribution).find(
-    ([id, role]) => role === "BAKER" && !id.startsWith("CENTER")
-  );
-  let breadRecipientId: PlayerId | null = null;
-  if (bakerEntry) {
-    const bakerId = bakerEntry[0];
-    const otherPlayerIds = state.players
-      .filter((p) => p.id !== bakerId)
-      .map((p) => p.id);
-    if (otherPlayerIds.length > 0) {
-      breadRecipientId = otherPlayerIds[Math.floor(Math.random() * otherPlayerIds.length)];
-    }
-  }
+  const breadRecipientId = findRandomRecipient(distribution, members, "BAKER");
 
   // 白怪盗がいればランダムな他プレイヤーに予告状を配達
-  const whiteRobberEntry = Object.entries(distribution).find(
-    ([id, role]) => role === "WHITE_ROBBER" && !id.startsWith("CENTER")
-  );
-  let noticeRecipientId: PlayerId | null = null;
-  if (whiteRobberEntry) {
-    const whiteRobberId = whiteRobberEntry[0];
-    const otherPlayerIds = state.players
-      .filter((p) => p.id !== whiteRobberId)
-      .map((p) => p.id);
-    if (otherPlayerIds.length > 0) {
-      noticeRecipientId = otherPlayerIds[Math.floor(Math.random() * otherPlayerIds.length)];
-    }
-  }
+  const noticeRecipientId = findRandomRecipient(distribution, members, "WHITE_ROBBER");
 
   const nightState: GameState = {
-    ...state,
     phase: "NIGHT",
+    players: [...members],
     initialDistribution: distribution,
     actions: [],
     votes: {},
@@ -201,7 +43,6 @@ export function startGame(state: GameState): GameState {
     breadRecipientId,
     noticeRecipientId,
     phaseStartedAt: Date.now(),
-    readyForNextGame: {},
   };
 
   // 夜アクションを持つプレイヤーがいない場合は即座に昼フェーズへ
@@ -216,66 +57,54 @@ export function startGame(state: GameState): GameState {
  * 固定配置でゲームを開始（テスト用）
  */
 export function startGameWithDistribution(
-  state: GameState,
+  members: readonly Player[],
+  config: GameConfig,
   distribution: Record<string, Role>
 ): GameState {
-  if (state.phase !== "LOBBY" && state.phase !== "FINISHED") {
-    throw new Error("ロビーまたは終了フェーズからのみゲームを開始できます");
-  }
-
-  if (state.players.length < 3) {
+  if (members.length < 3) {
     throw new Error("最低3人のプレイヤーが必要です");
   }
 
-  // パン屋がいればランダムな他プレイヤーにパンを配達（テスト用固定配置）
-  const bakerEntryTest = Object.entries(distribution).find(
-    ([id, role]) => role === "BAKER" && !id.startsWith("CENTER")
-  );
-  let breadRecipientIdTest: PlayerId | null = null;
-  if (bakerEntryTest) {
-    const bakerId = bakerEntryTest[0];
-    const otherPlayerIds = state.players
-      .filter((p) => p.id !== bakerId)
-      .map((p) => p.id);
-    if (otherPlayerIds.length > 0) {
-      breadRecipientIdTest = otherPlayerIds[Math.floor(Math.random() * otherPlayerIds.length)];
-    }
-  }
-
-  // 白怪盗がいればランダムな他プレイヤーに予告状を配達（テスト用固定配置）
-  const whiteRobberEntryTest = Object.entries(distribution).find(
-    ([id, role]) => role === "WHITE_ROBBER" && !id.startsWith("CENTER")
-  );
-  let noticeRecipientIdTest: PlayerId | null = null;
-  if (whiteRobberEntryTest) {
-    const whiteRobberId = whiteRobberEntryTest[0];
-    const otherPlayerIds = state.players
-      .filter((p) => p.id !== whiteRobberId)
-      .map((p) => p.id);
-    if (otherPlayerIds.length > 0) {
-      noticeRecipientIdTest = otherPlayerIds[Math.floor(Math.random() * otherPlayerIds.length)];
-    }
-  }
+  const breadRecipientId = findRandomRecipient(distribution, members, "BAKER");
+  const noticeRecipientId = findRandomRecipient(distribution, members, "WHITE_ROBBER");
 
   const nightState: GameState = {
-    ...state,
     phase: "NIGHT",
+    players: [...members],
     initialDistribution: distribution,
     actions: [],
     votes: {},
     hunterRevengeTarget: {},
-    breadRecipientId: breadRecipientIdTest,
-    noticeRecipientId: noticeRecipientIdTest,
+    breadRecipientId,
+    noticeRecipientId,
     phaseStartedAt: Date.now(),
-    readyForNextGame: {},
   };
 
-  // 夜アクションを持つプレイヤーがいない場合は即座に昼フェーズへ
   if (shouldAutoAdvanceFromNight(nightState)) {
     return advancePhase(nightState);
   }
 
   return nightState;
+}
+
+/**
+ * 特定の役職のプレイヤーから、ランダムな他プレイヤーを選ぶ
+ */
+function findRandomRecipient(
+  distribution: Record<string, Role>,
+  members: readonly Player[],
+  role: Role
+): PlayerId | null {
+  const entry = Object.entries(distribution).find(
+    ([id, r]) => r === role && !id.startsWith("CENTER")
+  );
+  if (!entry) return null;
+
+  const sourceId = entry[0];
+  const otherIds = members.filter((p) => p.id !== sourceId).map((p) => p.id);
+  if (otherIds.length === 0) return null;
+
+  return otherIds[Math.floor(Math.random() * otherIds.length)];
 }
 
 /**
@@ -321,13 +150,11 @@ export function executeNightAction(
  * 夜フェーズから自動進行すべきかチェック
  */
 function shouldAutoAdvanceFromNight(state: GameState): boolean {
-  // アクション持ちの役職を持つプレイヤーを取得
   const playersWithActions = state.players.filter((player) => {
     const role = state.initialDistribution[player.id];
     return ROLES[role].hasNightAction;
   });
 
-  // 全員がアクションを実行したかチェック
   return playersWithActions.every((player) =>
     state.actions.some((action) => action.actorId === player.id)
   );
@@ -341,7 +168,6 @@ export function executeVote(
   voterId: PlayerId,
   targetId: PlayerId
 ): GameState {
-  // バリデーション
   const validation = validateVote(state, voterId, targetId);
   if (!validation.valid) {
     throw new Error(validation.error.message);
@@ -355,7 +181,6 @@ export function executeVote(
     },
   };
 
-  // 全員の投票が完了したかチェック
   if (haveAllPlayersVoted(newState)) {
     return advancePhase(newState);
   }
@@ -373,31 +198,23 @@ export function advancePhase(state: GameState): GameState {
     throw new Error("これ以上フェーズを進行できません");
   }
 
-  // FINISHED フェーズに遷移する際にスタッツを更新
-  const stats = nextPhase === "FINISHED" ? updateStats(state) : null;
-
   return {
     ...state,
     phase: nextPhase,
     phaseStartedAt: Date.now(),
-    playerStats: stats?.playerStats ?? state.playerStats,
-    roomStats: stats?.roomStats ?? state.roomStats,
   };
 }
 
 /**
  * 次のフェーズを取得
  */
-function getNextPhase(currentPhase: Phase, state?: GameState): Phase | null {
+function getNextPhase(currentPhase: GamePhase, state?: GameState): GamePhase | null {
   switch (currentPhase) {
-    case "LOBBY":
-      return "NIGHT";
     case "NIGHT":
       return "DAY";
     case "DAY":
       return "VOTING";
     case "VOTING":
-      // 投票完了時に狩人が処刑されるかチェック
       if (state) {
         const executedIds = calculateExecutedPlayers(state.votes, state.initialDistribution);
         const finalRoles = resolveFinalRoles(state.initialDistribution, state.actions);
@@ -422,13 +239,11 @@ export function executeHunterRevenge(
   hunterId: PlayerId,
   targetId: PlayerId
 ): GameState {
-  // バリデーション
   const validation = validateHunterRevenge(state, hunterId, targetId);
   if (!validation.valid) {
     throw new Error(validation.error.message);
   }
 
-  // 処刑された狩人のIDリストを取得
   const executedIds = calculateExecutedPlayers(state.votes, state.initialDistribution);
   const finalRoles = resolveFinalRoles(state.initialDistribution, state.actions);
   const executedHunterIds = executedIds.filter((id) => finalRoles[id] === "HUNTER");
@@ -441,7 +256,6 @@ export function executeHunterRevenge(
     },
   };
 
-  // 全ての処刑された狩人が道連れを選択したかチェック
   if (haveAllExecutedHuntersChosen(newState, executedHunterIds)) {
     return advancePhase(newState);
   }
@@ -450,9 +264,13 @@ export function executeHunterRevenge(
 }
 
 /**
- * ゲーム終了時のスタッツを更新
+ * ゲーム終了時のスタッツを計算
  */
-function updateStats(state: GameState): { playerStats: Record<PlayerId, PlayerStat>; roomStats: RoomStats } {
+export function calculateStats(
+  state: GameState,
+  prevPlayerStats: Record<PlayerId, PlayerStat>,
+  prevRoomStats: RoomStats
+): { playerStats: Record<PlayerId, PlayerStat>; roomStats: RoomStats } {
   const finalRoles = resolveFinalRoles(state.initialDistribution, state.actions);
   const result = calculateGameResult(
     state.votes,
@@ -462,7 +280,7 @@ function updateStats(state: GameState): { playerStats: Record<PlayerId, PlayerSt
     state.hunterRevengeTarget
   );
 
-  const newPlayerStats = { ...state.playerStats };
+  const newPlayerStats = { ...prevPlayerStats };
 
   for (const player of state.players) {
     const prev = newPlayerStats[player.id] ?? {
@@ -492,91 +310,14 @@ function updateStats(state: GameState): { playerStats: Record<PlayerId, PlayerSt
     };
   }
 
-  const prev = state.roomStats;
   const newRoomStats: RoomStats = {
-    gamesPlayed: prev.gamesPlayed + 1,
-    villageWins: prev.villageWins + (result.winningTeam === "VILLAGE" ? 1 : 0),
-    werewolfWins: prev.werewolfWins + (result.winningTeam === "WEREWOLF" ? 1 : 0),
-    minorityWins: prev.minorityWins + (result.winningTeam === "MINORITY" ? 1 : 0),
-    draws: prev.draws + (result.winningTeam === null ? 1 : 0),
+    gamesPlayed: prevRoomStats.gamesPlayed + 1,
+    villageWins: prevRoomStats.villageWins + (result.winningTeam === "VILLAGE" ? 1 : 0),
+    werewolfWins: prevRoomStats.werewolfWins + (result.winningTeam === "WEREWOLF" ? 1 : 0),
+    minorityWins: prevRoomStats.minorityWins + (result.winningTeam === "MINORITY" ? 1 : 0),
+    draws: prevRoomStats.draws + (result.winningTeam === null ? 1 : 0),
   };
 
   return { playerStats: newPlayerStats, roomStats: newRoomStats };
 }
 
-/**
- * プレイヤーを次ゲーム準備完了としてマーク
- */
-export function markReadyForNextGame(
-  state: GameState,
-  playerId: PlayerId
-): GameState {
-  if (state.phase !== "FINISHED") {
-    throw new Error("終了フェーズでのみ次のゲームの準備ができます");
-  }
-  return {
-    ...state,
-    readyForNextGame: {
-      ...state.readyForNextGame,
-      [playerId]: true,
-    },
-  };
-}
-
-/**
- * ゲームをリセット（結果 → ロビー）
- */
-export function resetGame(state: GameState): GameState {
-  return {
-    ...state,
-    phase: "LOBBY",
-    initialDistribution: {},
-    actions: [],
-    votes: {},
-    hunterRevengeTarget: {},
-    breadRecipientId: null,
-    noticeRecipientId: null,
-    phaseStartedAt: null,
-    readyForNextGame: {},
-  };
-}
-
-/**
- * ゲーム全体のReducer
- */
-export type GameActionType =
-  | { type: "ADD_PLAYER"; player: Player }
-  | { type: "REMOVE_PLAYER"; playerId: PlayerId }
-  | { type: "UPDATE_CONFIG"; config: GameConfig }
-  | { type: "START_GAME" }
-  | { type: "START_GAME_WITH_DISTRIBUTION"; distribution: Record<string, Role> }
-  | { type: "EXECUTE_NIGHT_ACTION"; action: GameAction }
-  | { type: "EXECUTE_VOTE"; voterId: PlayerId; targetId: PlayerId }
-  | { type: "ADVANCE_PHASE" }
-  | { type: "RESET_GAME" };
-
-export function gameReducer(
-  state: GameState,
-  action: GameActionType
-): GameState {
-  switch (action.type) {
-    case "ADD_PLAYER":
-      return addPlayer(state, action.player);
-    case "REMOVE_PLAYER":
-      return removePlayer(state, action.playerId);
-    case "UPDATE_CONFIG":
-      return updateConfig(state, action.config);
-    case "START_GAME":
-      return startGame(state);
-    case "START_GAME_WITH_DISTRIBUTION":
-      return startGameWithDistribution(state, action.distribution);
-    case "EXECUTE_NIGHT_ACTION":
-      return executeNightAction(state, action.action);
-    case "EXECUTE_VOTE":
-      return executeVote(state, action.voterId, action.targetId);
-    case "ADVANCE_PHASE":
-      return advancePhase(state);
-    case "RESET_GAME":
-      return resetGame(state);
-  }
-}

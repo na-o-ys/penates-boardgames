@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback, Fragment } from "react";
-import type { ClientGameState, PlayerId, Role } from "@/lib/game";
+import type { PlayerId, Role } from "@/lib/game";
 import { SKIP_VOTE } from "@/lib/game";
+import type { ClientRoomState } from "@/lib/room";
 import { PlayerCard } from "../common/PlayerCard";
 import { OtherPlayersDivider } from "../common/OtherPlayersDivider";
 import { PlayerRoleDisplay } from "../common/PlayerRoleDisplay";
@@ -14,7 +15,7 @@ import { VoteTargetBadge } from "../common/VoteTargetBadge";
 const HUNTER_REVENGE_DURATION = 30;
 
 interface HunterRevengeScreenProps {
-  gameState: ClientGameState;
+  roomState: ClientRoomState;
   playerId: string;
   roomId: string;
   onSubmitRevenge: (targetId: string) => Promise<{ success: boolean; error?: string }>;
@@ -22,7 +23,7 @@ interface HunterRevengeScreenProps {
 }
 
 export function HunterRevengeScreen({
-  gameState,
+  roomState,
   playerId,
   roomId,
   onSubmitRevenge,
@@ -34,16 +35,17 @@ export function HunterRevengeScreen({
   const [detailRole, setDetailRole] = useState<Role | null>(null);
   const [showRoleConfig, setShowRoleConfig] = useState(false);
 
-  const isExecutedHunter = gameState.isExecutedHunter ?? false;
-  const hasChosen = gameState.hunterRevengeChosen?.[playerId] ?? false;
-  const executedHunterIds = gameState.executedHunterIds ?? [];
+  const game = roomState.game!;
+  const isExecutedHunter = game.isExecutedHunter ?? false;
+  const hasChosen = game.hunterRevengeChosen?.[playerId] ?? false;
+  const executedHunterIds = game.executedHunterIds ?? [];
 
-  const chosenCount = Object.values(gameState.hunterRevengeChosen ?? {}).filter(
+  const chosenCount = Object.values(game.hunterRevengeChosen ?? {}).filter(
     Boolean
   ).length;
   const totalHunters = executedHunterIds.length;
 
-  const phaseStartedAt = gameState.phaseStartedAt;
+  const phaseStartedAt = game.phaseStartedAt;
 
   const calculateTimeLeft = useCallback(() => {
     if (!phaseStartedAt) return HUNTER_REVENGE_DURATION;
@@ -99,7 +101,7 @@ export function HunterRevengeScreen({
 
   const getExecutedHunterNames = () => {
     return executedHunterIds
-      .map((id: PlayerId) => gameState.players.find((p) => p.id === id)?.name)
+      .map((id: PlayerId) => game.players.find((p) => p.id === id)?.name)
       .filter(Boolean)
       .join("、");
   };
@@ -107,7 +109,7 @@ export function HunterRevengeScreen({
   const isTimeLow = timeLeft <= 10 && timeLeft > 0;
   const canSelect = isExecutedHunter && !hasChosen;
 
-  const sortedPlayers = [...gameState.players].sort((a, b) =>
+  const sortedPlayers = [...game.players].sort((a, b) =>
     a.id === playerId ? -1 : b.id === playerId ? 1 : 0
   );
 
@@ -119,8 +121,8 @@ export function HunterRevengeScreen({
   };
 
   return (
-    <div className="flex flex-col min-h-screen game-overlay">
-      <div className="max-w-md mx-auto w-full flex flex-col flex-1">
+    <div className="flex flex-col h-dvh overflow-hidden game-overlay">
+      <div className="max-w-md mx-auto w-full flex flex-col flex-1 min-h-0">
         {/* Header */}
         <div className="pt-8 pb-4 px-4 text-center relative">
           <button
@@ -150,7 +152,7 @@ export function HunterRevengeScreen({
         )}
 
         {/* Player list (scrollable) */}
-        <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-24">
+        <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-4 ">
           {sortedPlayers.map((player, index) => {
             const isCurrentPlayer = player.id === playerId;
 
@@ -158,9 +160,9 @@ export function HunterRevengeScreen({
               ? () => setConfirmTarget({ id: player.id, name: player.name })
               : undefined;
 
-            const voteTarget = gameState.allVotes?.[player.id];
+            const voteTarget = game.allVotes?.[player.id];
             const voteTargetPlayer = voteTarget && voteTarget !== SKIP_VOTE
-              ? gameState.players.find(p => p.id === voteTarget)
+              ? game.players.find(p => p.id === voteTarget)
               : null;
 
             return (
@@ -179,7 +181,7 @@ export function HunterRevengeScreen({
                   <PlayerRoleDisplay
                     playerId={player.id}
                     currentPlayerId={playerId}
-                    gameState={gameState}
+                    gameState={game}
                     tappable={canSelect && !isCurrentPlayer}
                     onRoleClick={setDetailRole}
                   />
@@ -190,7 +192,7 @@ export function HunterRevengeScreen({
         </div>
 
         {/* Footer */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[var(--color-bg-deep)] via-[var(--color-bg-deep)]/95 to-transparent z-20 max-w-md mx-auto">
+        <div className="shrink-0 px-4 pb-4 pt-8 -mt-8 relative z-10 bg-gradient-to-t from-[var(--color-bg-deep)] via-[var(--color-bg-deep)]/95 to-transparent">
           {canSelect ? (
             <p className="text-center text-[var(--color-text-muted)] py-3 text-xs">
               ※ 必ず誰かを選択してください（時間切れでランダム選択）
@@ -230,7 +232,7 @@ export function HunterRevengeScreen({
       )}
 
       {showRoleConfig && (
-        <RoleConfigModal roles={[...gameState.config.roles]} onClose={() => setShowRoleConfig(false)} />
+        <RoleConfigModal roles={[...roomState.config.roles]} onClose={() => setShowRoleConfig(false)} />
       )}
     </div>
   );

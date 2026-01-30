@@ -26,7 +26,7 @@ export default function RoomPage({ params }: RoomPageProps) {
   }, []);
 
   // playerIdが取得できたらuseGameStateを呼ぶ
-  const { gameState, isInRoom, isLoading, error, refresh } = useGameState(
+  const { roomState, isInRoom, isLoading, error, refresh } = useGameState(
     roomId,
     playerId ?? ""
   );
@@ -56,7 +56,7 @@ export default function RoomPage({ params }: RoomPageProps) {
     );
   }
 
-  if (!gameState || !playerId) {
+  if (!roomState || !playerId) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gray-900">
         <h1 className="text-2xl font-bold mb-4 text-red-500">エラー</h1>
@@ -80,7 +80,7 @@ export default function RoomPage({ params }: RoomPageProps) {
     <GamePhaseRenderer
       roomId={roomId}
       playerId={playerId}
-      gameState={gameState}
+      roomState={roomState}
     />
   );
 }

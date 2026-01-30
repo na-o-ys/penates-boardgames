@@ -26,7 +26,7 @@ export const ExecutedHunter: Story = {
   args: {
     roomId: "test-room-id",
     playerId: "p1",
-    gameState: hunterRevengeExecutedState,
+    roomState: hunterRevengeExecutedState,
   },
 };
 
@@ -34,7 +34,7 @@ export const Waiting: Story = {
   args: {
     roomId: "test-room-id",
     playerId: "p1",
-    gameState: hunterRevengeWaitingState,
+    roomState: hunterRevengeWaitingState,
   },
 };
 
@@ -42,6 +42,6 @@ export const Chosen: Story = {
   args: {
     roomId: "test-room-id",
     playerId: "p1",
-    gameState: hunterRevengeChosenState,
+    roomState: hunterRevengeChosenState,
   },
 };

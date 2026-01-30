@@ -25,7 +25,7 @@ export default function PracticePage() {
           currentActor={practice.currentActor}
           currentActorIndex={practice.currentActorIndex}
           nightActors={practice.nightActors}
-          currentClientState={practice.currentClientState}
+          currentRoomState={practice.currentRoomState}
           gameState={practice.gameState!}
           onSubmitAction={practice.submitNightAction}
           onAdvanceActor={practice.advanceNightActor}

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback, Fragment } from "react";
-import type { ClientGameState, Role } from "@/lib/game";
+import type { Role } from "@/lib/game";
 import { SKIP_VOTE, buildRevealedInfo } from "@/lib/game";
+import type { ClientRoomState } from "@/lib/room";
 import { PlayerCard } from "../common/PlayerCard";
 import { PlayerRoleDisplay } from "../common/PlayerRoleDisplay";
 import { RoleDetailModal } from "../common/RoleDetailModal";
@@ -11,28 +12,31 @@ import { OtherPlayersDivider } from "../common/OtherPlayersDivider";
 import { ConfirmModal } from "../common/ConfirmModal";
 import { SkipLink } from "../common/SkipLink";
 import { VoteTargetBadge } from "../common/VoteTargetBadge";
+import { PhaseProgressBar } from "../common/PhaseProgressBar";
+
 
 interface VotingScreenProps {
-  gameState: ClientGameState;
+  roomState: ClientRoomState;
   playerId: string;
   roomId: string;
   onSubmitVote: (targetId: string) => Promise<{ success: boolean; error?: string }>;
   onAutoVote: () => Promise<{ success: boolean; error?: string }>;
 }
 
-export function VotingScreen({ gameState, playerId, roomId, onSubmitVote, onAutoVote }: VotingScreenProps) {
+export function VotingScreen({ roomState, playerId, roomId, onSubmitVote, onAutoVote }: VotingScreenProps) {
   const [confirmTarget, setConfirmTarget] = useState<{ id: string; name: string; role?: Role } | "skip" | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detailRole, setDetailRole] = useState<Role | null>(null);
   const [showRoleConfig, setShowRoleConfig] = useState(false);
 
-  const votedCount = gameState.votedPlayers?.length ?? 0;
-  const totalPlayers = gameState.players.length;
-  const hasVoted = gameState.votedPlayers?.includes(playerId) ?? false;
+  const game = roomState.game!;
+  const votedCount = game.votedPlayers?.length ?? 0;
+  const totalPlayers = game.players.length;
+  const hasVoted = game.votedPlayers?.includes(playerId) ?? false;
 
-  const votingDuration = gameState.config.votingDuration;
-  const phaseStartedAt = gameState.phaseStartedAt;
+  const votingDuration = roomState.config.votingDuration;
+  const phaseStartedAt = game.phaseStartedAt;
 
   const calculateTimeLeft = useCallback(() => {
     if (!phaseStartedAt) return votingDuration;
@@ -89,17 +93,18 @@ export function VotingScreen({ gameState, playerId, roomId, onSubmitVote, onAuto
   };
 
   const isTimeLow = timeLeft <= 10 && timeLeft > 0;
-  const revealedInfo = buildRevealedInfo(gameState.actionResults);
+  const revealedInfo = buildRevealedInfo(game.actionResults);
 
-  const sortedPlayers = [...gameState.players].sort((a, b) =>
+  const sortedPlayers = [...game.players].sort((a, b) =>
     a.id === playerId ? -1 : b.id === playerId ? 1 : 0
   );
 
   return (
-    <div className="flex flex-col min-h-screen game-overlay">
-      <div className="max-w-md mx-auto w-full flex flex-col flex-1">
+    <div className="flex flex-col h-dvh overflow-hidden game-overlay">
+      <div className="max-w-md mx-auto w-full flex flex-col flex-1 min-h-0">
         {/* Header */}
         <div className="pt-8 pb-4 px-4 text-center relative">
+          <PhaseProgressBar currentPhase="VOTING" />
           <button
             onClick={() => setShowRoleConfig(true)}
             className="absolute top-8 right-4 w-9 h-9 rounded-full glass-panel flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
@@ -130,19 +135,19 @@ export function VotingScreen({ gameState, playerId, roomId, onSubmitVote, onAuto
         )}
 
         {/* Player list (scrollable) */}
-        <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-24">
+        <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-4 ">
           {sortedPlayers.map((player, index) => {
             const isCurrentPlayer = player.id === playerId;
-            const playerHasVoted = gameState.votedPlayers?.includes(player.id) ?? false;
+            const playerHasVoted = game.votedPlayers?.includes(player.id) ?? false;
 
             const cardOnClick = (!isCurrentPlayer && !hasVoted)
               ? () => setConfirmTarget({ id: player.id, name: player.name, role: revealedInfo.players[player.id] })
               : undefined;
 
             // 自分の投票先を表示（自分のカードのみ）
-            const myVoteTarget = isCurrentPlayer && gameState.myVote
-              ? (gameState.myVote !== SKIP_VOTE
-                  ? gameState.players.find(p => p.id === gameState.myVote)
+            const myVoteTarget = isCurrentPlayer && game.myVote
+              ? (game.myVote !== SKIP_VOTE
+                  ? game.players.find(p => p.id === game.myVote)
                   : null)
               : undefined;
 
@@ -159,7 +164,7 @@ export function VotingScreen({ gameState, playerId, roomId, onSubmitVote, onAuto
                         <span className="material-icons text-sm align-middle">check</span>
                         {" "}投票済み
                       </span>
-                      {isCurrentPlayer && gameState.myVote && (
+                      {isCurrentPlayer && game.myVote && (
                         <VoteTargetBadge targetName={myVoteTarget?.name ?? null} />
                       )}
                     </div>
@@ -168,7 +173,7 @@ export function VotingScreen({ gameState, playerId, roomId, onSubmitVote, onAuto
                   <PlayerRoleDisplay
                     playerId={player.id}
                     currentPlayerId={playerId}
-                    gameState={gameState}
+                    gameState={game}
                     tappable={!isCurrentPlayer && !hasVoted}
                     onRoleClick={setDetailRole}
                   />
@@ -179,7 +184,7 @@ export function VotingScreen({ gameState, playerId, roomId, onSubmitVote, onAuto
         </div>
 
         {/* Footer */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[var(--color-bg-deep)] via-[var(--color-bg-deep)]/95 to-transparent z-20 max-w-md mx-auto">
+        <div className="shrink-0 px-4 pb-4 pt-8 -mt-8 relative z-10 bg-gradient-to-t from-[var(--color-bg-deep)] via-[var(--color-bg-deep)]/95 to-transparent">
           {hasVoted ? (
             <div className="text-center py-3">
               <div className="w-full bg-black/30 rounded-full h-2 mb-2">
@@ -215,7 +220,7 @@ export function VotingScreen({ gameState, playerId, roomId, onSubmitVote, onAuto
       )}
 
       {showRoleConfig && (
-        <RoleConfigModal roles={[...gameState.config.roles]} onClose={() => setShowRoleConfig(false)} />
+        <RoleConfigModal roles={[...roomState.config.roles]} onClose={() => setShowRoleConfig(false)} />
       )}
     </div>
   );

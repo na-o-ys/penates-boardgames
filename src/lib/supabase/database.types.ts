@@ -1,4 +1,4 @@
-import type { GameState } from "@/lib/game/types";
+import type { RoomState } from "@/lib/room/types";
 
 export interface Database {
   public: {
@@ -7,21 +7,21 @@ export interface Database {
         Row: {
           id: string;
           version: number;
-          game_state: GameState;
+          game_state: RoomState;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
           version?: number;
-          game_state: GameState;
+          game_state: RoomState;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
           version?: number;
-          game_state?: GameState;
+          game_state?: RoomState;
           created_at?: string;
           updated_at?: string;
         };

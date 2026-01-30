@@ -2,9 +2,6 @@
 
 import { useState, useMemo, useCallback } from "react";
 import {
-  createInitialGameState,
-  addPlayer,
-  updateConfig,
   startGame as startGameReducer,
   executeNightAction,
   maskGameState,
@@ -12,11 +9,13 @@ import {
   ROLES,
   type GameState,
   type ClientGameState,
+  type GameConfig,
   type Role,
   type ActionType,
   type GameAction,
   type Player,
 } from "@/lib/game";
+import type { ClientRoomState } from "@/lib/room";
 
 type PracticePhase = "LOBBY" | "NIGHT" | "DAY";
 
@@ -62,22 +61,18 @@ export function usePracticeGame() {
 
   const currentActor = phase === "NIGHT" ? (nightActors[currentActorIndex] ?? null) : null;
 
+  const config: GameConfig = useMemo(() => ({
+    roles,
+    nightDuration: 0,
+    dayDuration: 0,
+    votingDuration: 0,
+    updatedAt: Date.now(),
+  }), [roles]);
+
   const startGame = useCallback(() => {
     if (playerCount < 3) return;
 
-    let state = createInitialGameState("practice");
-    for (const player of players) {
-      state = addPlayer(state, player);
-    }
-    state = updateConfig(state, {
-      roles,
-      nightDuration: 0,
-      dayDuration: 0,
-      votingDuration: 0,
-      updatedAt: Date.now(),
-    });
-    state = startGameReducer(state);
-
+    const state = startGameReducer(players, config);
     setGameState(state);
 
     // startGame may auto-advance to DAY if no night actions exist
@@ -88,7 +83,7 @@ export function usePracticeGame() {
       setPhase("NIGHT");
       setCurrentActorIndex(0);
     }
-  }, [playerCount, players, roles]);
+  }, [playerCount, players, config]);
 
   const submitNightAction = useCallback(
     async (
@@ -148,6 +143,17 @@ export function usePracticeGame() {
     return getMaskedState(gameState, pid);
   }, [gameState, phase, currentActor, viewPlayerId]);
 
+  // ClientRoomState wrapper for phase screen components
+  const currentRoomState = useMemo((): ClientRoomState | null => {
+    if (!currentClientState) return null;
+    return {
+      roomId: "practice",
+      members: players,
+      config,
+      game: currentClientState,
+    };
+  }, [currentClientState, players, config]);
+
   return {
     // State
     phase,
@@ -165,6 +171,7 @@ export function usePracticeGame() {
     currentActorIndex,
     nightActors,
     currentClientState,
+    currentRoomState,
     submitNightAction,
     advanceNightActor,
 

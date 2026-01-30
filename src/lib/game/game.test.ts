@@ -1,9 +1,6 @@
 import { describe, it, expect } from "vitest";
-import type { GameAction, GameState, Player, Role } from "./types";
+import type { GameAction, GameConfig, Player, Role } from "./types";
 import {
-  createInitialGameState,
-  addPlayer,
-  updateConfig,
   startGameWithDistribution,
   executeNightAction,
   executeVote,
@@ -26,20 +23,23 @@ function createTestPlayers(count: number): Player[] {
   }));
 }
 
+function createConfig(roles: Role[]): GameConfig {
+  return {
+    roles,
+    nightDuration: 10,
+    dayDuration: 180,
+    votingDuration: 60,
+    updatedAt: Date.now(),
+  };
+}
+
 function setupGame(
   playerCount: number,
   roles: Role[]
-): { state: GameState; players: Player[] } {
+): { players: Player[]; config: GameConfig } {
   const players = createTestPlayers(playerCount);
-  let state = createInitialGameState("test-room");
-
-  for (const player of players) {
-    state = addPlayer(state, player);
-  }
-
-  state = updateConfig(state, { ...state.config, roles });
-
-  return { state, players };
+  const config = createConfig(roles);
+  return { players, config };
 }
 
 function createAction(
@@ -63,7 +63,7 @@ describe("ゲームシナリオテスト", () => {
   describe("シナリオ1: 村人陣営の勝利（人狼を処刑）", () => {
     it("占い師が人狼を発見し、投票で人狼を処刑する", () => {
       // 3人プレイ: 占い師、人狼、村人 + 中央2枚（村人、村人）
-      const { state, players } = setupGame(3, [
+      const { players, config } = setupGame(3, [
         "SEER",
         "WEREWOLF",
         "VILLAGER",
@@ -80,7 +80,7 @@ describe("ゲームシナリオテスト", () => {
         CENTER_1: "VILLAGER",
       };
 
-      let gameState = startGameWithDistribution(state, distribution);
+      let gameState = startGameWithDistribution(players, config, distribution);
       expect(gameState.phase).toBe("NIGHT");
 
       // 占い師がplayer-2を占う
@@ -131,7 +131,7 @@ describe("ゲームシナリオテスト", () => {
   describe("シナリオ2: 人狼陣営の勝利（人狼が生存）", () => {
     it("人狼が処刑を免れ、村人が処刑される", () => {
       // 3人プレイ: 人狼、村人、村人 + 中央2枚
-      const { state, players } = setupGame(3, [
+      const { players, config } = setupGame(3, [
         "WEREWOLF",
         "VILLAGER",
         "VILLAGER",
@@ -147,7 +147,7 @@ describe("ゲームシナリオテスト", () => {
         CENTER_1: "ROBBER",
       };
 
-      let gameState = startGameWithDistribution(state, distribution);
+      let gameState = startGameWithDistribution(players, config, distribution);
 
       // 人狼は単独なので中央カードを見る
       const werewolfAction = createAction("player-1", "WEREWOLF_LOOK", [
@@ -189,7 +189,7 @@ describe("ゲームシナリオテスト", () => {
   describe("シナリオ3: 吊人の勝利（単独勝利）", () => {
     it("吊人が処刑されて単独勝利", () => {
       // 3人プレイ: 吊人、人狼、村人 + 中央2枚
-      const { state, players } = setupGame(3, [
+      const { players, config } = setupGame(3, [
         "TANNER",
         "WEREWOLF",
         "VILLAGER",
@@ -205,7 +205,7 @@ describe("ゲームシナリオテスト", () => {
         CENTER_1: "ROBBER",
       };
 
-      let gameState = startGameWithDistribution(state, distribution);
+      let gameState = startGameWithDistribution(players, config, distribution);
 
       // 人狼は単独なので中央カードを見る
       const werewolfAction = createAction("player-2", "WEREWOLF_LOOK", [
@@ -240,7 +240,7 @@ describe("ゲームシナリオテスト", () => {
   describe("シナリオ4: 平和村（人狼不在で誰も処刑しない）", () => {
     it("人狼がおらず全員バラバラ投票で村人陣営の勝利", () => {
       // 3人プレイ: 村人、村人、村人 + 中央2枚（人狼、人狼）
-      const { state, players } = setupGame(3, [
+      const { players, config } = setupGame(3, [
         "VILLAGER",
         "VILLAGER",
         "VILLAGER",
@@ -256,7 +256,7 @@ describe("ゲームシナリオテスト", () => {
         CENTER_1: "WEREWOLF",
       };
 
-      let gameState = startGameWithDistribution(state, distribution);
+      let gameState = startGameWithDistribution(players, config, distribution);
 
       // 村人は夜アクションがないので即座に昼フェーズへ
       expect(gameState.phase).toBe("DAY");
@@ -284,7 +284,7 @@ describe("ゲームシナリオテスト", () => {
   describe("シナリオ5: 怪盗による役職交換", () => {
     it("怪盗が人狼のカードを奪い、元人狼が処刑されて村人陣営の勝利", () => {
       // 3人プレイ: 怪盗、人狼、村人 + 中央2枚
-      const { state, players } = setupGame(3, [
+      const { players, config } = setupGame(3, [
         "ROBBER",
         "WEREWOLF",
         "VILLAGER",
@@ -300,7 +300,7 @@ describe("ゲームシナリオテスト", () => {
         CENTER_1: "TANNER",
       };
 
-      let gameState = startGameWithDistribution(state, distribution);
+      let gameState = startGameWithDistribution(players, config, distribution);
 
       // 人狼は単独なので中央を見る
       const werewolfAction = createAction("player-2", "WEREWOLF_LOOK", [
@@ -347,7 +347,7 @@ describe("ゲームシナリオテスト", () => {
 
     it("怪盗が村人のカードを奪い、人狼が処刑されて村人陣営の勝利", () => {
       // 3人プレイ: 怪盗、人狼、村人 + 中央2枚
-      const { state, players } = setupGame(3, [
+      const { players, config } = setupGame(3, [
         "ROBBER",
         "WEREWOLF",
         "VILLAGER",
@@ -363,7 +363,7 @@ describe("ゲームシナリオテスト", () => {
         CENTER_1: "TANNER",
       };
 
-      let gameState = startGameWithDistribution(state, distribution);
+      let gameState = startGameWithDistribution(players, config, distribution);
 
       // 人狼は単独なので中央を見る
       const werewolfAction = createAction("player-2", "WEREWOLF_LOOK", [
@@ -406,7 +406,7 @@ describe("ゲームシナリオテスト", () => {
   describe("シナリオ6: トラブルメーカーによる役職交換", () => {
     it("トラブルメーカーが人狼と村人を入れ替え、元村人が処刑される", () => {
       // 4人プレイ
-      const { state, players } = setupGame(4, [
+      const { players, config } = setupGame(4, [
         "TROUBLEMAKER",
         "WEREWOLF",
         "VILLAGER",
@@ -424,7 +424,7 @@ describe("ゲームシナリオテスト", () => {
         CENTER_1: "TANNER",
       };
 
-      let gameState = startGameWithDistribution(state, distribution);
+      let gameState = startGameWithDistribution(players, config, distribution);
 
       // 人狼は単独なので中央を見る
       const werewolfAction = createAction("player-2", "WEREWOLF_LOOK", [
@@ -476,7 +476,7 @@ describe("ゲームシナリオテスト", () => {
   describe("シナリオ7: 複数人狼の場合", () => {
     it("人狼が2人いて互いを確認し、1人が処刑されても人狼陣営は負ける", () => {
       // 4人プレイ: 人狼、人狼、村人、村人 + 中央2枚
-      const { state, players } = setupGame(4, [
+      const { players, config } = setupGame(4, [
         "WEREWOLF",
         "WEREWOLF",
         "VILLAGER",
@@ -494,7 +494,7 @@ describe("ゲームシナリオテスト", () => {
         CENTER_1: "ROBBER",
       };
 
-      let gameState = startGameWithDistribution(state, distribution);
+      let gameState = startGameWithDistribution(players, config, distribution);
 
       // 人狼同士はお互いを確認できるのでスキップ
       const werewolf1Action = createAction("player-1", "SKIP", []);
@@ -529,7 +529,7 @@ describe("ゲームシナリオテスト", () => {
   describe("シナリオ8: 占い師が中央カードを見る", () => {
     it("占い師が中央カード2枚を見て人狼がいないことを確認", () => {
       // 3人プレイ
-      const { state } = setupGame(3, [
+      const { players, config } = setupGame(3, [
         "SEER",
         "VILLAGER",
         "VILLAGER",
@@ -545,7 +545,7 @@ describe("ゲームシナリオテスト", () => {
         CENTER_1: "ROBBER",
       };
 
-      let gameState = startGameWithDistribution(state, distribution);
+      let gameState = startGameWithDistribution(players, config, distribution);
 
       // 占い師が中央カード2枚を見る
       const seerAction = createAction("player-1", "SEER_LOOK_CENTER", [
@@ -567,7 +567,7 @@ describe("ゲームシナリオテスト", () => {
   describe("シナリオ9: 平和村で村人処刑（全員敗北）", () => {
     it("人狼がおらず村人が処刑されると全員敗北", () => {
       // 3人プレイ: 村人、村人、村人 + 中央2枚（人狼、人狼）
-      const { state, players } = setupGame(3, [
+      const { players, config } = setupGame(3, [
         "VILLAGER",
         "VILLAGER",
         "VILLAGER",
@@ -583,7 +583,7 @@ describe("ゲームシナリオテスト", () => {
         CENTER_1: "WEREWOLF",
       };
 
-      let gameState = startGameWithDistribution(state, distribution);
+      let gameState = startGameWithDistribution(players, config, distribution);
 
       // 村人は夜アクションがないので即座に昼フェーズへ
       expect(gameState.phase).toBe("DAY");
@@ -612,7 +612,7 @@ describe("ゲームシナリオテスト", () => {
   describe("シナリオ10: 同票による複数人処刑", () => {
     it("村人と吊人が同時に処刑された場合、吊人の勝利", () => {
       // 4人プレイ: 村人、村人、吊人、人狼 + 中央2枚
-      const { state, players } = setupGame(4, [
+      const { players, config } = setupGame(4, [
         "VILLAGER",
         "VILLAGER",
         "TANNER",
@@ -630,7 +630,7 @@ describe("ゲームシナリオテスト", () => {
         CENTER_1: "ROBBER",
       };
 
-      let gameState = startGameWithDistribution(state, distribution);
+      let gameState = startGameWithDistribution(players, config, distribution);
 
       // 人狼は中央を見る
       const werewolfAction = createAction("player-4", "WEREWOLF_LOOK", [
@@ -665,7 +665,7 @@ describe("ゲームシナリオテスト", () => {
 
     it("村人と人狼が同時に処刑された場合、村人陣営の勝利", () => {
       // 4人プレイ: 村人、村人、村人、人狼 + 中央2枚
-      const { state, players } = setupGame(4, [
+      const { players, config } = setupGame(4, [
         "VILLAGER",
         "VILLAGER",
         "VILLAGER",
@@ -683,7 +683,7 @@ describe("ゲームシナリオテスト", () => {
         CENTER_1: "ROBBER",
       };
 
-      let gameState = startGameWithDistribution(state, distribution);
+      let gameState = startGameWithDistribution(players, config, distribution);
 
       // 人狼は中央を見る
       const werewolfAction = createAction("player-4", "WEREWOLF_LOOK", [
@@ -722,7 +722,7 @@ describe("ゲームシナリオテスト", () => {
   describe("シナリオ11: 人狼不在・狂人の扱い", () => {
     it("処刑なし：狂人含む全員勝利", () => {
       // 4人プレイ: 村人、村人、村人、狂人 + 中央2枚（人狼、人狼）
-      const { state, players } = setupGame(4, [
+      const { players, config } = setupGame(4, [
         "VILLAGER",
         "VILLAGER",
         "VILLAGER",
@@ -740,7 +740,7 @@ describe("ゲームシナリオテスト", () => {
         CENTER_1: "WEREWOLF",
       };
 
-      let gameState = startGameWithDistribution(state, distribution);
+      let gameState = startGameWithDistribution(players, config, distribution);
       expect(gameState.phase).toBe("DAY");
 
       gameState = advancePhase(gameState);
@@ -769,7 +769,7 @@ describe("ゲームシナリオテスト", () => {
 
     it("狂人処刑：全員敗北", () => {
       // 4人プレイ: 村人、村人、村人、狂人 + 中央2枚（人狼、人狼）
-      const { state, players } = setupGame(4, [
+      const { players, config } = setupGame(4, [
         "VILLAGER",
         "VILLAGER",
         "VILLAGER",
@@ -787,7 +787,7 @@ describe("ゲームシナリオテスト", () => {
         CENTER_1: "WEREWOLF",
       };
 
-      let gameState = startGameWithDistribution(state, distribution);
+      let gameState = startGameWithDistribution(players, config, distribution);
       expect(gameState.phase).toBe("DAY");
 
       gameState = advancePhase(gameState);
@@ -813,7 +813,7 @@ describe("ゲームシナリオテスト", () => {
   describe("シナリオ12: 人狼不在・吊人の扱い", () => {
     it("処刑なし：吊人以外が勝利", () => {
       // 4人プレイ: 村人、村人、村人、吊人 + 中央2枚（人狼、人狼）
-      const { state, players } = setupGame(4, [
+      const { players, config } = setupGame(4, [
         "VILLAGER",
         "VILLAGER",
         "VILLAGER",
@@ -831,7 +831,7 @@ describe("ゲームシナリオテスト", () => {
         CENTER_1: "WEREWOLF",
       };
 
-      let gameState = startGameWithDistribution(state, distribution);
+      let gameState = startGameWithDistribution(players, config, distribution);
       expect(gameState.phase).toBe("DAY");
 
       gameState = advancePhase(gameState);
@@ -862,7 +862,7 @@ describe("ゲームシナリオテスト", () => {
 
 describe("データマスキングテスト", () => {
   it("夜フェーズで自分の役職のみ見える", () => {
-    const { state } = setupGame(3, [
+    const { players, config } = setupGame(3, [
       "SEER",
       "WEREWOLF",
       "VILLAGER",
@@ -878,7 +878,7 @@ describe("データマスキングテスト", () => {
       CENTER_1: "VILLAGER",
     };
 
-    const gameState = startGameWithDistribution(state, distribution);
+    const gameState = startGameWithDistribution(players, config, distribution);
 
     const player1View = maskGameState(gameState, "player-1");
     expect(player1View.myRole).toBe("SEER");
@@ -889,7 +889,7 @@ describe("データマスキングテスト", () => {
   });
 
   it("人狼は仲間の人狼を確認できる", () => {
-    const { state } = setupGame(4, [
+    const { players, config } = setupGame(4, [
       "WEREWOLF",
       "WEREWOLF",
       "VILLAGER",
@@ -907,7 +907,7 @@ describe("データマスキングテスト", () => {
       CENTER_1: "ROBBER",
     };
 
-    const gameState = startGameWithDistribution(state, distribution);
+    const gameState = startGameWithDistribution(players, config, distribution);
 
     const player1View = maskGameStateForWerewolf(gameState, "player-1");
     expect(player1View.myRole).toBe("WEREWOLF");
@@ -922,7 +922,7 @@ describe("データマスキングテスト", () => {
   });
 
   it("結果フェーズで全情報が開示される", () => {
-    const { state } = setupGame(3, [
+    const { players, config } = setupGame(3, [
       "SEER",
       "WEREWOLF",
       "VILLAGER",
@@ -938,7 +938,7 @@ describe("データマスキングテスト", () => {
       CENTER_1: "VILLAGER",
     };
 
-    let gameState = startGameWithDistribution(state, distribution);
+    let gameState = startGameWithDistribution(players, config, distribution);
 
     // 占い師がplayer-2を占う
     gameState = executeNightAction(
@@ -974,25 +974,8 @@ describe("データマスキングテスト", () => {
 });
 
 describe("バリデーションテスト", () => {
-  it("ロビーフェーズでアクションを実行できない", () => {
-    const { state } = setupGame(3, [
-      "SEER",
-      "WEREWOLF",
-      "VILLAGER",
-      "VILLAGER",
-      "VILLAGER",
-    ]);
-
-    // ロビーフェーズのまま
-    expect(state.phase).toBe("LOBBY");
-
-    const action = createAction("player-1", "SEER_LOOK_PLAYER", ["player-2"]);
-
-    expect(() => executeNightAction(state, action)).toThrow();
-  });
-
-  it("同じプレイヤーが2回アクションできない", () => {
-    const { state } = setupGame(3, [
+  it("昼フェーズで夜アクションを実行できない", () => {
+    const { players, config } = setupGame(3, [
       "SEER",
       "WEREWOLF",
       "VILLAGER",
@@ -1008,7 +991,41 @@ describe("バリデーションテスト", () => {
       CENTER_1: "VILLAGER",
     };
 
-    let gameState = startGameWithDistribution(state, distribution);
+    let gameState = startGameWithDistribution(players, config, distribution);
+
+    // 夜アクションを完了させて昼へ
+    gameState = executeNightAction(
+      gameState,
+      createAction("player-1", "SEER_LOOK_PLAYER", ["player-2"])
+    );
+    gameState = executeNightAction(
+      gameState,
+      createAction("player-2", "SKIP", [])
+    );
+    expect(gameState.phase).toBe("DAY");
+
+    const action = createAction("player-1", "SEER_LOOK_PLAYER", ["player-2"]);
+    expect(() => executeNightAction(gameState, action)).toThrow();
+  });
+
+  it("同じプレイヤーが2回アクションできない", () => {
+    const { players, config } = setupGame(3, [
+      "SEER",
+      "WEREWOLF",
+      "VILLAGER",
+      "VILLAGER",
+      "VILLAGER",
+    ]);
+
+    const distribution: Record<string, Role> = {
+      "player-1": "SEER",
+      "player-2": "WEREWOLF",
+      "player-3": "VILLAGER",
+      CENTER_0: "VILLAGER",
+      CENTER_1: "VILLAGER",
+    };
+
+    let gameState = startGameWithDistribution(players, config, distribution);
 
     // 1回目のアクション
     gameState = executeNightAction(
@@ -1026,7 +1043,7 @@ describe("バリデーションテスト", () => {
   });
 
   it("役職に合わないアクションはエラー", () => {
-    const { state } = setupGame(3, [
+    const { players, config } = setupGame(3, [
       "VILLAGER",
       "WEREWOLF",
       "SEER",
@@ -1042,7 +1059,7 @@ describe("バリデーションテスト", () => {
       CENTER_1: "VILLAGER",
     };
 
-    const gameState = startGameWithDistribution(state, distribution);
+    const gameState = startGameWithDistribution(players, config, distribution);
 
     // 村人が占い師のアクションを実行しようとする
     expect(() =>

@@ -9,7 +9,7 @@ export type { Database, RoomRow, RoomInsert, RoomUpdate } from "./database.types
 export {
   createRoom,
   getRoom,
-  getGameState,
+  getRoomState,
   updateRoom,
   updateRoomWithRetry,
   deleteRoom,

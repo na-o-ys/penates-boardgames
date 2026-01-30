@@ -10,9 +10,9 @@ interface PlayerColumnProps {
 }
 
 export function PlayerColumn({ roomId, playerId, playerName }: PlayerColumnProps) {
-  const { gameState, isLoading, refresh } = useGameState(roomId, playerId);
+  const { roomState, isLoading, refresh } = useGameState(roomId, playerId);
 
-  if (isLoading || !gameState) {
+  if (isLoading || !roomState) {
     return (
       <div className="h-full flex items-center justify-center text-gray-400">
         読み込み中...
@@ -20,7 +20,7 @@ export function PlayerColumn({ roomId, playerId, playerName }: PlayerColumnProps
     );
   }
 
-  const isHost = gameState.players.find((p) => p.id === playerId)?.isHost;
+  const isHost = roomState.members.find((p) => p.id === playerId)?.isHost;
 
   return (
     <div className="border border-gray-700 h-full overflow-hidden flex flex-col">
@@ -30,11 +30,11 @@ export function PlayerColumn({ roomId, playerId, playerName }: PlayerColumnProps
           <span className="ml-1 text-xs bg-yellow-600 px-1 rounded">Host</span>
         )}
       </header>
-      <div className="flex-1 overflow-y-auto [&>*]:min-h-0">
+      <div className="flex-1 min-h-0 [&>*]:!h-full">
         <GamePhaseRenderer
           roomId={roomId}
           playerId={playerId}
-          gameState={gameState}
+          roomState={roomState}
         />
       </div>
     </div>

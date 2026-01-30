@@ -1,4 +1,5 @@
 import type { ClientGameState, Role } from "@/lib/game";
+import type { ClientRoomState } from "@/lib/room";
 
 const MOCK_PLAYERS = [
   { id: "p1", name: "太郎", isHost: true, isConnected: true },
@@ -17,11 +18,18 @@ const MOCK_CONFIG = {
   updatedAt: 0,
 } as const;
 
-const BASE_STATE: ClientGameState = {
+/** ClientRoomState のベース（game: null = ロビー） */
+const BASE_ROOM_STATE: ClientRoomState = {
   roomId: "test-room-id",
-  phase: "LOBBY",
-  players: MOCK_PLAYERS,
+  members: MOCK_PLAYERS,
   config: MOCK_CONFIG,
+  game: null,
+};
+
+/** ゲーム進行中の ClientGameState ベース */
+const BASE_GAME_STATE: ClientGameState = {
+  phase: "NIGHT",
+  players: MOCK_PLAYERS,
   myRole: null,
   myActions: [],
   actionResults: [],
@@ -32,117 +40,125 @@ const BASE_STATE: ClientGameState = {
   phaseStartedAt: null,
 };
 
+/** ゲーム進行中の ClientRoomState を生成するヘルパー */
+function withGame(game: ClientGameState): ClientRoomState {
+  return {
+    ...BASE_ROOM_STATE,
+    game,
+  };
+}
+
 // ========================================
-// LOBBY
+// LOBBY (game: null)
 // ========================================
 
-export const lobbyHostState: ClientGameState = {
-  ...BASE_STATE,
-  phase: "LOBBY",
+export const lobbyHostState: ClientRoomState = {
+  ...BASE_ROOM_STATE,
+  game: null,
 };
 
-export const lobbyGuestState: ClientGameState = {
-  ...BASE_STATE,
-  phase: "LOBBY",
+export const lobbyGuestState: ClientRoomState = {
+  ...BASE_ROOM_STATE,
+  game: null,
 };
 
 // ========================================
 // NIGHT
 // ========================================
 
-export const nightSeerState: ClientGameState = {
-  ...BASE_STATE,
+export const nightSeerState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "NIGHT",
   myRole: "SEER",
   hasActed: false,
   phaseStartedAt: Date.now(),
-};
+});
 
-export const nightWerewolfState: ClientGameState = {
-  ...BASE_STATE,
+export const nightWerewolfState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "NIGHT",
   myRole: "WEREWOLF",
   hasActed: false,
   fellowWerewolves: [],
   phaseStartedAt: Date.now(),
-};
+});
 
-export const nightWerewolfWithFellowsState: ClientGameState = {
-  ...BASE_STATE,
+export const nightWerewolfWithFellowsState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "NIGHT",
   myRole: "WEREWOLF",
   hasActed: false,
   fellowWerewolves: ["p2"],
   phaseStartedAt: Date.now(),
-};
+});
 
-export const nightRobberState: ClientGameState = {
-  ...BASE_STATE,
+export const nightRobberState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "NIGHT",
   myRole: "ROBBER",
   hasActed: false,
   phaseStartedAt: Date.now(),
-};
+});
 
-export const nightTroublemakerState: ClientGameState = {
-  ...BASE_STATE,
+export const nightTroublemakerState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "NIGHT",
   myRole: "TROUBLEMAKER",
   hasActed: false,
   phaseStartedAt: Date.now(),
-};
+});
 
-export const nightHunterState: ClientGameState = {
-  ...BASE_STATE,
+export const nightHunterState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "NIGHT",
   myRole: "HUNTER",
   hasActed: false,
   phaseStartedAt: Date.now(),
-};
+});
 
-export const nightVillagerState: ClientGameState = {
-  ...BASE_STATE,
+export const nightVillagerState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "NIGHT",
   myRole: "VILLAGER",
   hasActed: false,
   phaseStartedAt: Date.now(),
-};
+});
 
-export const nightTannerState: ClientGameState = {
-  ...BASE_STATE,
+export const nightTannerState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "NIGHT",
   myRole: "TANNER",
   hasActed: false,
   phaseStartedAt: Date.now(),
-};
+});
 
-export const nightMadmanState: ClientGameState = {
-  ...BASE_STATE,
+export const nightMadmanState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "NIGHT",
   myRole: "MADMAN",
   hasActed: false,
   phaseStartedAt: Date.now(),
-};
+});
 
-export const nightCiaState: ClientGameState = {
-  ...BASE_STATE,
+export const nightCiaState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "NIGHT",
   myRole: "CIA",
   hasActed: false,
   fellowWerewolves: ["p2"],
   phaseStartedAt: Date.now(),
-};
+});
 
-export const nightBakerState: ClientGameState = {
-  ...BASE_STATE,
+export const nightBakerState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "NIGHT",
   myRole: "BAKER",
   hasActed: false,
   phaseStartedAt: Date.now(),
-};
+});
 
-export const nightAlphaWolfState: ClientGameState = {
-  ...BASE_STATE,
+export const nightAlphaWolfState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "NIGHT",
   myRole: "ALPHA_WOLF",
   hasActed: false,
@@ -152,10 +168,10 @@ export const nightAlphaWolfState: ClientGameState = {
     CENTER_1: "VILLAGER",
   },
   phaseStartedAt: Date.now(),
-};
+});
 
-export const nightAlphaWolfWithFellowsState: ClientGameState = {
-  ...BASE_STATE,
+export const nightAlphaWolfWithFellowsState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "NIGHT",
   myRole: "ALPHA_WOLF",
   hasActed: false,
@@ -165,10 +181,10 @@ export const nightAlphaWolfWithFellowsState: ClientGameState = {
     CENTER_1: "HUNTER",
   },
   phaseStartedAt: Date.now(),
-};
+});
 
-export const nightActedState: ClientGameState = {
-  ...BASE_STATE,
+export const nightActedState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "NIGHT",
   myRole: "SEER",
   hasActed: true,
@@ -179,10 +195,10 @@ export const nightActedState: ClientGameState = {
     { type: "SEER_LOOK_PLAYER", targetIds: ["p2"], revealedRoles: ["WEREWOLF"] },
   ],
   phaseStartedAt: Date.now(),
-};
+});
 
-export const nightActedSeerCenterState: ClientGameState = {
-  ...BASE_STATE,
+export const nightActedSeerCenterState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "NIGHT",
   myRole: "SEER",
   hasActed: true,
@@ -193,10 +209,10 @@ export const nightActedSeerCenterState: ClientGameState = {
     { type: "SEER_LOOK_CENTER", targetIds: ["CENTER_0", "CENTER_1"], revealedRoles: ["SEER", "VILLAGER"] },
   ],
   phaseStartedAt: Date.now(),
-};
+});
 
-export const nightActedRobberState: ClientGameState = {
-  ...BASE_STATE,
+export const nightActedRobberState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "NIGHT",
   myRole: "ROBBER",
   hasActed: true,
@@ -207,11 +223,10 @@ export const nightActedRobberState: ClientGameState = {
     { type: "ROBBER_SWAP", targetIds: ["p2"], revealedRoles: ["WEREWOLF"] },
   ],
   phaseStartedAt: Date.now(),
-};
+});
 
-// パンを受け取ったプレイヤー（夜フェーズ）
-export const nightReceivedBreadState: ClientGameState = {
-  ...BASE_STATE,
+export const nightReceivedBreadState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "NIGHT",
   myRole: "VILLAGER",
   hasActed: true,
@@ -224,20 +239,18 @@ export const nightReceivedBreadState: ClientGameState = {
   ],
   receivedBread: true,
   phaseStartedAt: Date.now(),
-};
+});
 
-// 白怪盗（夜フェーズ）
-export const nightWhiteRobberState: ClientGameState = {
-  ...BASE_STATE,
+export const nightWhiteRobberState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "NIGHT",
   myRole: "WHITE_ROBBER",
   hasActed: false,
   phaseStartedAt: Date.now(),
-};
+});
 
-// 予告状を受け取ったプレイヤー（夜フェーズ）
-export const nightReceivedNoticeState: ClientGameState = {
-  ...BASE_STATE,
+export const nightReceivedNoticeState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "NIGHT",
   myRole: "VILLAGER",
   hasActed: true,
@@ -250,15 +263,14 @@ export const nightReceivedNoticeState: ClientGameState = {
   ],
   receivedNotice: true,
   phaseStartedAt: Date.now(),
-};
+});
 
 // ========================================
 // DAY
 // ========================================
 
-// パンを受け取ったプレイヤー（昼フェーズ）
-export const dayReceivedBreadState: ClientGameState = {
-  ...BASE_STATE,
+export const dayReceivedBreadState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "DAY",
   myRole: "VILLAGER",
   hasActed: true,
@@ -271,11 +283,10 @@ export const dayReceivedBreadState: ClientGameState = {
   ],
   receivedBread: true,
   phaseStartedAt: Date.now(),
-};
+});
 
-// 予告状を受け取ったプレイヤー（昼フェーズ）
-export const dayReceivedNoticeState: ClientGameState = {
-  ...BASE_STATE,
+export const dayReceivedNoticeState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "DAY",
   myRole: "VILLAGER",
   hasActed: true,
@@ -288,10 +299,10 @@ export const dayReceivedNoticeState: ClientGameState = {
   ],
   receivedNotice: true,
   phaseStartedAt: Date.now(),
-};
+});
 
-export const dayNormalState: ClientGameState = {
-  ...BASE_STATE,
+export const dayNormalState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "DAY",
   myRole: "SEER",
   myActions: [
@@ -301,10 +312,10 @@ export const dayNormalState: ClientGameState = {
     { type: "SEER_LOOK_PLAYER", targetIds: ["p2"], revealedRoles: ["WEREWOLF"] },
   ],
   phaseStartedAt: Date.now(),
-};
+});
 
-export const dayRobberSwapState: ClientGameState = {
-  ...BASE_STATE,
+export const dayRobberSwapState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "DAY",
   myRole: "ROBBER",
   myActions: [
@@ -314,14 +325,14 @@ export const dayRobberSwapState: ClientGameState = {
     { type: "ROBBER_SWAP", targetIds: ["p2"], revealedRoles: ["WEREWOLF"] },
   ],
   phaseStartedAt: Date.now(),
-};
+});
 
 // ========================================
 // VOTING
 // ========================================
 
-export const votingNotVotedState: ClientGameState = {
-  ...BASE_STATE,
+export const votingNotVotedState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "VOTING",
   myRole: "SEER",
   myActions: [
@@ -333,10 +344,10 @@ export const votingNotVotedState: ClientGameState = {
   votedPlayers: ["p3"],
   myVote: null,
   phaseStartedAt: Date.now(),
-};
+});
 
-export const votingVotedState: ClientGameState = {
-  ...BASE_STATE,
+export const votingVotedState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "VOTING",
   myRole: "SEER",
   myActions: [
@@ -348,10 +359,10 @@ export const votingVotedState: ClientGameState = {
   votedPlayers: ["p1", "p3"],
   myVote: "p2",
   phaseStartedAt: Date.now(),
-};
+});
 
-export const votingRobberNotVotedState: ClientGameState = {
-  ...BASE_STATE,
+export const votingRobberNotVotedState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "VOTING",
   myRole: "ROBBER",
   myActions: [
@@ -363,18 +374,15 @@ export const votingRobberNotVotedState: ClientGameState = {
   votedPlayers: [],
   myVote: null,
   phaseStartedAt: Date.now(),
-};
+});
 
 // ========================================
 // FINISHED
 // ========================================
 
-export const resultVillageWinState: ClientGameState = {
-  ...BASE_STATE,
+export const resultVillageWinState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "FINISHED",
-  readyForNextGame: {},
-  isReadyForNextGame: false,
-  allPlayersReady: false,
   myRole: "SEER",
   initialRoles: {
     p1: "SEER",
@@ -400,14 +408,11 @@ export const resultVillageWinState: ClientGameState = {
   executedPlayerIds: ["p2"],
   winners: ["p1", "p3", "p4"],
   winningTeam: "VILLAGE",
-};
+});
 
-export const resultWerewolfWinState: ClientGameState = {
-  ...BASE_STATE,
+export const resultWerewolfWinState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "FINISHED",
-  readyForNextGame: {},
-  isReadyForNextGame: false,
-  allPlayersReady: false,
   myRole: "SEER",
   initialRoles: {
     p1: "SEER",
@@ -430,14 +435,11 @@ export const resultWerewolfWinState: ClientGameState = {
   executedPlayerIds: ["p3"],
   winners: ["p2"],
   winningTeam: "WEREWOLF",
-};
+});
 
-export const resultSwappedState: ClientGameState = {
-  ...BASE_STATE,
+export const resultSwappedState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "FINISHED",
-  readyForNextGame: {},
-  isReadyForNextGame: false,
-  allPlayersReady: false,
   myRole: "ROBBER",
   initialRoles: {
     p1: "ROBBER",
@@ -463,14 +465,14 @@ export const resultSwappedState: ClientGameState = {
   executedPlayerIds: ["p1"],
   winners: ["p2", "p3", "p4"],
   winningTeam: "VILLAGE",
-};
+});
 
 // ========================================
 // HUNTER_REVENGE
 // ========================================
 
-export const hunterRevengeExecutedState: ClientGameState = {
-  ...BASE_STATE,
+export const hunterRevengeExecutedState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "HUNTER_REVENGE",
   myRole: "HUNTER",
   isExecutedHunter: true,
@@ -478,10 +480,10 @@ export const hunterRevengeExecutedState: ClientGameState = {
   hunterRevengeChosen: {},
   allVotes: { p1: "p2", p2: "p3", p3: "p1", p4: "p1" },
   phaseStartedAt: Date.now(),
-};
+});
 
-export const hunterRevengeWaitingState: ClientGameState = {
-  ...BASE_STATE,
+export const hunterRevengeWaitingState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "HUNTER_REVENGE",
   myRole: "SEER",
   isExecutedHunter: false,
@@ -495,10 +497,10 @@ export const hunterRevengeWaitingState: ClientGameState = {
     { type: "SEER_LOOK_PLAYER", targetIds: ["p3"], revealedRoles: ["ROBBER"] },
   ],
   phaseStartedAt: Date.now(),
-};
+});
 
-export const hunterRevengeChosenState: ClientGameState = {
-  ...BASE_STATE,
+export const hunterRevengeChosenState: ClientRoomState = withGame({
+  ...BASE_GAME_STATE,
   phase: "HUNTER_REVENGE",
   myRole: "HUNTER",
   isExecutedHunter: true,
@@ -506,4 +508,4 @@ export const hunterRevengeChosenState: ClientGameState = {
   hunterRevengeChosen: { p1: true },
   allVotes: { p1: "p2", p2: "p3", p3: "p1", p4: "p1" },
   phaseStartedAt: Date.now(),
-};
+});

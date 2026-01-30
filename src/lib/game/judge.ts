@@ -2,6 +2,36 @@ import type { PlayerId, Role, WinResult } from "./types";
 import { ROLES } from "./types";
 import { SKIP_VOTE } from "./validator";
 
+export interface VoteCount {
+  readonly count: number;
+  readonly voterIds: readonly PlayerId[];
+}
+
+/**
+ * 投票結果から各プレイヤーの得票数と投票者を集計
+ *
+ * @param votes - 投票結果 (voterId -> targetId)
+ * @param initialDistribution - 初期役職配置（重み付き投票用）
+ * @returns 各プレイヤーの得票情報 (targetId -> { count, voterIds })
+ */
+export function countVotes(
+  votes: Record<PlayerId, PlayerId>,
+  initialDistribution: Record<string, Role>
+): Record<PlayerId, VoteCount> {
+  const result: Record<PlayerId, { count: number; voterIds: PlayerId[] }> = {};
+
+  for (const [voterId, targetId] of Object.entries(votes)) {
+    if (targetId === SKIP_VOTE) continue;
+    if (!result[targetId]) result[targetId] = { count: 0, voterIds: [] };
+    const voterRole = initialDistribution[voterId];
+    const weight = ROLES[voterRole].voteWeight;
+    result[targetId].count += weight;
+    result[targetId].voterIds.push(voterId);
+  }
+
+  return result;
+}
+
 /**
  * 投票結果から処刑されるプレイヤーを計算
  *
@@ -13,26 +43,18 @@ export function calculateExecutedPlayers(
   votes: Record<PlayerId, PlayerId>,
   initialDistribution: Record<string, Role>
 ): readonly PlayerId[] {
-  // 得票数をカウント（SKIP_VOTEは無視、役職の重みを考慮）
-  const voteCount: Record<PlayerId, number> = {};
-
-  for (const [voterId, targetId] of Object.entries(votes)) {
-    if (targetId === SKIP_VOTE) continue; // スキップ投票は無視
-    const voterRole = initialDistribution[voterId];
-    const weight = ROLES[voterRole].voteWeight;
-    voteCount[targetId] = (voteCount[targetId] || 0) + weight;
-  }
+  const voteResult = countVotes(votes, initialDistribution);
 
   // 最多得票数を取得
-  const maxVotes = Math.max(...Object.values(voteCount), 0);
+  const maxVotes = Math.max(...Object.values(voteResult).map((v) => v.count), 0);
 
   if (maxVotes === 0) {
     return [];
   }
 
   // 最多得票者を取得（同票は全員処刑）
-  const executedPlayers = Object.entries(voteCount)
-    .filter(([, count]) => count === maxVotes)
+  const executedPlayers = Object.entries(voteResult)
+    .filter(([, v]) => v.count === maxVotes)
     .map(([playerId]) => playerId);
 
   // 全員がバラバラに投票した場合（全員1票ずつ）は処刑なし

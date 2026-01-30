@@ -23,7 +23,7 @@ export const Host: Story = {
   args: {
     roomId: "test-room-id",
     playerId: "p1",
-    gameState: lobbyHostState,
+    roomState: lobbyHostState,
   },
 };
 
@@ -31,6 +31,6 @@ export const Guest: Story = {
   args: {
     roomId: "test-room-id",
     playerId: "p2",
-    gameState: lobbyGuestState,
+    roomState: lobbyGuestState,
   },
 };

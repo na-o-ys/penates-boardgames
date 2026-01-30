@@ -7,7 +7,6 @@ interface PlayerListProps {
   currentPlayerId: string;
   isHost?: boolean;
   onKickPlayer?: (playerId: string) => void;
-  readyForNextGame?: Record<string, boolean>;
 }
 
 export function PlayerList({
@@ -15,7 +14,6 @@ export function PlayerList({
   currentPlayerId,
   isHost = false,
   onKickPlayer,
-  readyForNextGame,
 }: PlayerListProps) {
   return (
     <div className="space-y-2">
@@ -40,11 +38,6 @@ export function PlayerList({
             )}
           </div>
           <div className="flex items-center gap-2">
-            {readyForNextGame !== undefined && readyForNextGame[player.id] && (
-              <span className="px-2 py-1 bg-[var(--color-ready)]/20 text-[var(--color-ready)] text-xs rounded-lg font-semibold">
-                準備完了
-              </span>
-            )}
             {player.isHost && (
               <span className="px-2 py-1 bg-[var(--color-primary)]/20 text-[var(--color-primary)] text-xs rounded-lg font-semibold">
                 ホスト

@@ -161,3 +161,37 @@ input[type=range]::-webkit-slider-runnable-track {
 input[type=range]:disabled {
   opacity: 0.5;
 }
+
+/* フェーズ遷移インタースティシャル */
+@keyframes interstitial-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes interstitial-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes interstitial-text-in {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.interstitial-fade-in {
+  animation: interstitial-fade-in 300ms ease-out forwards;
+}
+
+.interstitial-fade-out {
+  animation: interstitial-fade-out 300ms ease-in forwards;
+}
+
+.interstitial-text {
+  animation: interstitial-text-in 400ms ease-out forwards;
+}

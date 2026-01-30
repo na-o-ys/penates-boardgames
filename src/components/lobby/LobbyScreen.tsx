@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { type ClientGameState, type GameConfig, type Role } from "@/lib/game";
+import { type GameConfig, type Role } from "@/lib/game";
+import type { ClientRoomState } from "@/lib/room";
 import { PlayerList } from "./PlayerList";
 import { RoleSelector } from "./RoleSelector";
 import { TimerSettings } from "./TimerSettings";
@@ -11,7 +12,7 @@ type LobbyTab = "players" | "roles" | "settings";
 
 interface LobbyScreenProps {
   roomId: string;
-  gameState: ClientGameState;
+  roomState: ClientRoomState;
   playerId: string;
   onStartGame: () => Promise<{ success: boolean; error?: string }>;
   onSaveConfig: (config: GameConfig) => Promise<{ success: boolean; error?: string }>;
@@ -20,7 +21,7 @@ interface LobbyScreenProps {
 
 export function LobbyScreen({
   roomId,
-  gameState,
+  roomState,
   playerId,
   onStartGame,
   onSaveConfig,
@@ -29,22 +30,21 @@ export function LobbyScreen({
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<LobbyTab>("players");
-  const [localConfig, setLocalConfig] = useState<GameConfig>(gameState.config);
+  const [localConfig, setLocalConfig] = useState<GameConfig>(roomState.config);
   const [showStats, setShowStats] = useState(false);
 
   // サーバーの config が localConfig より新しければ同期（他タブからの更新）
   useEffect(() => {
-    if (gameState.config.updatedAt > localConfig.updatedAt) {
-      setLocalConfig(gameState.config);
+    if (roomState.config.updatedAt > localConfig.updatedAt) {
+      setLocalConfig(roomState.config);
     }
-  }, [gameState.config, localConfig.updatedAt]);
+  }, [roomState.config, localConfig.updatedAt]);
 
-  const isHost = gameState.players.find((p) => p.id === playerId)?.isHost ?? false;
-  const playerCount = gameState.players.length;
+  const isHost = roomState.members.find((p) => p.id === playerId)?.isHost ?? false;
+  const playerCount = roomState.members.length;
   const requiredRoles = playerCount + 2;
   const hasValidRoles = localConfig.roles.length === requiredRoles;
-  const allPlayersReady = gameState.allPlayersReady ?? true;
-  const canStart = isHost && playerCount >= 3 && hasValidRoles && allPlayersReady;
+  const canStart = isHost && playerCount >= 3 && hasValidRoles;
 
   const saveConfig = (newConfig: GameConfig) => {
     setLocalConfig(newConfig);
@@ -159,11 +159,10 @@ export function LobbyScreen({
         <div className="flex-1 glass-card rounded-xl p-4 mb-6">
           {activeTab === "players" && (
             <PlayerList
-              players={gameState.players}
+              players={roomState.members}
               currentPlayerId={playerId}
               isHost={isHost}
               onKickPlayer={handleKickPlayer}
-              readyForNextGame={gameState.phase === "FINISHED" ? gameState.readyForNextGame : undefined}
             />
           )}
 
@@ -219,8 +218,6 @@ export function LobbyScreen({
                   ? "3人以上でプレイできます"
                   : !hasValidRoles
                   ? "役職を設定してください"
-                  : !allPlayersReady
-                  ? "全員がロビーに戻るのを待っています..."
                   : ""}
               </p>
             )}
@@ -229,18 +226,16 @@ export function LobbyScreen({
 
         {!isHost && (
           <div className="text-center pb-4 text-[var(--color-text-muted)] text-sm">
-            {!allPlayersReady
-              ? "全員がロビーに戻るのを待っています..."
-              : "ホストがゲームを開始するのを待っています..."}
+            ホストがゲームを開始するのを待っています...
           </div>
         )}
       </div>
 
       {showStats && (
         <PlayerStatsModal
-          players={gameState.players}
-          playerStats={gameState.playerStats ?? {}}
-          roomStats={gameState.roomStats ?? { gamesPlayed: 0, villageWins: 0, werewolfWins: 0, minorityWins: 0, draws: 0 }}
+          players={roomState.members}
+          playerStats={roomState.playerStats ?? {}}
+          roomStats={roomState.roomStats ?? { gamesPlayed: 0, villageWins: 0, werewolfWins: 0, minorityWins: 0, draws: 0 }}
           onClose={() => setShowStats(false)}
         />
       )}

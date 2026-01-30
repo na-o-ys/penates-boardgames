@@ -5,10 +5,10 @@ import {
   ROLES,
   buildRevealedInfo,
   getSwapReason,
-  type ClientGameState,
   type ActionType,
   type Role,
 } from "@/lib/game";
+import type { ClientRoomState } from "@/lib/room";
 import { RoleMiniCard, UnknownMiniCard } from "../common/RoleMiniCard";
 import { PlayerCard } from "../common/PlayerCard";
 import { PlayerRoleDisplay } from "../common/PlayerRoleDisplay";
@@ -19,10 +19,12 @@ import { RoleDetailModal } from "../common/RoleDetailModal";
 import { RoleConfigModal } from "../common/RoleConfigModal";
 import { SkipLink } from "../common/SkipLink";
 import { OtherPlayersDivider } from "../common/OtherPlayersDivider";
+import { PhaseProgressBar } from "../common/PhaseProgressBar";
+
 
 interface NightScreenProps {
   roomId: string;
-  gameState: ClientGameState;
+  roomState: ClientRoomState;
   playerId: string;
   onSubmitAction: (actionType: ActionType, targets: string[]) => Promise<{ success: boolean; error?: string }>;
   onAutoSkip: () => Promise<{ success: boolean; error?: string }>;
@@ -34,7 +36,7 @@ interface NightScreenProps {
 
 export function NightScreen({
   roomId,
-  gameState,
+  roomState,
   playerId,
   onSubmitAction,
   onAutoSkip,
@@ -49,8 +51,9 @@ export function NightScreen({
   const [showRoleConfig, setShowRoleConfig] = useState(false);
   const [pendingResult, setPendingResult] = useState<{ type: ActionType; targets: string[] } | null>(initialPendingResult);
 
-  const nightDuration = gameState.config.nightDuration;
-  const phaseStartedAt = gameState.phaseStartedAt;
+  const game = roomState.game!;
+  const nightDuration = roomState.config.nightDuration;
+  const phaseStartedAt = game.phaseStartedAt;
 
   const calculateTimeLeft = useCallback(() => {
     if (!phaseStartedAt) return nightDuration;
@@ -74,7 +77,7 @@ export function NightScreen({
     return () => clearInterval(timer);
   }, [timeLeft, calculateTimeLeft]);
 
-  const hasActed = gameState.hasActed;
+  const hasActed = game.hasActed;
   useEffect(() => {
     if (timeLeft <= 0 && !hasActed) {
       onAutoSkip().catch(console.error);
@@ -87,14 +90,14 @@ export function NightScreen({
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const myRole = gameState.myRole;
+  const myRole = game.myRole;
   const hasAction = myRole ? ROLES[myRole].hasNightAction : false;
-  const fellowWerewolves = gameState.fellowWerewolves ?? [];
-  const otherPlayers = gameState.players.filter((p) => p.id !== playerId);
-  const sortedPlayers = [...gameState.players].sort((a, b) =>
+  const fellowWerewolves = game.fellowWerewolves ?? [];
+  const otherPlayers = game.players.filter((p) => p.id !== playerId);
+  const sortedPlayers = [...game.players].sort((a, b) =>
     a.id === playerId ? -1 : b.id === playerId ? 1 : 0
   );
-  const revealedInfo = buildRevealedInfo(gameState.actionResults);
+  const revealedInfo = buildRevealedInfo(game.actionResults);
 
   const handleSubmitAction = async (actionType: ActionType, targets: string[]) => {
     setIsSubmitting(true);
@@ -172,7 +175,7 @@ export function NightScreen({
           const parts: string[] = [];
           if (fellowWerewolves.length > 0) {
             const fellowNames = fellowWerewolves
-              .map((id) => gameState.players.find((p) => p.id === id)?.name)
+              .map((id) => game.players.find((p) => p.id === id)?.name)
               .filter(Boolean)
               .join("、");
             parts.push(`人狼仲間は ${fellowNames} です`);
@@ -192,7 +195,7 @@ export function NightScreen({
   const getConfirmTitle = (): string => {
     if (!confirmAction) return "";
     const targetNames = confirmAction.targets
-      .map((id) => gameState.players.find((p) => p.id === id)?.name)
+      .map((id) => game.players.find((p) => p.id === id)?.name)
       .filter(Boolean);
 
     switch (confirmAction.type) {
@@ -231,7 +234,7 @@ export function NightScreen({
     }
     return confirmAction.targets
       .map((id) => {
-        const player = gameState.players.find((p) => p.id === id);
+        const player = game.players.find((p) => p.id === id);
         return player ? { name: player.name } : null;
       })
       .filter((t): t is { name: string } => t !== null);
@@ -245,7 +248,7 @@ export function NightScreen({
         <PlayerRoleDisplay
           playerId={playerId_}
           currentPlayerId={playerId}
-          gameState={gameState}
+          gameState={game}
           onRoleClick={setDetailRole}
         />
       );
@@ -272,10 +275,11 @@ export function NightScreen({
   };
 
   return (
-    <div className="flex flex-col min-h-screen game-overlay">
-      <div className="max-w-md mx-auto w-full flex flex-col flex-1">
+    <div className="flex flex-col h-dvh overflow-hidden game-overlay">
+      <div className="max-w-md mx-auto w-full flex flex-col flex-1 min-h-0">
         {/* Header */}
         <div className="pt-8 pb-4 px-4 text-center relative">
+          <PhaseProgressBar currentPhase="NIGHT" />
           <button
             onClick={() => setShowRoleConfig(true)}
             className="absolute top-8 right-4 w-9 h-9 rounded-full glass-panel flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
@@ -301,11 +305,11 @@ export function NightScreen({
         )}
 
         {/* Player list + Cemetery (scrollable) */}
-        <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-24">
+        <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-4 ">
           {sortedPlayers.map((player, index) => {
             const isCurrentPlayer = player.id === playerId;
             const swapReason = hasActed
-              ? getSwapReason(player.id, gameState.myActions, gameState.players)
+              ? getSwapReason(player.id, game.myActions, game.players)
               : null;
 
             const cardOnClick = (() => {
@@ -353,13 +357,13 @@ export function NightScreen({
                         ) : (
                           <p className="text-[var(--color-ready)] font-semibold text-xs">アクション完了</p>
                         )}
-                        {gameState.receivedBread && (
+                        {game.receivedBread && (
                           <div className="flex items-center gap-1 text-amber-400 text-xs mt-1">
                             <span className="material-icons text-sm">bakery_dining</span>
                             <span>パン屋からパンが届きました</span>
                           </div>
                         )}
-                        {gameState.receivedNotice && (
+                        {game.receivedNotice && (
                           <div className="flex items-center gap-1 text-white text-xs mt-1">
                             <span className="material-icons text-sm">mail</span>
                             <span>白怪盗から予告状が届きました</span>
@@ -390,15 +394,15 @@ export function NightScreen({
               centerRoles={{}}
               onTapCenter={() => setConfirmAction({ type: "SEER_LOOK_CENTER", targets: ["CENTER_0", "CENTER_1"] })}
             />
-          ) : myRole && ROLES[myRole].revealsCenter && gameState.revealedCenterRoles ? (
-            <CemeterySection centerRoles={gameState.revealedCenterRoles} />
+          ) : myRole && ROLES[myRole].revealsCenter && game.revealedCenterRoles ? (
+            <CemeterySection centerRoles={game.revealedCenterRoles} />
           ) : (
             <CemeterySection centerRoles={{}} />
           )}
         </div>
 
         {/* Footer */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[var(--color-bg-deep)] via-[var(--color-bg-deep)]/95 to-transparent z-20 max-w-md mx-auto">
+        <div className="shrink-0 px-4 pb-4 pt-8 -mt-8 relative z-10 bg-gradient-to-t from-[var(--color-bg-deep)] via-[var(--color-bg-deep)]/95 to-transparent">
           {(() => {
             const isWerewolfAlly = myRole && ROLES[myRole].isWerewolfNightAlly;
             if (hasActed || (!hasAction && !isWerewolfAlly)) {
@@ -430,7 +434,7 @@ export function NightScreen({
 
       {/* Night Result Modal */}
       {pendingResult && hasActed && (() => {
-        const actionResult = gameState.actionResults.find(r => r.type === pendingResult.type);
+        const actionResult = game.actionResults.find(r => r.type === pendingResult.type);
         if (!actionResult?.revealedRoles) return null;
 
         let resultTitle: string;
@@ -438,7 +442,7 @@ export function NightScreen({
 
         switch (pendingResult.type) {
           case "SEER_LOOK_PLAYER": {
-            const player = gameState.players.find(p => p.id === pendingResult.targets[0]);
+            const player = game.players.find(p => p.id === pendingResult.targets[0]);
             resultTitle = `${player?.name}の役職`;
             resultTargets = [{ name: player?.name ?? "", role: actionResult.revealedRoles[0] }];
             break;
@@ -451,7 +455,7 @@ export function NightScreen({
             }));
             break;
           case "ROBBER_SWAP": {
-            const player = gameState.players.find(p => p.id === pendingResult.targets[0]);
+            const player = game.players.find(p => p.id === pendingResult.targets[0]);
             resultTitle = `${player?.name}から${ROLES[actionResult.revealedRoles[0]].name}を奪った`;
             resultTargets = [{ name: player?.name ?? "", role: actionResult.revealedRoles[0] }];
             break;
@@ -482,7 +486,7 @@ export function NightScreen({
       )}
 
       {showRoleConfig && (
-        <RoleConfigModal roles={[...gameState.config.roles]} onClose={() => setShowRoleConfig(false)} />
+        <RoleConfigModal roles={[...roomState.config.roles]} onClose={() => setShowRoleConfig(false)} />
       )}
     </div>
   );

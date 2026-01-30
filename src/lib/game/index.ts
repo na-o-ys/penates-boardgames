@@ -27,6 +27,8 @@ export {
 
 // Judge
 export {
+  countVotes,
+  type VoteCount,
   calculateExecutedPlayers,
   determineWinner,
   calculateGameResult,
@@ -34,20 +36,13 @@ export {
 
 // Reducer
 export {
-  createInitialGameState,
-  addPlayer,
-  removePlayer,
-  updateConfig,
   startGame,
   startGameWithDistribution,
   executeNightAction,
   executeVote,
   executeHunterRevenge,
   advancePhase,
-  markReadyForNextGame,
-  resetGame,
-  gameReducer,
-  type GameActionType,
+  calculateStats,
 } from "./reducer";
 
 // Masking

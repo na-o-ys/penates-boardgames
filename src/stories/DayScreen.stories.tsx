@@ -21,7 +21,7 @@ export const Normal: Story = {
   args: {
     roomId: "test-room-id",
     playerId: "p1",
-    gameState: dayNormalState,
+    roomState: dayNormalState,
   },
 };
 
@@ -29,7 +29,7 @@ export const RobberSwap: Story = {
   args: {
     roomId: "test-room-id",
     playerId: "p1",
-    gameState: dayRobberSwapState,
+    roomState: dayRobberSwapState,
   },
 };
 
@@ -37,7 +37,7 @@ export const ReceivedBread: Story = {
   args: {
     roomId: "test-room-id",
     playerId: "p1",
-    gameState: dayReceivedBreadState,
+    roomState: dayReceivedBreadState,
   },
 };
 
@@ -45,6 +45,6 @@ export const ReceivedNotice: Story = {
   args: {
     roomId: "test-room-id",
     playerId: "p1",
-    gameState: dayReceivedNoticeState,
+    roomState: dayReceivedNoticeState,
   },
 };

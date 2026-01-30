@@ -22,7 +22,7 @@ export const NotVoted: Story = {
   args: {
     roomId: "test-room-id",
     playerId: "p1",
-    gameState: votingNotVotedState,
+    roomState: votingNotVotedState,
   },
 };
 
@@ -30,7 +30,7 @@ export const Voted: Story = {
   args: {
     roomId: "test-room-id",
     playerId: "p1",
-    gameState: votingVotedState,
+    roomState: votingVotedState,
   },
 };
 
@@ -38,6 +38,6 @@ export const RobberNotVoted: Story = {
   args: {
     roomId: "test-room-id",
     playerId: "p1",
-    gameState: votingRobberNotVotedState,
+    roomState: votingRobberNotVotedState,
   },
 };

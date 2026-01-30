@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback, Fragment } from "react";
-import type { ClientGameState, Player, Role } from "@/lib/game";
+import type { Player, Role } from "@/lib/game";
 import { buildRevealedInfo, getSwapReason } from "@/lib/game";
+import type { ClientRoomState } from "@/lib/room";
 import { PlayerCard } from "../common/PlayerCard";
 import { PlayerRoleDisplay } from "../common/PlayerRoleDisplay";
 import { CemeterySection } from "../common/CemeterySection";
@@ -10,23 +11,26 @@ import { RoleDetailModal } from "../common/RoleDetailModal";
 import { RoleConfigModal } from "../common/RoleConfigModal";
 import { OtherPlayersDivider } from "../common/OtherPlayersDivider";
 import { SkipLink } from "../common/SkipLink";
+import { PhaseProgressBar } from "../common/PhaseProgressBar";
+
 
 interface DayScreenProps {
-  gameState: ClientGameState;
+  roomState: ClientRoomState;
   playerId: string;
   roomId: string;
   onAdvancePhase: () => Promise<{ success: boolean; error?: string }>;
 }
 
-export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DayScreenProps) {
+export function DayScreen({ roomState, playerId, roomId, onAdvancePhase }: DayScreenProps) {
   const currentPlayerId = playerId;
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [detailRole, setDetailRole] = useState<Role | null>(null);
   const [showRoleConfig, setShowRoleConfig] = useState(false);
 
-  const isHost = gameState.players[0]?.id === currentPlayerId;
-  const dayDuration = gameState.config.dayDuration;
-  const phaseStartedAt = gameState.phaseStartedAt;
+  const game = roomState.game!;
+  const isHost = game.players[0]?.id === currentPlayerId;
+  const dayDuration = roomState.config.dayDuration;
+  const phaseStartedAt = game.phaseStartedAt;
 
   const calculateTimeLeft = useCallback(() => {
     if (!phaseStartedAt) return dayDuration;
@@ -77,17 +81,18 @@ export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DaySc
   };
 
   const isTimeLow = timeLeft <= 10 && timeLeft > 0;
-  const revealedInfo = buildRevealedInfo(gameState.actionResults);
+  const revealedInfo = buildRevealedInfo(game.actionResults);
 
-  const sortedPlayers = [...gameState.players].sort((a, b) =>
+  const sortedPlayers = [...game.players].sort((a, b) =>
     a.id === currentPlayerId ? -1 : b.id === currentPlayerId ? 1 : 0
   );
 
   return (
-    <div className="flex flex-col min-h-screen game-overlay">
-      <div className="max-w-md mx-auto w-full flex flex-col flex-1">
+    <div className="flex flex-col h-dvh overflow-hidden game-overlay">
+      <div className="max-w-md mx-auto w-full flex flex-col flex-1 min-h-0">
         {/* Header */}
         <div className="pt-8 pb-4 px-4 text-center relative">
+          <PhaseProgressBar currentPhase="DAY" />
           <button
             onClick={() => setShowRoleConfig(true)}
             className="absolute top-8 right-4 w-9 h-9 rounded-full glass-panel flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
@@ -109,9 +114,9 @@ export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DaySc
         </div>
 
         {/* Player list + Cemetery (scrollable) */}
-        <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-24">
+        <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-4 ">
           {sortedPlayers.map((player: Player, index: number) => {
-            const swapReason = getSwapReason(player.id, gameState.myActions, gameState.players);
+            const swapReason = getSwapReason(player.id, game.myActions, game.players);
             return (
               <Fragment key={player.id}>
                 {index === 1 && <OtherPlayersDivider />}
@@ -119,15 +124,15 @@ export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DaySc
                   playerName={player.name}
                   isCurrentPlayer={player.id === currentPlayerId}
                   statusBadges={
-                    (player.id === currentPlayerId && (gameState.receivedBread || gameState.receivedNotice)) || swapReason ? (
+                    (player.id === currentPlayerId && (game.receivedBread || game.receivedNotice)) || swapReason ? (
                       <div className="text-xs space-y-1">
-                        {player.id === currentPlayerId && gameState.receivedBread && (
+                        {player.id === currentPlayerId && game.receivedBread && (
                           <div className="flex items-center gap-1 text-amber-400">
                             <span className="material-icons text-sm">bakery_dining</span>
                             <span>パン屋からパンが届きました</span>
                           </div>
                         )}
-                        {player.id === currentPlayerId && gameState.receivedNotice && (
+                        {player.id === currentPlayerId && game.receivedNotice && (
                           <div className="flex items-center gap-1 text-white">
                             <span className="material-icons text-sm">mail</span>
                             <span>白怪盗から予告状が届きました</span>
@@ -146,7 +151,7 @@ export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DaySc
                   <PlayerRoleDisplay
                     playerId={player.id}
                     currentPlayerId={currentPlayerId}
-                    gameState={gameState}
+                    gameState={game}
                     onRoleClick={setDetailRole}
                   />
                 </PlayerCard>
@@ -158,17 +163,13 @@ export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DaySc
         </div>
 
         {/* Footer */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[var(--color-bg-deep)] via-[var(--color-bg-deep)]/95 to-transparent z-20 max-w-md mx-auto">
-          {isHost ? (
+        <div className="shrink-0 px-4 pb-4 pt-8 -mt-8 relative z-10 bg-gradient-to-t from-[var(--color-bg-deep)] via-[var(--color-bg-deep)]/95 to-transparent">
+          {isHost && (
             <SkipLink
               label={isAdvancing ? "移行中..." : "議論フェーズをスキップ"}
               onClick={handleAdvanceToVoting}
               disabled={isAdvancing}
             />
-          ) : (
-            <p className="text-center text-[var(--color-text-muted)] py-3">
-              ホストが投票フェーズへ進めるのを待っています...
-            </p>
           )}
         </div>
       </div>
@@ -178,7 +179,7 @@ export function DayScreen({ gameState, playerId, roomId, onAdvancePhase }: DaySc
       )}
 
       {showRoleConfig && (
-        <RoleConfigModal roles={[...gameState.config.roles]} onClose={() => setShowRoleConfig(false)} />
+        <RoleConfigModal roles={[...roomState.config.roles]} onClose={() => setShowRoleConfig(false)} />
       )}
     </div>
   );
