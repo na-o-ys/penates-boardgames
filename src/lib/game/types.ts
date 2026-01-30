@@ -93,6 +93,7 @@ export interface GameState {
   readonly noticeRecipientId: PlayerId | null; // 予告状を受け取ったプレイヤーID
   readonly phaseStartedAt: number | null;
   readonly playerStats: Record<PlayerId, PlayerStat>; // プレイヤースタッツ
+  readonly roomStats: RoomStats; // ルーム全体スタッツ
   readonly readyForNextGame: Record<PlayerId, boolean>; // 次ゲームへの準備完了状態
 }
 
@@ -133,8 +134,9 @@ export interface ClientGameState {
   readonly receivedBread?: boolean;
   // 白怪盗から予告状を受け取ったか
   readonly receivedNotice?: boolean;
-  // プレイヤースタッツ
+  // スタッツ
   readonly playerStats?: Record<PlayerId, PlayerStat>;
+  readonly roomStats?: RoomStats;
   // FINISHEDフェーズのみ
   readonly initialRoles?: Record<string, Role>;
   readonly finalRoles?: Record<string, Role>;
@@ -164,6 +166,15 @@ export interface PlayerStat {
   readonly werewolfWins: number;
   readonly minorityGames: number;
   readonly minorityWins: number;
+}
+
+/** ルーム全体スタッツ（ゲーム単位） */
+export interface RoomStats {
+  readonly gamesPlayed: number;
+  readonly villageWins: number;
+  readonly werewolfWins: number;
+  readonly minorityWins: number;
+  readonly draws: number;
 }
 
 // ========================================

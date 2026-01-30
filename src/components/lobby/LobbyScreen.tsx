@@ -209,7 +209,7 @@ export function LobbyScreen({
             <button
               onClick={handleStartGame}
               disabled={!canStart || isStarting}
-              className="w-full py-4 btn-primary rounded-xl text-lg font-[family-name:var(--font-display)] tracking-wider"
+              className="w-full py-4 btn-primary rounded-xl text-lg tracking-wider"
             >
               {isStarting ? "開始中..." : "ゲーム開始"}
             </button>
@@ -240,6 +240,7 @@ export function LobbyScreen({
         <PlayerStatsModal
           players={gameState.players}
           playerStats={gameState.playerStats ?? {}}
+          roomStats={gameState.roomStats ?? { gamesPlayed: 0, villageWins: 0, werewolfWins: 0, minorityWins: 0, draws: 0 }}
           onClose={() => setShowStats(false)}
         />
       )}

@@ -177,7 +177,7 @@ export function ResultScreen({ gameState, playerId, roomId, onMarkReady }: Resul
             disabled={isSubmitting}
             className="w-full py-3 btn-primary rounded-lg tracking-wider flex items-center justify-center gap-1"
           >
-            {isSubmitting ? "移動中..." : "ロビーへ戻る"}
+            {isSubmitting ? "送信中..." : "確認した"}
           </button>
         </div>
       </div>
@@ -190,6 +190,7 @@ export function ResultScreen({ gameState, playerId, roomId, onMarkReady }: Resul
         <PlayerStatsModal
           players={gameState.players}
           playerStats={gameState.playerStats ?? {}}
+          roomStats={gameState.roomStats ?? { gamesPlayed: 0, villageWins: 0, werewolfWins: 0, minorityWins: 0, draws: 0 }}
           onClose={() => setShowStats(false)}
         />
       )}

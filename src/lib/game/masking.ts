@@ -74,6 +74,7 @@ export function maskGameState(
     receivedBread,
     receivedNotice,
     playerStats: state.playerStats,
+    roomStats: state.roomStats,
     phaseStartedAt: state.phaseStartedAt,
   };
 

@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import type { Player, PlayerStat } from "@/lib/game";
+import type { Player, PlayerStat, RoomStats } from "@/lib/game";
 
 interface PlayerStatsModalProps {
   players: readonly Player[];
   playerStats: Record<string, PlayerStat>;
+  roomStats: RoomStats;
   onClose: () => void;
 }
 
@@ -47,6 +48,7 @@ function StatBlock({
 export function PlayerStatsModal({
   players,
   playerStats,
+  roomStats,
   onClose,
 }: PlayerStatsModalProps) {
   const [mounted, setMounted] = useState(false);
@@ -99,39 +101,23 @@ export function PlayerStatsModal({
         </h2>
 
         <div className="space-y-3">
-          {/* 全体集計 */}
-          {players.length > 0 && (() => {
-            const totals = players.reduce(
-              (acc, p) => {
-                const s = playerStats[p.id] ?? EMPTY_STAT;
-                return {
-                  totalGames: acc.totalGames + s.totalGames,
-                  totalWins: acc.totalWins + s.totalWins,
-                  villageGames: acc.villageGames + s.villageGames,
-                  villageWins: acc.villageWins + s.villageWins,
-                  werewolfGames: acc.werewolfGames + s.werewolfGames,
-                  werewolfWins: acc.werewolfWins + s.werewolfWins,
-                  minorityGames: acc.minorityGames + s.minorityGames,
-                  minorityWins: acc.minorityWins + s.minorityWins,
-                };
-              },
-              { ...EMPTY_STAT }
-            );
-            return (
-              <div className="glass-panel rounded-lg p-3 border border-white/10">
-                <div className="font-semibold text-sm mb-2 text-[var(--color-text-secondary)]">
-                  <span className="material-icons text-sm align-middle mr-1">groups</span>
-                  全体
-                </div>
-                <div className="grid grid-cols-4 gap-1">
-                  <StatBlock label="全体" games={totals.totalGames} wins={totals.totalWins} colorClass="text-[var(--color-text-secondary)]" />
-                  <StatBlock label="村人" games={totals.villageGames} wins={totals.villageWins} colorClass="text-emerald-400" />
-                  <StatBlock label="人狼" games={totals.werewolfGames} wins={totals.werewolfWins} colorClass="text-red-400" />
-                  <StatBlock label="第三" games={totals.minorityGames} wins={totals.minorityWins} colorClass="text-orange-400" />
-                </div>
+          {/* 全体集計（ゲーム単位） */}
+          {roomStats.gamesPlayed > 0 && (
+            <div className="glass-panel rounded-lg p-3 border border-white/10">
+              <div className="font-semibold text-sm mb-2 text-[var(--color-text-secondary)]">
+                <span className="material-icons text-sm align-middle mr-1">groups</span>
+                全体（{roomStats.gamesPlayed}試合）
               </div>
-            );
-          })()}
+              <div className={`grid gap-1 ${roomStats.draws > 0 ? "grid-cols-4" : "grid-cols-3"}`}>
+                <StatBlock label="村人" games={roomStats.gamesPlayed} wins={roomStats.villageWins} colorClass="text-emerald-400" />
+                <StatBlock label="人狼" games={roomStats.gamesPlayed} wins={roomStats.werewolfWins} colorClass="text-red-400" />
+                <StatBlock label="第三" games={roomStats.gamesPlayed} wins={roomStats.minorityWins} colorClass="text-orange-400" />
+                {roomStats.draws > 0 && (
+                  <StatBlock label="引分" games={roomStats.gamesPlayed} wins={roomStats.draws} colorClass="text-[var(--color-text-muted)]" />
+                )}
+              </div>
+            </div>
+          )}
 
           {players.map((player) => {
             const stats = playerStats[player.id] ?? EMPTY_STAT;

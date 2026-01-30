@@ -1,4 +1,4 @@
-import type { GameAction, GameConfig, GameState, Phase, Player, PlayerId, PlayerStat, Role } from "./types";
+import type { GameAction, GameConfig, GameState, Phase, Player, PlayerId, PlayerStat, Role, RoomStats } from "./types";
 import { ROLES } from "./types";
 import { distributeRoles } from "./distribution";
 import { getActionResult } from "./resolver";
@@ -52,6 +52,7 @@ export function createInitialGameState(roomId: string): GameState {
     noticeRecipientId: null,
     phaseStartedAt: null,
     playerStats: {},
+    roomStats: { gamesPlayed: 0, villageWins: 0, werewolfWins: 0, minorityWins: 0, draws: 0 },
     readyForNextGame: {},
   };
 }
@@ -373,14 +374,14 @@ export function advancePhase(state: GameState): GameState {
   }
 
   // FINISHED フェーズに遷移する際にスタッツを更新
-  const updatedStats =
-    nextPhase === "FINISHED" ? updatePlayerStats(state) : state.playerStats;
+  const stats = nextPhase === "FINISHED" ? updateStats(state) : null;
 
   return {
     ...state,
     phase: nextPhase,
     phaseStartedAt: Date.now(),
-    playerStats: updatedStats,
+    playerStats: stats?.playerStats ?? state.playerStats,
+    roomStats: stats?.roomStats ?? state.roomStats,
   };
 }
 
@@ -449,9 +450,9 @@ export function executeHunterRevenge(
 }
 
 /**
- * プレイヤースタッツを更新
+ * ゲーム終了時のスタッツを更新
  */
-function updatePlayerStats(state: GameState): Record<PlayerId, PlayerStat> {
+function updateStats(state: GameState): { playerStats: Record<PlayerId, PlayerStat>; roomStats: RoomStats } {
   const finalRoles = resolveFinalRoles(state.initialDistribution, state.actions);
   const result = calculateGameResult(
     state.votes,
@@ -461,10 +462,10 @@ function updatePlayerStats(state: GameState): Record<PlayerId, PlayerStat> {
     state.hunterRevengeTarget
   );
 
-  const newStats = { ...state.playerStats };
+  const newPlayerStats = { ...state.playerStats };
 
   for (const player of state.players) {
-    const prev = newStats[player.id] ?? {
+    const prev = newPlayerStats[player.id] ?? {
       totalGames: 0,
       totalWins: 0,
       villageGames: 0,
@@ -479,7 +480,7 @@ function updatePlayerStats(state: GameState): Record<PlayerId, PlayerStat> {
     const team = ROLES[finalRole].team;
     const isWinner = result.winners.includes(player.id);
 
-    newStats[player.id] = {
+    newPlayerStats[player.id] = {
       totalGames: prev.totalGames + 1,
       totalWins: prev.totalWins + (isWinner ? 1 : 0),
       villageGames: prev.villageGames + (team === "VILLAGE" ? 1 : 0),
@@ -491,7 +492,16 @@ function updatePlayerStats(state: GameState): Record<PlayerId, PlayerStat> {
     };
   }
 
-  return newStats;
+  const prev = state.roomStats;
+  const newRoomStats: RoomStats = {
+    gamesPlayed: prev.gamesPlayed + 1,
+    villageWins: prev.villageWins + (result.winningTeam === "VILLAGE" ? 1 : 0),
+    werewolfWins: prev.werewolfWins + (result.winningTeam === "WEREWOLF" ? 1 : 0),
+    minorityWins: prev.minorityWins + (result.winningTeam === "MINORITY" ? 1 : 0),
+    draws: prev.draws + (result.winningTeam === null ? 1 : 0),
+  };
+
+  return { playerStats: newPlayerStats, roomStats: newRoomStats };
 }
 
 /**
