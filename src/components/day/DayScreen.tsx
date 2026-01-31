@@ -82,6 +82,10 @@ export function DayScreen({ roomState, playerId, roomId, onAdvancePhase }: DaySc
 
   const isTimeLow = timeLeft <= 10 && timeLeft > 0;
   const revealedInfo = buildRevealedInfo(game.actionResults);
+  const centerRoles = {
+    ...revealedInfo.centers,
+    ...game.revealedCenterRoles,
+  };
 
   const sortedPlayers = [...game.players].sort((a, b) =>
     a.id === currentPlayerId ? -1 : b.id === currentPlayerId ? 1 : 0
@@ -159,7 +163,7 @@ export function DayScreen({ roomState, playerId, roomId, onAdvancePhase }: DaySc
             );
           })}
 
-          <CemeterySection centerRoles={revealedInfo.centers} />
+          <CemeterySection centerRoles={centerRoles} />
         </div>
 
         {/* Footer */}
