@@ -183,7 +183,7 @@ export function DayScreen({ roomState, playerId, roomId, onAdvancePhase }: DaySc
       )}
 
       {showRoleConfig && (
-        <RoleConfigModal roles={[...roomState.config.roles]} onClose={() => setShowRoleConfig(false)} />
+        <RoleConfigModal config={roomState.config} onClose={() => setShowRoleConfig(false)} />
       )}
     </div>
   );

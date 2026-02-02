@@ -25,7 +25,9 @@ export function startGame(
   }
 
   // 役職を配布
-  const distribution = distributeRoles(members, config.roles);
+  const distribution = distributeRoles(members, config.roles, {
+    noPeaceVillage: config.options?.noPeaceVillage,
+  });
 
   // パン屋がいればランダムな他プレイヤーにパンを配達
   const breadRecipientId = findRandomRecipient(distribution, members, "BAKER");

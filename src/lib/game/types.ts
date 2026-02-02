@@ -66,12 +66,18 @@ export interface Player {
   readonly isConnected: boolean;
 }
 
+/** ゲームオプション */
+export interface GameOptions {
+  readonly noPeaceVillage: boolean; // 平和村無し（村人陣営・人狼陣営が各1人以上）
+}
+
 /** ゲーム設定 */
 export interface GameConfig {
   readonly roles: readonly Role[]; // 使用する役職リスト
   readonly nightDuration: number; // 夜フェーズ秒数
   readonly dayDuration: number; // 昼フェーズ秒数
   readonly votingDuration: number; // 投票フェーズ秒数
+  readonly options?: GameOptions; // ゲームオプション（後方互換のためoptional）
   readonly updatedAt: number; // 設定更新タイムスタンプ
 }
 

@@ -232,7 +232,7 @@ export function HunterRevengeScreen({
       )}
 
       {showRoleConfig && (
-        <RoleConfigModal roles={[...roomState.config.roles]} onClose={() => setShowRoleConfig(false)} />
+        <RoleConfigModal config={roomState.config} onClose={() => setShowRoleConfig(false)} />
       )}
     </div>
   );

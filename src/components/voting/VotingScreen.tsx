@@ -220,7 +220,7 @@ export function VotingScreen({ roomState, playerId, roomId, onSubmitVote, onAuto
       )}
 
       {showRoleConfig && (
-        <RoleConfigModal roles={[...roomState.config.roles]} onClose={() => setShowRoleConfig(false)} />
+        <RoleConfigModal config={roomState.config} onClose={() => setShowRoleConfig(false)} />
       )}
     </div>
   );

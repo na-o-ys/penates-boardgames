@@ -1,4 +1,5 @@
 import type { Player, Role } from "./types";
+import { ROLES } from "./types";
 
 /**
  * Fisher-Yatesシャッフルで配列をランダムに並び替える
@@ -22,7 +23,8 @@ function shuffle<T>(array: readonly T[]): T[] {
  */
 export function distributeRoles(
   players: readonly Player[],
-  roles: readonly Role[]
+  roles: readonly Role[],
+  options?: { noPeaceVillage?: boolean }
 ): Record<string, Role> {
   const requiredCount = players.length + 2; // プレイヤー数 + 中央2枚
 
@@ -32,19 +34,29 @@ export function distributeRoles(
     );
   }
 
-  const shuffledRoles = shuffle(roles);
-  const distribution: Record<string, Role> = {};
+  const maxAttempts = options?.noPeaceVillage ? 100 : 1;
 
-  // プレイヤーに配布
-  players.forEach((player, index) => {
-    distribution[player.id] = shuffledRoles[index];
-  });
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const shuffledRoles = shuffle(roles);
 
-  // 中央カードに配布
-  distribution["CENTER_0"] = shuffledRoles[players.length];
-  distribution["CENTER_1"] = shuffledRoles[players.length + 1];
+    if (options?.noPeaceVillage && attempt < maxAttempts - 1) {
+      const playerRoles = shuffledRoles.slice(0, players.length);
+      const hasWerewolf = playerRoles.some((r) => ROLES[r].team === "WEREWOLF" && ROLES[r].isWerewolfExecution);
+      const hasVillage = playerRoles.some((r) => ROLES[r].team === "VILLAGE");
+      if (!hasWerewolf || !hasVillage) continue;
+    }
 
-  return distribution;
+    const distribution: Record<string, Role> = {};
+    players.forEach((player, index) => {
+      distribution[player.id] = shuffledRoles[index];
+    });
+    distribution["CENTER_0"] = shuffledRoles[players.length];
+    distribution["CENTER_1"] = shuffledRoles[players.length + 1];
+    return distribution;
+  }
+
+  // unreachable but TypeScript needs it
+  throw new Error("配布に失敗しました");
 }
 
 /**

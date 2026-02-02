@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { type GameConfig, type Role } from "@/lib/game";
+import { type GameConfig, type GameOptions, type Role } from "@/lib/game";
 import type { ClientRoomState } from "@/lib/room";
 import { PlayerList } from "./PlayerList";
 import { RoleSelector } from "./RoleSelector";
 import { TimerSettings } from "./TimerSettings";
+import { GameOptionsSettings } from "./GameOptionsSettings";
 import { PlayerStatsModal } from "../common/PlayerStatsModal";
 
 type LobbyTab = "players" | "roles" | "settings";
@@ -44,6 +45,7 @@ export function LobbyScreen({
   const playerCount = roomState.members.length;
   const requiredRoles = playerCount + 2;
   const hasValidRoles = localConfig.roles.length === requiredRoles;
+  const options = localConfig.options ?? { noPeaceVillage: false };
   const canStart = isHost && playerCount >= 3 && hasValidRoles;
 
   const saveConfig = (newConfig: GameConfig) => {
@@ -61,6 +63,10 @@ export function LobbyScreen({
 
   const handleTimerChange = (settings: { nightDuration?: number; dayDuration?: number; votingDuration?: number }) => {
     saveConfig({ ...localConfig, ...settings, updatedAt: Date.now() });
+  };
+
+  const handleOptionsChange = (newOptions: GameOptions) => {
+    saveConfig({ ...localConfig, options: newOptions, updatedAt: Date.now() });
   };
 
   const handleKickPlayer = async (targetPlayerId: string) => {
@@ -96,8 +102,8 @@ export function LobbyScreen({
 
   const tabs: { id: LobbyTab; label: string }[] = [
     { id: "players", label: "プレイヤー" },
-    { id: "roles", label: "役職設定" },
-    { id: "settings", label: "タイマー" },
+    { id: "roles", label: "役職" },
+    { id: "settings", label: "設定" },
   ];
 
   return (
@@ -196,6 +202,12 @@ export function LobbyScreen({
                 votingDuration={localConfig.votingDuration}
                 playerCount={playerCount}
                 onChange={handleTimerChange}
+                disabled={!isHost}
+              />
+              <div className="border-t border-white/10 my-5" />
+              <GameOptionsSettings
+                options={options}
+                onChange={handleOptionsChange}
                 disabled={!isHost}
               />
             </div>

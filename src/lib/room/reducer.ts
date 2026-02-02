@@ -38,6 +38,7 @@ export function createInitialRoomState(roomId: string, host: Player): RoomState 
       nightDuration: 30,
       dayDuration: 120,
       votingDuration: 30,
+      options: { noPeaceVillage: true },
       updatedAt: 0,
     },
     playerStats: {},

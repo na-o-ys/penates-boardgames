@@ -2,18 +2,26 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { SELECTABLE_ROLES, type Role } from "@/lib/game";
+import { SELECTABLE_ROLES, type GameConfig, type Role } from "@/lib/game";
 import { RoleDetailContent } from "./RoleDetailContent";
 import { RoleGalleryCard, VillagerBar } from "./RoleGalleryCard";
 
+function formatDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
 interface RoleConfigModalProps {
-  roles: Role[];
+  config: GameConfig;
   onClose: () => void;
 }
 
-export function RoleConfigModal({ roles, onClose }: RoleConfigModalProps) {
+export function RoleConfigModal({ config, onClose }: RoleConfigModalProps) {
   const [mounted, setMounted] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+
+  const roles = config.roles;
 
   useEffect(() => {
     setMounted(true);
@@ -32,6 +40,7 @@ export function RoleConfigModal({ roles, onClose }: RoleConfigModalProps) {
 
   const specialRolesWithCount = SELECTABLE_ROLES.filter((role) => getRoleCount(role) > 0);
   const villagerCount = getRoleCount("VILLAGER");
+  const options = config.options ?? { noPeaceVillage: false };
 
   return createPortal(
     <div
@@ -101,6 +110,33 @@ export function RoleConfigModal({ roles, onClose }: RoleConfigModalProps) {
                   </span>
                 </VillagerBar>
               )}
+            </div>
+
+            {/* 設定セクション */}
+            <div className="border-t border-white/10 pt-4">
+              <h3 className="font-[family-name:var(--font-display)] text-base font-bold gold-text text-center mb-3">
+                設定
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">夜フェーズ</span>
+                  <span className="text-gray-200 font-mono">{formatDuration(config.nightDuration)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">議論フェーズ</span>
+                  <span className="text-gray-200 font-mono">{formatDuration(config.dayDuration)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">投票フェーズ</span>
+                  <span className="text-gray-200 font-mono">{formatDuration(config.votingDuration)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">平和村無し</span>
+                  <span className={`font-bold ${options.noPeaceVillage ? "text-[var(--color-primary)]" : "text-gray-500"}`}>
+                    {options.noPeaceVillage ? "ON" : "OFF"}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         )}
