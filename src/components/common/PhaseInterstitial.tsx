@@ -29,12 +29,20 @@ const DURATION_MS: Record<GamePhase, number> = {
 
 const FADE_OUT_MS = 300;
 
+const bellAudio = typeof window !== "undefined" ? new Audio("/sounds/phase-bell.mp3") : null;
+
 export function PhaseInterstitial({ phase, onComplete }: PhaseInterstitialProps) {
   const [fadingOut, setFadingOut] = useState(false);
   const config = PHASE_CONFIG[phase];
   const duration = DURATION_MS[phase];
 
   useEffect(() => {
+    navigator.vibrate?.(100);
+    if (bellAudio) {
+      bellAudio.currentTime = 0;
+      bellAudio.play().catch(() => {});
+    }
+
     const fadeOutTimer = setTimeout(() => {
       setFadingOut(true);
     }, duration - FADE_OUT_MS);
